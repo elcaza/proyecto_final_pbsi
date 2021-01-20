@@ -26,8 +26,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.40469339"
-     inkscape:cx="1107.876"
-     inkscape:cy="-1773.7104"
+     inkscape:cx="1404.3968"
+     inkscape:cy="-1872.5507"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -1373,12 +1373,12 @@
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:6.01378107px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.15034452"
        x="14.07296"
-       y="678.79285"
+       y="676.67615"
        id="text221-8-2-9"><tspan
          sodipodi:role="line"
          id="tspan219-4-2-1"
          x="14.07296"
-         y="678.79285"
+         y="676.67615"
          style="stroke-width:0.15034452">FILTROS</tspan></text>
     <rect
        style="fill:none;stroke:#000000;stroke-width:0.88811231;stroke-miterlimit:4;stroke-dasharray:none"
@@ -1435,5 +1435,70 @@
            height="344.07901"
            x="37.855545"
            y="3002.3464" /></flowRegion><flowPara
-         id="flowPara1835">Info de cada módulo</flowPara></flowRoot>  </g>
+         id="flowPara1835">Info de cada módulo</flowPara></flowRoot>    <g
+       id="g1846">
+      <rect
+         y="680.61774"
+         x="18.306038"
+         height="13.729529"
+         width="86.299896"
+         id="rect1837"
+         style="fill:none;stroke:#000000;stroke-width:0.52916664;stroke-miterlimit:4;stroke-dasharray:none" />
+      <text
+         id="text1841"
+         y="690.05072"
+         x="43.803738"
+         style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="stroke-width:0.26458332"
+           y="690.05072"
+           x="43.803738"
+           id="tspan1839"
+           sodipodi:role="line">fecha 1</tspan></text>
+    </g>
+    <g
+       transform="translate(91.973548,-0.4189449)"
+       id="g1846-6">
+      <rect
+         y="680.61774"
+         x="18.306038"
+         height="13.729529"
+         width="86.299896"
+         id="rect1837-0"
+         style="fill:none;stroke:#000000;stroke-width:0.52916664;stroke-miterlimit:4;stroke-dasharray:none" />
+      <text
+         id="text1841-5"
+         y="690.05072"
+         x="43.803738"
+         style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="stroke-width:0.26458332"
+           y="690.05072"
+           x="43.803738"
+           id="tspan1839-0"
+           sodipodi:role="line">fecha 1</tspan></text>
+    </g>
+    <g
+       transform="matrix(0.7659043,0,0,1.0047319,186.71402,-3.6720548)"
+       id="g1846-2">
+      <rect
+         y="680.61774"
+         x="18.306038"
+         height="13.729529"
+         width="86.299896"
+         id="rect1837-9"
+         style="fill:none;stroke:#000000;stroke-width:0.52916664;stroke-miterlimit:4;stroke-dasharray:none" />
+      <text
+         id="text1841-4"
+         y="690.05072"
+         x="43.803738"
+         style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="stroke-width:0.26458332"
+           y="690.05072"
+           x="43.803738"
+           id="tspan1839-3"
+           sodipodi:role="line">fecha 1</tspan></text>
+    </g>
+  </g>
 </svg>
