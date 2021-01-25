@@ -1,7 +1,7 @@
 from modelo import strings 
 from modelo.conector import Conector
 from exploits import exploits
-from explotacion import explotacion_modificar
+from explotacion import explotacion
 
 '''
     Guardar exploit
@@ -28,11 +28,12 @@ from explotacion import explotacion_modificar
     Buscar exploits y ejecutar exploits
 '''
 # con = Conector()
+# json_explotacion = {"ip":"192.168.0.1", "puerto": 1001}
 # res = con.exploit_buscar_software("Shell")
 # for r in res["exploits"]:
 #     ruta = r["ruta"]
 #     lenguaje = r["lenguaje"]
-#     explotacion_modificar.execute("192.168.0.1",ruta,lenguaje)
+#     explotacion.execute(json_explotacion,ruta,lenguaje)
 
 '''
     Eliminar Base de exploits
