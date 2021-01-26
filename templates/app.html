@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Site Scanner</title>
+	<link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+
+<!--Navegación-->
+	<nav class="nav">
+
+		<ul>
+			<li class="nav__nuevo">Nuevo Análisis</li>
+			<li class="nav__consultas">Consultas</li>
+			<li class="nav__configuraciones">Configuraciones</li>
+		</ul>
+	</nav>
+
+<!--Nuevo análisis-->
+	<section class="scan">
+		<div>
+			<button class="scan__options__url">url</button>
+			<button class="scan__options__file">file</button>
+		</div>
+		<input type="text" name="" id="" class="scan__url" placeholder="URL">
+		<input type="file" name="" id="" class="scan__file">
+		<button type="submit" class="scan__start">Iniciar</button>
+	</section>
+
+	<section class="modulos">
+		<h1 class="modulos__titulo">Módulos</h1>
+		<select class="modulos__select">
+			<option value="0">Select car:</option>
+			<option value="1">Audi</option>
+			<option value="2">BMW</option>
+			<option value="3">Citroen</option>
+			<option value="4">Ford</option>
+			<option value="5">Honda</option>
+			<option value="6">Jaguar</option>
+			<option value="7">Land Rover</option>
+			<option value="8">Mercedes</option>
+			<option value="9">Mini</option>
+			<option value="10">Nissan</option>
+		</select>
+
+		<div class="modulos__modulo">
+			<span class="modulos__nombre">Nombre</span>
+			<label class="modulos__switch">
+				<input type="modulos__checkbox" checked>
+				<span class="modulos__slider modulos__round"></span>
+			</label>
+		</div>
+
+		<div class="modulos__modulo__config">
+
+		</div>
+	</section>
+
+	<section class="programar">
+		<h1 class="programar__titulo">
+			Programar escaneo
+		</h1>
+	</section>
+
+<!--Consultas-->
+	<section class="consultas">
+		<div class="consultas__analizados">
+			<h1 class="consultas__analizados__titulo">
+				Sitios Analizados
+			</h1>
+			<h2 class="consultas__analizados__numero">
+				17
+			</h2>
+		</div>
+
+		<div class="consultas__vulnes">
+			<h1 class="consultas__vulnes__titulo">
+				Vulnerabilidades encontradas
+			</h1>
+			<h2 class="consultas__vulnes__numero">
+				2
+			</h2>
+		</div>
+
+		<div class="consultas__fecha">
+			<h1 class="consultas__fecha__titulo">
+				Último Análisis
+			</h1>
+			<h2 class="consultas__fecha__fecha">
+				12/01/2021
+			</h2>
+		</div>
+
+		<div class="consultas__opciones">
+			<button class="consultas__opciones__actuales">
+				Actuales
+			</button>
+			<button class="consultas__opciones__proximo">
+				Próximos escaneos
+			</button>
+		</div>
+	</section>
+
+<!--Configuraciones-->
+
+<!--Footer-->
+	<footer>
+		<script src="../static/js/scripts.js"></script>
+	</footer>
+</body>
+</html>
