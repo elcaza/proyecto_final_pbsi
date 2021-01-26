@@ -3,6 +3,7 @@ from modules.exploits import exploits
 from modules.explotacion import explotacion
 from datetime import datetime
 from modules.alertas import alertas
+
 '''
     Guardar exploit
 '''

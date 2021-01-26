@@ -1,3 +1,6 @@
 MONGO_URI = "mongodb://localhost"
 BASE_DATOS = "masivo"
 COLECCION_EXPLOITS = "exploits"
+CORREO_CONTRASENA = "hola123.,"
+CORREO_REMITENTE = "alertaproyecto1@gmail.com"
+CORREO_DESTINATARIO = "vipatrinf@gmail.com"

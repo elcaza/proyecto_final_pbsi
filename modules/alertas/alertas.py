@@ -1,25 +1,20 @@
 import smtplib
 import ssl
-import email
 from datetime import datetime
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from modules import strings
 
 class Correo():
     def __init__(self, parametros):
         self.set_subject(parametros)
         self.set_sitios(parametros)
         self.set_fecha(parametros)
-
-        # self.correo_contrasena = strings.correo_contrasena
-        # self.correo_remitente = strings.correo_remitente
-        # self.correo_destinatario = strings.correo_destinatario
-
-        self.correo_contrasena = "hola123.,"
-        self.correo_remitente = "alertaproyecto1@gmail.com"
-        self.correo_destinatario = "betoazul40@gmail.com"
+        self.correo_contrasena = strings.CORREO_CONTRASENA
+        self.correo_remitente = strings.CORREO_REMITENTE
+        self.correo_destinatario = strings.CORREO_DESTINATARIO
         self.correo_mensaje_texto = ""
         self.correo_mensaje = MIMEMultipart()
         self.contexto = ssl.create_default_context()
@@ -52,11 +47,24 @@ class Correo():
         return self.fecha
 
     def crear_mensaje_sitio(self):
+        self.correo_mensaje_texto = self.get_html()+self.get_head()+self.get_body_inicio()
+        for sitio in self.sitios:
+            sitio_vulnerable = self.get_body_sitio(sitio["sitio"])
+            motivo = self.get_body_motivo(sitio["motivo"])
+            estado = self.get_body_estado(sitio["estado"])
+            salto = self.get_body_salto()
+            self.correo_mensaje_texto += sitio_vulnerable+motivo+estado+salto
+        self.correo_mensaje_texto += self.get_body_fin()
+
+    def get_html(self):
         html = """
         <html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office"
                 style="width: 100% ;font-family: sans-serif; padding: 0; margin: 0;">
         """
-        header = """
+        return html
+
+    def get_head(self):
+        head = """
             <head>
                 <meta http-equiv="Content-Security-Policy"
                     content="script-src 'none'; connect-src 'none'; object-src 'none'; form-action 'none';">
@@ -67,6 +75,9 @@ class Correo():
                 <meta content="telephone=no" name="format-detection">
             </head>
         """
+        return head
+
+    def get_body_inicio(self):
         body_inicio = """
             <body style="margin: 0; padding: 0;">
                 <div style="background-color:#EEEEEE; ">
@@ -86,14 +97,16 @@ class Correo():
                                     <td align=" left" style="padding: 0; margin: 0; padding-top: 40px; padding-bottom: 20px;">
                                         <h3 style="margin: 0; padding: 0; padding-left: 10px ;line-height: 22px; font-family: sans-serif; font-size: 18px; font-style: normal; font-weight: bold; color:#333333;">
         """
+
         fecha = """
         {0} 
                                         </h3>
                                     </td>
                                 </tr>
         """.format(self.fecha)
+        return body_inicio+fecha
 
-
+    def get_body_fin(self):
         body_fin = """
                         </table>
                     </div>
@@ -108,10 +121,10 @@ class Correo():
             </body>
             </html>
         """
+        return body_fin
 
-        self.correo_mensaje_texto = html+header+body_inicio+fecha
-        for sitio in self.sitios:
-            sitio_vulnerable = """
+    def get_body_sitio(self, sitio):
+        sitio_vulnerable = """
                             <tr>    
                                 <td style="padding: 0; margin: 0; padding-left: 10px; padding-top: 20px;">
                                     Sitio
@@ -120,28 +133,37 @@ class Correo():
                                     {0}
                                 </td>
                             </tr>
-            """.format(sitio["sitio"])
-            motivo = """
+            """.format(sitio)
+        return sitio_vulnerable
+
+    def get_body_motivo(self, motivo):
+        motivo = """
                             <tr>
                                 <td style="padding: 0; margin: 0; padding-left: 10px; padding-top: 20px;">
                                     Motivo
                                 </td>
                                 <td style="padding: 0; margin: 0;  padding-left: 10px; padding-top: 20px;">
-                                    LFI
+                                    {0}
                                 </td>
                             </tr>
-            """.format(sitio["motivo"])
-            estado = """
+            """.format(motivo)
+        return motivo
+
+    def get_body_estado(self, estado):
+        estado = """
                                 <tr>
                                     <td style="padding: 0; margin: 0; padding-left: 10px; padding-top: 20px;">
                                         Estado
                                     </td>
                                     <td style="padding: 0; margin: 0;  padding-left: 10px; padding-top: 20px;">
-                                        Posible
+                                        {0}
                                     </td>
                                 </tr>
-            """.format(sitio["estado"])
-            salto = """
+            """.format(estado)
+        return estado
+
+    def get_body_salto(self):
+        salto = """
                                 <tr>
                                     <td style="padding: 0; margin: 0;  padding-left: 10px; padding-top: 5px;">
                                         <hr>
@@ -151,9 +173,7 @@ class Correo():
                                     </td>
                                 </tr>
             """
-            self.correo_mensaje_texto += sitio_vulnerable+motivo+estado+salto
-        self.correo_mensaje_texto += body_fin
-
+        return salto
 
     def crear_cabecera(self):
         self.correo_mensaje  = MIMEMultipart()
