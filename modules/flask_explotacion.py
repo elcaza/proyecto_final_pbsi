@@ -1,7 +1,8 @@
-from modelo import strings 
-from modelo.conector import Conector
-from exploits import exploits
-from explotacion import explotacion
+from modules.modelo.conector import Conector
+from modules.exploits import exploits
+from modules.explotacion import explotacion
+from datetime import datetime
+from modules.alertas import alertas
 
 '''
     Guardar exploit
@@ -50,3 +51,30 @@ from explotacion import explotacion
     Actualizar exploit
 '''
 #con.exploit_actualizar_datos({"nombre" : "pruebap.py", "ruta" : "/home/kali/Proyectos/proyecto_final_pbsi/modules/exploits", "software" : "asl", "biblioteca" : "ab", "gestor_contenido" : "ac" })
+
+'''
+    Enviar alertas
+'''
+con = Conector()
+json_alerta = {
+    "subject":"Alerta generada automáticamente",
+    "sitios":[
+            {
+                "sitio":"http://sitio1.com",
+                "motivo":"CMS vulnerable a Drupalgeddon2",
+                "estado":"Comprometido"
+            },
+            {
+                "sitio":"192.168.0.1",
+                "motivo":"LFI en el input \"search\"",
+                "estado":"Posible vulnerable"
+            },
+            {
+                "sitio":"http://sitio2.com",
+                "motivo":"XSS en el input \"username\"",
+                "estado":"Comprometido"
+            }
+        ],
+    "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+}
+alertas.execute(json_alerta)

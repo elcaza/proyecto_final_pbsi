@@ -1,5 +1,5 @@
 from pymongo import MongoClient, errors
-from modelo import strings
+from modules import strings
 from os import path
 
 class Conector():
