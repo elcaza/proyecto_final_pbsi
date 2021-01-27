@@ -1,0 +1,349 @@
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+/**
+===========================================
+START CSS
+===========================================
+*/
+
+/**
+===========================================
+Sections Paddigs
+===========================================
+*/
+
+.main__nuevo,
+.main__consultas,
+.main__configuraciones {
+    box-sizing: border-box;
+    padding: 10px;
+    background-color: gainsboro;
+    border: 1px solid;
+}
+
+/**
+===========================================
+Títulos 
+===========================================
+*/
+
+.modulos__titulo,
+.programar__titulo {
+    font-size: 2em;
+    margin: 10px 0;
+}
+
+/**
+===========================================
+General 
+===========================================
+*/
+
+body {
+    background: gray;
+}
+
+.main__container {
+    max-width: 1280px;
+    margin: auto;
+    
+}
+
+.nav {
+    text-align: right;
+    min-height: 20px;
+    background: gainsboro;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.nav__nuevo,
+.nav__consultas,
+.nav__configuraciones {
+    display: inline;
+}
+
+/* Nuevo análisis */
+.main__nuevo {
+
+}
+
+.scan {
+    text-align: center;
+}
+
+.scan__options-container {
+    display: block;
+    margin: 20px auto;
+    min-height: 50px;
+    width: 50%;
+    text-align: center;
+}
+
+.scan__options__url {
+    
+}
+
+.scan__options__file {
+    
+}
+
+.scan__url {
+    display: block;
+    margin: 10px auto;
+}
+
+.scan__file {
+    display: block;
+    margin: 10px auto;
+}
+
+.scan__start {
+
+}
+
+.modulos {
+
+}
+
+.modulos__titulo {
+
+}
+
+.modulos__seleccionar-perfil {
+    display: inline-block
+}
+
+.modulos__select {
+    display: inline-block
+}
+
+.modulos__modulo {
+    box-sizing: border-box;
+    border: 1px solid;
+    margin: 10px 0 10px 0;
+    padding: 10px;
+}
+
+.modulos__nombre {
+
+}
+
+.modulos__switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.modulos__switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.modulos__checkbox {
+
+}
+
+.modulos__slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.modulos__slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+  
+input:checked + .modulos__slider {
+    background-color: #2196F3;
+}
+
+input:focus + .modulos__slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .modulos__slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+.modulos__round {
+    border-radius: 34px;
+}
+
+.modulos__round:before {
+    border-radius: 34px;
+}
+
+.modulos__modulo__config {
+
+}
+
+.modulos__config {
+
+}
+
+.modulos__opcion__nombre {
+    display: inline-block;
+    width: 20%;
+    vertical-align: top;
+}
+
+.modulos__opcion__descripcion {
+    display: inline-block;
+    width: 40%;
+    vertical-align: top;
+}
+
+.modulos__opcion__valor {
+    display: inline-block;
+    width: 39%;
+    vertical-align: top;
+}
+
+.programar {
+
+}
+
+.programar__titulo {
+
+}
+
+/* Consultas */
+
+.main__consultas {
+
+}
+
+.consultas {
+    border: 1px solid;
+    text-align: center;
+}
+
+.consultas__analizados,
+.consultas__vulnes,
+.consultas__fecha {
+    display: inline-block;
+    width: 33%;
+    margin: auto;
+}
+
+.consultas__analizados {
+
+}
+
+.consultas__analizados__titulo,
+.consultas__vulnes__titulo,
+.consultas__fecha__titulo {
+    font-size: 1.5em;
+}
+
+.consultas__analizados__numero,
+.consultas__vulnes__numero,
+.consultas__fecha__fecha {
+    font-size: 2.5em;
+}
+
+.consultas__vulnes {
+
+}
+
+.consultas__vulnes__titulo {
+
+}
+
+.consultas__vulnes__numero {
+
+}
+
+.consultas__fecha {
+
+}
+
+.consultas__fecha__titulo {
+
+}
+
+.consultas__fecha__fecha {
+
+}
+
+.consultas__opciones {
+
+}
+
+.consultas__opciones__actuales {
+
+}
+
+.consultas__opciones__proximo {
+
+}
+
+.main__configuraciones {
+
+}
+

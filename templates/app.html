@@ -17,10 +17,11 @@
 			<li class="nav__configuraciones">Configuraciones</li>
 		</ul>
 	</nav>
-
+<div class="main__container">
 <!--Nuevo análisis-->
+<section class="main__nuevo">
 	<section class="scan">
-		<div>
+		<div class="scan__options-container">
 			<button class="scan__options__url">url</button>
 			<button class="scan__options__file">file</button>
 		</div>
@@ -31,6 +32,7 @@
 
 	<section class="modulos">
 		<h1 class="modulos__titulo">Módulos</h1>
+		<div class="modulos__seleccionar-perfil">Seleccionar perfil</div>
 		<select class="modulos__select">
 			<option value="0">Select car:</option>
 			<option value="1">Audi</option>
@@ -48,13 +50,26 @@
 		<div class="modulos__modulo">
 			<span class="modulos__nombre">Nombre</span>
 			<label class="modulos__switch">
-				<input type="modulos__checkbox" checked>
+				<input type="checkbox" class="modulos__checkbox">
 				<span class="modulos__slider modulos__round"></span>
 			</label>
 		</div>
 
-		<div class="modulos__modulo__config">
-
+		<div class="modulos__modulo">
+			<span class="modulos__nombre">Nombre</span>
+			<label class="modulos__switch">
+				<input type="checkbox" class="modulos__checkbox">
+				<span class="modulos__slider modulos__round"></span>
+			</label>
+			<div class="modulos__config">
+				<div class="modulos__opcion__nombre">Nombre de la opción</div>
+				<div class="modulos__opcion__descripcion">
+					Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut dictum lorem ut sem sagittis vulputate. Sed aliquet, neque placerat varius mollis, leo arcu fringilla magna, sit amet sollicitudin eros sapien a purus. Ut consequat mollis arcu, a feugiat nulla efficitur eget. Donec id ante sed sem egestas euismod. 
+				</div>
+				<div class="modulos__opcion__valor">
+					Valor
+				</div>
+			</div>
 		</div>
 	</section>
 
@@ -62,9 +77,13 @@
 		<h1 class="programar__titulo">
 			Programar escaneo
 		</h1>
+		<span style="font-size: 5em; margin:20px auto; width: 100%;">`¯\_(ツ)_/¯`</span>
 	</section>
+</section>
+
 
 <!--Consultas-->
+<section class="main__consultas">
 	<section class="consultas">
 		<div class="consultas__analizados">
 			<h1 class="consultas__analizados__titulo">
@@ -101,13 +120,25 @@
 				Próximos escaneos
 			</button>
 		</div>
+
+		<div class="consultas__filtros">
+			Filtros
+		</div>
+
+		<div class="consultas__sitio">
+
+		</div>
 	</section>
-
+</section>
 <!--Configuraciones-->
+<section class="main__configuraciones">
 
+</section>
 <!--Footer-->
-	<footer>
-		<script src="../static/js/scripts.js"></script>
-	</footer>
+<footer>
+	<script src="../static/js/scripts.js"></script>
+</footer>
+
+</div>
 </body>
 </html>
