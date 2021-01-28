@@ -24,6 +24,37 @@ bd = {
         "url",
         "url",
         "url"
-    ]
+    ],
+    "bibliotecas_usadas":[
+        "url",
+        "url"
+    ],
+    "cabeceras":{
+        "presentes":[
+            "cabecera",
+            "cabecera"
+        ],
+        "ausentes":[
+            "cabecera",
+            "cabecera"
+        ]
+    },
+    "cifrados":{
+        "debiles":[
+            "a",
+            "b"
+        ]
+    },
+    "protocolos":{
+        "inseguros":[
+            "a",
+            "b"
+        ]
+    },
+    "ioc":{
+        "mineros":[],
+        "webshells":[],
+        "contenido_anomalo":[]
+    }
 }
 ```
