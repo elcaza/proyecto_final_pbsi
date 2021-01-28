@@ -27,19 +27,34 @@
     "url":"http://pagina.com/",
     "ataque":"XSS",
     "tipo":"No exitoso",
-    "form":"frmSearch",
-    "inputs":
+    "form":[
     {
-        [
-            "nombre":"username",
-            "id":"id_username",
-            "valor":"<script>Alert();</script>"
-        ],
-        [
-            "nombre":"password",
-            "id":"",
-            "valor":"<script>Alert();</script>"
-        ]
-    }
+        "form1":[
+             {
+                "nombre":"username",
+                "id":"id_username",
+                "valor":"<script>Alert();</script>"
+             },
+             {
+                "nombre":"password",
+                "id":"",
+                "valor":"<script>Alert();</script>"
+             }
+         ]
+     },
+        "form2":[
+             {
+                "nombre":"username",
+                "id":"id_username",
+                "valor":"<script>Alert();</script>"
+             },
+             {
+                "nombre":"password",
+                "id":"",
+                "valor":"<script>Alert();</script>"
+             }
+         ]
+      }
+   ]
 }
 ```
