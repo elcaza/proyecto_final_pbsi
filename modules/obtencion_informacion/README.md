@@ -1,7 +1,43 @@
+# Descripción
+Módulo para obtener información sobre sitios y dominios de la organización mediante fuentes de información públicas
 # Entrada
-
 ```
-http://site.com
+python3 -a https://site.com -g -t 80-100
+```
+
+```json
+parametros = {
+  "url":"http://site.com/",
+  "Diccionarios" : 
+  {
+    "dork_google": "dorks_google.txt",
+    "dork_bing": "dorks_bing.txt",
+  },
+  "google": {
+    "revision" : True,
+    "archivos_sql" : {
+      "revision" : True
+    },
+    "directorios" : {
+      "revision" : True
+    }
+  },
+  "bing" : {
+    "revision": True,
+    "archivos_sql" : {
+      "revision" : True
+    },
+    "directorios" : {
+      "revision" : True
+    }
+  },
+  "dnsdumper" : {
+    "revision": True
+  },
+  "robtex" : {
+    "revison":True
+  }
+}
 ```
 
 # Salida
