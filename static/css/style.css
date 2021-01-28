@@ -275,7 +275,7 @@ input:checked + .modulos__slider:before {
 /* Consultas */
 
 .main__consultas {
-
+    text-align: center;
 }
 
 .consultas {
@@ -289,6 +289,10 @@ input:checked + .modulos__slider:before {
     width: 33%;
     margin: auto;
     text-align: center;
+    min-height: 210px;
+    box-sizing: border-box;
+    border: 1px solid;
+    padding: 60px;
 }
 
 .consultas__analizados {
@@ -347,14 +351,19 @@ input:checked + .modulos__slider:before {
 
 }
 
+.consultas__contenidor__sitio {
+    text-align: center;
+}
+
 .consultas__sitio {
-    width: 24%;
+    width: 23%;
     display: inline-block;
     min-height: 200px;
     box-sizing: border-box;
     border: 1px solid;
-    margin: 20px auto;
     padding: 10px;
+    text-align: left;
+    margin: 1% 0.5%;
 }
 
 .consultas__sitio__url, 
@@ -374,3 +383,6 @@ input:checked + .modulos__slider:before {
 
 }
 
+.footer__copy {
+    text-align: center;
+}
