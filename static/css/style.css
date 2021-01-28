@@ -280,7 +280,6 @@ input:checked + .modulos__slider:before {
 
 .consultas {
     border: 1px solid;
-    text-align: center;
 }
 
 .consultas__analizados,
@@ -289,6 +288,7 @@ input:checked + .modulos__slider:before {
     display: inline-block;
     width: 33%;
     margin: auto;
+    text-align: center;
 }
 
 .consultas__analizados {
@@ -341,6 +341,33 @@ input:checked + .modulos__slider:before {
 
 .consultas__opciones__proximo {
 
+}
+
+.consultas__filtros {
+
+}
+
+.consultas__sitio {
+    width: 24%;
+    display: inline-block;
+    min-height: 200px;
+    box-sizing: border-box;
+    border: 1px solid;
+    margin: 20px auto;
+    padding: 10px;
+}
+
+.consultas__sitio__url, 
+.consultas__sitio__fecha,
+.consultas__sitio__escaneos,
+.consultas__sitio__vulnerabilidades, 
+.consultas__sitio__proximoScan {
+    font-size: 1.2em;
+    line-height: 1.5em;
+}
+
+.consultas__sitio__opciones {
+    text-align: center;
 }
 
 .main__configuraciones {
