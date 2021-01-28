@@ -1,0 +1,27 @@
+{
+	"sitio":"http://seguridad.unam.mx",
+	"dnsdumpster" : {
+		"revision":true,
+		"dns" : true,
+		"txt" : true,
+		"host" : true,
+		"mx" : false
+
+	},
+	"robtex" : {
+		"revision":true,
+		"informacion":true,
+		"dns_forward":false,
+		"mx_forward":true,
+		"host_forward":false,
+		"host_reverse":true
+	},
+	"puertos" : { 
+		"revision" : true,
+		"opcion" : "rango",
+		"rango" : {
+			"inicio" : 20,
+			"final" : 100
+		}
+	}
+}
