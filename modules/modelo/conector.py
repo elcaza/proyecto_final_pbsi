@@ -33,11 +33,11 @@ class Conector():
                     nombres_iterados["exploits"].append(nombre)
                 return nombres_iterados
 
-    def exploit_consulta_registro(self,nombre):
+    def exploit_consulta_registro(self,json_nombre):
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
                 coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
-                registro = coleccion_exploits.find_one({"nombre":nombre})
+                registro = coleccion_exploits.find_one({"nombre":json_nombre["nombre"]})
                 #{'_id': ObjectId('600ca7cea3005813de0d69dd'), 'nomnbre': 'exploit1.py', 'ruta': '/home/kali/Proyectos/proyecto_final_pbsi/modules/exploits', 'software': 'Javascript', 'biblioteca': 'Math', 'gestor_contenido': ''}
                 return registro
 

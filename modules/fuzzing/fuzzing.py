@@ -325,7 +325,7 @@ def validarSQLi(driver, formulario):
          print("SQLi DETECTADO {0}".format(formulario.get_peticion()))
          del diccionario
          return True
-      #print("{0} -> {1}".format(cadena,formulario.get_peticion()))
+      print("{0} -> {1}".format(cadena,formulario.get_peticion()))
    del diccionario
    return False
    
@@ -336,7 +336,7 @@ def validarLFI(driver, formulario):
       if existe is not None:
          print("LFI DETECTADO -> {0}".format(formulario.get_peticion()))
          return True
-      #print("{0}".format(formulario.get_peticion()))
+      print("{0}".format(formulario.get_peticion()))
    return False
    
 def obtener_divisor_diccionario_dividido(diccionario, hilos):
@@ -376,17 +376,18 @@ def crear_hijos_fuzzing(url, hilos, cookie=[]):
       del banderas
    del diccionarios
    
-def obtener_valores_iniciales():
-   url = sys.argv[1]
-   hilos = int(sys.argv[2])
-   diccionario_ataque_xss = sys.argv[3]
-   diccionario_ataque_sqli = sys.argv[4]
-   diccionario_ataque_lfi = sys.argv[5]
-   diccionario_validacion_sqli = sys.argv[6]
-   diccionario_validacion_lfi = sys.argv[7]
-   cookie = sys.argv[8]
-   manejador = sys.argv[9]
-   sistema_operativo = sys.argv[10]
+def obtener_valores_iniciales(parametros):
+   url = parametros["url"]
+   hilos = parametros["hilos"]
+   diccionario_ataque_xss = parametros["diccionario_ataque_xss"]
+   diccionario_ataque_sqli = parametros["diccionario_ataque_sqli"]
+   diccionario_ataque_lfi = parametros["diccionario_ataque_lfi"]
+   diccionario_validacion_sqli = parametros["diccionario_validacion_sqli"]
+   diccionario_validacion_lfi = parametros["diccionario_validacion_lfi"]
+   cookie = parametros["cookie"]
+   manejador = parametros["manejador"]
+   sistema_operativo = parametros["sistema_operativo"]
+
    diccionarios_ataque = Singleton_Diccionarios_ataque(diccionario_ataque_xss,diccionario_ataque_sqli,diccionario_ataque_lfi)
    diccionarios_validacion = Singleton_Diccionarios_validacion(diccionario_validacion_sqli,diccionario_validacion_lfi,manejador,sistema_operativo)
    diccionarios_validacion = Singleton_Diccionarios_validacion(diccionario_validacion_sqli,diccionario_validacion_lfi)
@@ -405,11 +406,10 @@ def convertir_cookie(cookie):
       cookies_individuales.append({"name":cookie_individual_temporal[0],"value":cookie_individual_temporal[1]})
    return cookies_individuales
 
-def main():
-   url, hilos, cookie = obtener_valores_iniciales()
+def execute(parametros):
+   url, hilos, cookie = obtener_valores_iniciales(parametros)
    crear_hijos_fuzzing(url,hilos,cookie)
 
-main()
 '''
 raise MaxRetryError(_pool, url, error or ResponseError(cause)) urllib3.exceptions.MaxRetryError: 
 HTTPConnectionPool(host='127.0.0.1', port=35207):
