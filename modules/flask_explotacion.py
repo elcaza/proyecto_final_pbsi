@@ -18,10 +18,27 @@ from modules.fuzzing import fuzzing
 # json_exploit = {
 #     "nombre":"exploit1.sh",
 #     "contenido":"ZWNobyAiQVBQX0lQIg==",
-#     "software":"Shell",
-#     "biblioteca":"",
-#     "gestor_contenido":""
+#     "software":{
+#         "nombre":"Drupal",
+#         "version":"7.57"
+#     }
 # }
+
+# exp = exploits.execute(json_exploit)
+# con = Conector()
+# con.exploit_insertar_datos(exp)
+
+# json_exploit = {
+#     "nombre":"exploit6.py",
+#     "contenido":"ZnJvbSB0aW1lIGltcG9ydCBzbGVlcAoKc2xlZXAoNjApCgpwcmludCgiRXhpdG8iKQ==",
+#     "cms":{
+#         "nombre_cms":"Drupal",
+#         "categoria":"Plugin",
+#         "nombre_cms_extension":"Form 9",
+#         "version":"1.5"
+#     }
+# }
+
 # exp = exploits.execute(json_exploit)
 # con = Conector()
 # con.exploit_insertar_datos(exp)
@@ -32,21 +49,26 @@ from modules.fuzzing import fuzzing
 # con = Conector()
 # print(con.exploit_consulta_nombres())
 # json_exploit_consulta_registro = {
-#     "nombre":"exploit1.sh"
+#     "exploit":"exploit2.sh"
 # }
 # print(con.exploit_consulta_registro(json_exploit_consulta_registro))
 
 '''
     Actualizar exploit
 ''' 
+# con = Conector()
 # json_exploit_actualizar = {
-#     "nombre" : "pruebap.py", 
-#     "ruta" : "/home/kali/Proyectos/proyecto_final_pbsi/modules/exploits", 
-#     "software" : "", 
-#     "biblioteca" : "", 
-#     "gestor_contenido" : "Drupal" 
+#     "nombre":"exploit2.sh",
+#     "contenido":"ZWNobyBFWElUTwo=",
+#     "software":{
+#         "nombre":"Drupal",
+#         "version":"7.58"
+#     }
 # }
-# con.exploit_actualizar_datos(json_exploit_actualizar)
+
+# exp = exploits.execute(json_exploit_actualizar)
+# con = Conector()
+# con.exploit_actualizar_datos(exp)
 
 '''
     Eliminar Base de exploits
@@ -61,13 +83,29 @@ from modules.fuzzing import fuzzing
 '''
     Buscar exploits y ejecutar exploits
 '''
+# con = Conector()
+
+# res = con.exploit_buscar_software_general("drup")
+# print(res)
+# print("--------------------------------------------")
+# res = con.exploit_buscar_software_especifico("drup","7.57")
+# print(res)
+# print("--------------------------------------------")
+
 con = Conector()
-json_explotacion = {"ip":"192.168.0.1", "puerto": 1001}
-res = con.exploit_buscar_software("JS")
-for r in res["exploits"]:
-    ruta = r["ruta"]
-    lenguaje = r["lenguaje"]
-    explotacion.execute(json_explotacion,ruta,lenguaje)
+json_explotacion = {
+    "dominio":"192.168.0.1", #"dominios.com"
+    "puerto": 1001, 
+    "pagina": "http://fitio1.com/vuln.kol"
+}
+
+json_identificar = {
+    "cms_nombre":"Drupal",
+    "cms_categoria":"7.57"
+}
+
+res = con.exploit_buscar_cms(json_identificar,3)
+explotacion.execute(json_explotacion,res["exploits"])
 
 ################################################## EXPLOTACION | IDENTIFICACION ##################################################
 

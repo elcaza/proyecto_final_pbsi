@@ -70,7 +70,7 @@ class Singleton_Diccionarios_ataque(metaclass=SingletonMeta):
       return self.diccionarios
 
    def get_diccionario_tipo(self, numero_diccionario):
-      return 
+      return True
 
 class Singleton_Diccionarios_validacion(metaclass=SingletonMeta):
    def __init__(self, diccionario_validar_sqli, diccionario_validar_lfi, manejador = "", sistema = ""):
@@ -148,6 +148,7 @@ class Lanzar_fuzzing(threading.Thread):
       self.url = url
       self.tipo = tipo
       self.cookie = cookie
+
    def run(self):
       print ("Starting " + self.nombre)
       enviar_peticiones(self.driver, self.url, self.diccionario, self.tipo, self.cookie, -1)
@@ -174,6 +175,7 @@ class Form():
       self.buttons = self.get_buttons()
       self.form_completo = self.get_form()
       self.peticion = ""
+
    def get_inputs(self):
       return self.form.find_elements_by_xpath(".//input")
 
@@ -419,7 +421,7 @@ Failed to establish a new connection: [Errno 111] Connection refused'))
 Reiniciar Driver
 
 selenium.common.exceptions.WebDriverException: Message: unknown error: net::ERR_CONNECTION_RESET
-  (Session info: headles
+  (Session info: headless)
 '''
 
 '''
