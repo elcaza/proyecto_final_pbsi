@@ -1,6 +1,7 @@
 [General]
 internal SQL error
 Error: Line \d+: syntax error
+Syntax error: Encountered
 [MySQL]
 You have an error in your SQL syntax
 ERROR \d+ \(\w+\): 

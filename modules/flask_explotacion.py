@@ -4,6 +4,7 @@ from modules.explotacion import explotacion
 from datetime import datetime
 from modules.alertas import alertas
 from modules.fuzzing import fuzzing
+from modules.ejecucion import ejecucion
 ################################################## CONEXION MONGODB ##################################################
 '''
     Checar estado de la conexion
@@ -92,20 +93,20 @@ from modules.fuzzing import fuzzing
 # print(res)
 # print("--------------------------------------------")
 
-con = Conector()
-json_explotacion = {
-    "dominio":"192.168.0.1", #"dominios.com"
-    "puerto": 1001, 
-    "pagina": "http://fitio1.com/vuln.kol"
-}
+# con = Conector()
+# json_explotacion = {
+#     "dominio":"192.168.0.1", #"dominios.com"
+#     "puerto": 1001, 
+#     "pagina": "http://fitio1.com/vuln.kol"
+# }
 
-json_identificar = {
-    "cms_nombre":"Drupal",
-    "cms_categoria":"7.57"
-}
+# json_identificar = {
+#     "cms_nombre":"Drupal",
+#     "cms_categoria":"7.57"
+# }
 
-res = con.exploit_buscar_cms(json_identificar,3)
-explotacion.execute(json_explotacion,res["exploits"])
+# res = con.exploit_buscar_cms(json_identificar,3)
+# explotacion.execute(json_explotacion,res["exploits"])
 
 ################################################## EXPLOTACION | IDENTIFICACION ##################################################
 
@@ -155,3 +156,17 @@ explotacion.execute(json_explotacion,res["exploits"])
 # }
 
 # fuzzing.execute(json_fuzzing)
+################################################## FUZZING ##################################################
+
+################################################## EJECUCION ##################################################
+
+'''
+    Ejecución
+    Módulo para programar escaneos a determinados sitios o rangos de IP mediante una interfaz web pudiendo configurar determinados 
+    puertos de revisión y 
+    programarlos en intervalos específicos. 
+    Esto debe correr como demonio haciendo la identificación y análisis de sitios.
+'''
+
+
+################################################## EJECUCION ##################################################

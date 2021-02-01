@@ -1,13 +1,10 @@
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait as wait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException
+from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException, TimeoutException
 import time
 import threading
 import math
-import sys
 import re
+from modules import strings
 
 class SingletonMeta(type):
    _instances = {}
@@ -43,16 +40,25 @@ class Singleton_Diccionarios_ataque(metaclass=SingletonMeta):
       self.cantidad_diccionarios = len(self.diccionarios)
 
    def set_xss(self,diccionario_xss):
-      with open(diccionario_xss,"r") as xss:
-         self.diccionario_xss = xss.read().split("\n")
+      try:
+         with open(diccionario_xss,"r") as xss:
+            self.diccionario_xss = xss.read().split("\n")
+      except FileNotFoundError:
+         self.diccionario_xss = [""]
 
    def set_sqli(self,diccionario_sqli):
-      with open(diccionario_sqli,"r") as sqli:
-         self.diccionario_sqli = sqli.read().split("\n")
+      try:
+         with open(diccionario_sqli,"r") as sqli:
+            self.diccionario_sqli = sqli.read().split("\n")
+      except FileNotFoundError:
+         self.diccionario_sqli= [""]
 
    def set_lfi(self,diccionario_lfi):
-      with open(diccionario_lfi,"r") as lfi:
-         self.diccionario_lfi = lfi.read().split("\n")
+      try:
+         with open(diccionario_lfi,"r") as lfi:
+            self.diccionario_lfi = lfi.read().split("\n")
+      except FileNotFoundError:
+         self.diccionario_lfi = [""]
 
    def get_xss(self):
       return self.diccionario_xss
@@ -81,53 +87,60 @@ class Singleton_Diccionarios_validacion(metaclass=SingletonMeta):
       self.set_validar_lfi(diccionario_validar_lfi)
       
    def set_validar_sqli(self,diccionario_validar_sqli):
-      with open(diccionario_validar_sqli,"r") as sqli:
-         self.diccionario_validar_sqli = sqli.read().split("\n")
-      bandera = 0
-      diccionario_temporal = ""
-      if self.manejador != "":
-         for cadena in self.diccionario_validar_sqli:
-            existe_manejador = re.search(self.manejador,cadena)
-            existe_otro_manejador = re.search(self.patron,cadena)
-            if bandera == 1 and existe_otro_manejador is not None:
-               bandera = 0
-            elif bandera == 1:
-               diccionario_temporal += cadena + "\n"
-            elif existe_manejador is not None:
-               bandera = 1
+      try:
+         with open(diccionario_validar_sqli,"r") as sqli:
+            self.diccionario_validar_sqli = sqli.read().split("\n")
+         bandera = 0
+         diccionario_temporal = ""
+         if self.manejador != "":
+            for cadena in self.diccionario_validar_sqli:
+               existe_manejador = re.search(self.manejador,cadena)
+               existe_otro_manejador = re.search(self.patron,cadena)
+               if bandera == 1 and existe_otro_manejador is not None:
+                  bandera = 0
+               elif bandera == 1:
+                  diccionario_temporal += cadena + "\n"
+               elif existe_manejador is not None:
+                  bandera = 1
+            
+         else:
+            for cadena in self.diccionario_validar_sqli:
+               existe_manejador = re.search(self.patron,cadena)
+               if existe_manejador is None:
+                  diccionario_temporal += cadena + "\n"
          
-      else:
-         for cadena in self.diccionario_validar_sqli:
-            existe_manejador = re.search(self.patron,cadena)
-            if existe_manejador is None:
-               diccionario_temporal += cadena + "\n"
-      
-      self.diccionario_validar_sqli = diccionario_temporal.split("\n")[:-1]
+         self.diccionario_validar_sqli = diccionario_temporal.split("\n")[:-1]
+
+      except FileNotFoundError:
+         self.diccionario_validar_sqli = [""]
 
    def set_validar_lfi(self,diccionario_validar_lfi):
-      with open(diccionario_validar_lfi,"r") as lfi:
-         self.diccionario_validar_lfi = lfi.read().split("\n")
+      try:
+         with open(diccionario_validar_lfi,"r") as lfi:
+            self.diccionario_validar_lfi = lfi.read().split("\n")
 
-      bandera = 0
-      diccionario_temporal = ""
-      if self.sistema != "":
-         for cadena in self.diccionario_validar_lfi:
-            existe_sistema = re.search(self.sistema,cadena)
-            existe_otro_sistema = re.search(self.patron,cadena)
-            if bandera == 1 and existe_otro_sistema is not None:
-               bandera = 0
-            elif bandera == 1:
-               diccionario_temporal += cadena + "\n"
-            elif existe_sistema is not None:
-               bandera = 1
-      
-      else:
-         for cadena in self.diccionario_validar_lfi:
-            existe_sistema = re.search(self.patron,cadena)
-            if existe_sistema is None:
-               diccionario_temporal += cadena + "\n"
-      
-      self.diccionario_validar_lfi = diccionario_temporal.split("\n")[:-1]
+         bandera = 0
+         diccionario_temporal = ""
+         if self.sistema != "":
+            for cadena in self.diccionario_validar_lfi:
+               existe_sistema = re.search(self.sistema,cadena)
+               existe_otro_sistema = re.search(self.patron,cadena)
+               if bandera == 1 and existe_otro_sistema is not None:
+                  bandera = 0
+               elif bandera == 1:
+                  diccionario_temporal += cadena + "\n"
+               elif existe_sistema is not None:
+                  bandera = 1
+         
+         else:
+            for cadena in self.diccionario_validar_lfi:
+               existe_sistema = re.search(self.patron,cadena)
+               if existe_sistema is None:
+                  diccionario_temporal += cadena + "\n"
+         
+         self.diccionario_validar_lfi = diccionario_temporal.split("\n")[:-1]
+      except FileNotFoundError:
+         self.diccionario_validar_lfi = [""]
 
    def get_validar_sqli(self):
       return self.diccionario_validar_sqli
@@ -142,16 +155,19 @@ class Lanzar_fuzzing(threading.Thread):
       self.sin_navegador.add_argument('headless')      
       self.driver = webdriver.Chrome(options=self.sin_navegador)
       #self.driver = webdriver.Chrome()
+      self.driver.set_page_load_timeout(5)
       self.threadID = threadID
       self.nombre = nombre
       self.diccionario = diccionario
       self.url = url
       self.tipo = tipo
       self.cookie = cookie
+      self.lista_posibles_vulnerabilidades = {"xss":[],"sqli":[],"lfi":[]}
+      self.lista_sin_exito = {"xss":[],"sqli":[],"lfi":[]}
 
    def run(self):
       print ("Starting " + self.nombre)
-      enviar_peticiones(self.driver, self.url, self.diccionario, self.tipo, self.cookie, -1)
+      enviar_peticiones(self.driver, self.url, self.diccionario, self.tipo, self.lista_posibles_vulnerabilidades, self.lista_sin_exito, self.cookie, -1)
       self.driver.quit()
       print ("Exiting " + self.nombre)
 
@@ -163,6 +179,12 @@ class Lanzar_fuzzing(threading.Thread):
    def get_driver(self):
       return self.driver
    
+   def get_lista_posibles_vulnerabilidades(self):
+      return self.lista_posibles_vulnerabilidades
+
+   def get_lista_sin_exito(self):
+      return self.lista_sin_exito
+
 class Form():
    def __init__(self, driver_form):
       self.form = driver_form
@@ -217,7 +239,11 @@ class Form():
       self.peticion = ""
       for valor in self.form_completo["form"]["inputs"]:
          self.peticion += valor.get_attribute("id")+":"+valor.get_attribute("value")+" "
-      self.form.submit()
+      try:
+         self.form.submit()
+         return False
+      except TimeoutException:
+         return True
 
    def set_input(self, input_individual, valor):
       self.form_completo["form"]["inputs"][input_individual].send_keys(valor)
@@ -236,7 +262,6 @@ def actualizar_profundidad_iframes(driver, iframe_profundidad, iframe_posicion):
    return True
 
 def actualizar_formulario(driver,formulario_iteracion, url, iframe_posicion = -1, iframe_profundidad = 0):
-
    try:
       driver.get(url)
 
@@ -248,14 +273,13 @@ def actualizar_formulario(driver,formulario_iteracion, url, iframe_posicion = -1
    except UnexpectedAlertPresentException:
       return actualizar_formulario(driver,formulario_iteracion,url)
 
-def enviar_peticiones(driver, url, diccionario, tipo, cookie=[], iframe_posicion = -1, iframe_profundidad = 0):
+def enviar_peticiones(driver, url, diccionario, tipo, lista_posibles_vulnerabilidades, lista_sin_exito, cookie=[], iframe_posicion = -1, iframe_profundidad = 0):
    if iframe_posicion == -1:
       driver.get(url)   
       if len(cookie) > 0:
          for cookie_individual in cookie:
             driver.add_cookie(cookie_individual)
    try:
-
       actualizar_profundidad_iframes(driver, iframe_profundidad, iframe_posicion)
          
       iframes = len(driver.find_elements_by_tag_name("iframe"))
@@ -263,83 +287,66 @@ def enviar_peticiones(driver, url, diccionario, tipo, cookie=[], iframe_posicion
          for iframe in range(iframes):
             iframe_profundidad += 1
 
-            enviar_peticiones(driver, url, diccionario, tipo, cookie, iframe, iframe_profundidad)
+            enviar_peticiones(driver, url, diccionario, tipo, lista_posibles_vulnerabilidades, lista_sin_exito, cookie, iframe, iframe_profundidad)
             driver.get(url)
             time.sleep(0.5)
             iframe_profundidad -= 1
             actualizar_profundidad_iframes(driver, iframe_profundidad, iframe_posicion)
-
    except NoSuchElementException:
       iframe_posicion = -1
 
-
    cantidad_formularios = driver.find_elements_by_xpath(".//form")
-   banderas_formularios = [0 for bandera in range(len(cantidad_formularios))]
    
-   banderas = Singleton_Banderas_formulario()
-   banderas.set_banderas_formulario(banderas_formularios)
    for formulario_iteracion in range(len(cantidad_formularios)):
-      for valor in diccionario: 
-         if banderas.get_bandera(formulario_iteracion) == 1:
-            break
-
+      for valor in diccionario:
          formulario, inputs = actualizar_formulario(driver,formulario_iteracion, url, iframe_posicion, iframe_profundidad)
-         
          for input_individual in range(len(inputs)):
             formulario.set_input(input_individual,valor)
-         formulario.enviar_peticion()
+         vulnerabilidad_tiempo = formulario.enviar_peticion()
+         if vulnerabilidad_tiempo:
+            if tipo == "xss":
+               lista_posibles_vulnerabilidades["xss"].append("XSS DETECTADO En el form {0} -> \"{1}\"".format(formulario.get_id(),formulario.get_peticion()))
+            elif tipo == "sqli":
+               lista_posibles_vulnerabilidades["sqli"].append("SQLi DETECTADO En el form {0} -> \"{1}\"".format(formulario.get_id(),formulario.get_peticion()))
+            elif tipo == "lfi":
+               lista_posibles_vulnerabilidades["lfi"].append("LFI DETECTADO En el form {0} -> \"{1}\"".format(formulario.get_id(),formulario.get_peticion()))
+            continue
          time.sleep(0.1)
-
-         if tipo == "xss":    
-            if validarXSS(driver,formulario):
-               banderas.set_bandera(formulario_iteracion)
-               break
-            
-         elif tipo == "sqli":
-            if validarSQLi(driver,formulario):
-               banderas.set_bandera(formulario_iteracion)
-               break
-            
-         elif tipo == "lfi":
-            if validarLFI(driver,formulario):
-               banderas.set_bandera(formulario_iteracion)
-               break
+ 
+         validarXSS(driver,formulario,lista_posibles_vulnerabilidades,lista_sin_exito)
+         validarSQLi(driver,formulario,lista_posibles_vulnerabilidades,lista_sin_exito)
+         validarLFI(driver,formulario,lista_posibles_vulnerabilidades,lista_sin_exito)
          del formulario
-      banderas.set_bandera(formulario_iteracion)
    return True
 
-def validarXSS(driver, formulario):
+def validarXSS(driver, formulario, lista_posibles_vulnerabilidades, lista_sin_exito):
    try:
       alerta = driver.switch_to.alert
       if alerta.text is not None:
-         print("XSS DETECTADO -> {0}".format(formulario.get_peticion()))
          alerta.accept()
-         return True
+         lista_posibles_vulnerabilidades["xss"].append("XSS DETECTADO En el form {0} -> \"{1}\"".format(formulario.get_id(),formulario.get_peticion()))
    except NoAlertPresentException:
-      print("XSS -> {0}".format(formulario.get_peticion()))
-      return False
+      lista_sin_exito["xss"].append("XSS -> \"{0}\"".format(formulario.get_peticion()))
 
-def validarSQLi(driver, formulario):
+def validarSQLi(driver, formulario, lista_posibles_vulnerabilidades, lista_sin_exito):
    diccionario = Singleton_Diccionarios_validacion()
    for cadena in diccionario.get_validar_sqli():
       existe = re.search(re.compile(cadena), driver.page_source)
       if existe is not None:
-         print("SQLi DETECTADO {0}".format(formulario.get_peticion()))
-         del diccionario
-         return True
-      print("{0} -> {1}".format(cadena,formulario.get_peticion()))
+         lista_posibles_vulnerabilidades["sqli"].append("SQLi DETECTADO En el form {0} -> \"{1}\"".format(formulario.get_id(),formulario.get_peticion()))
+         continue
+      lista_sin_exito["sqli"].append("SQLi -> \"{1}\"".format(cadena,formulario.get_peticion()))
    del diccionario
-   return False
-   
-def validarLFI(driver, formulario):
+
+def validarLFI(driver, formulario, lista_posibles_vulnerabilidades, lista_sin_exito):
    diccionario = Singleton_Diccionarios_validacion()
    for cadena in diccionario.get_validar_lfi():
       existe = re.search(re.compile(cadena), driver.page_source)
       if existe is not None:
-         print("LFI DETECTADO -> {0}".format(formulario.get_peticion()))
-         return True
-      print("{0}".format(formulario.get_peticion()))
-   return False
+         lista_posibles_vulnerabilidades["lfi"].append("LFI DETECTADO En el form {0} -> \"{1}\"".format(formulario.get_id(),formulario.get_peticion()))
+         continue
+      lista_sin_exito["lfi"].append("LFI -> \"{1}\"".format(cadena, formulario.get_peticion()))
+   del diccionario
    
 def obtener_divisor_diccionario_dividido(diccionario, hilos):
    if hilos < len(diccionario):
@@ -354,6 +361,8 @@ def obtener_divisor_diccionario_dividido(diccionario, hilos):
 
 def crear_hijos_fuzzing(url, hilos, cookie=[]):
    diccionarios = Singleton_Diccionarios_ataque()
+   lista_posibles_vulnerabilidades = {"xss":[],"sqli":[],"lfi":[]}
+   lista_sin_exito = {"xss":[],"sqli":[],"lfi":[]}
    for diccionario in diccionarios.get_diccionarios():
       lotes_palabras, residuo_lotes_palabras = obtener_divisor_diccionario_dividido(diccionarios.get_diccionario(diccionario), hilos)
       hijos = [] 
@@ -371,28 +380,24 @@ def crear_hijos_fuzzing(url, hilos, cookie=[]):
 
       for hilo in range(hilos):
          hijos[hilo].join()
-      
 
-      banderas = Singleton_Banderas_formulario()
-      banderas.reiniciar_banderas_formulario()
-      del banderas
+      for hilo in range(hilos):
+         categoria_vulnerabilidad = hijos[hilo].get_lista_posibles_vulnerabilidades()
+         for categoria in categoria_vulnerabilidad:
+            lista_posibles_vulnerabilidades[categoria] += categoria_vulnerabilidad[categoria]
+
+         categoria_vulnerabilidad = hijos[hilo].get_lista_sin_exito()
+         for categoria in categoria_vulnerabilidad:
+            lista_sin_exito[categoria] += categoria_vulnerabilidad[categoria]
    del diccionarios
+   return lista_posibles_vulnerabilidades, lista_sin_exito
    
 def obtener_valores_iniciales(parametros):
    url = parametros["url"]
    hilos = parametros["hilos"]
-   diccionario_ataque_xss = parametros["diccionario_ataque_xss"]
-   diccionario_ataque_sqli = parametros["diccionario_ataque_sqli"]
-   diccionario_ataque_lfi = parametros["diccionario_ataque_lfi"]
-   diccionario_validacion_sqli = parametros["diccionario_validacion_sqli"]
-   diccionario_validacion_lfi = parametros["diccionario_validacion_lfi"]
    cookie = parametros["cookie"]
-   manejador = parametros["manejador"]
-   sistema_operativo = parametros["sistema_operativo"]
-
-   diccionarios_ataque = Singleton_Diccionarios_ataque(diccionario_ataque_xss,diccionario_ataque_sqli,diccionario_ataque_lfi)
-   diccionarios_validacion = Singleton_Diccionarios_validacion(diccionario_validacion_sqli,diccionario_validacion_lfi,manejador,sistema_operativo)
-   diccionarios_validacion = Singleton_Diccionarios_validacion(diccionario_validacion_sqli,diccionario_validacion_lfi)
+   diccionarios_ataque = Singleton_Diccionarios_ataque(strings.DICCIONARIO_ATAQUE_XSS,strings.DICCIONARIO_ATAQUE_SQLI,strings.DICCIONARIO_ATAQUE_LFI)
+   diccionarios_validacion = Singleton_Diccionarios_validacion(strings.DICCIONARIO_VALIDACION_SQLI,strings.DICCIONARIO_VALIDACION_LFI)
    cookie = convertir_cookie(cookie)
    return url, hilos, cookie
 
@@ -410,7 +415,8 @@ def convertir_cookie(cookie):
 
 def execute(parametros):
    url, hilos, cookie = obtener_valores_iniciales(parametros)
-   crear_hijos_fuzzing(url,hilos,cookie)
+   lista_posibles_vulnerabilidades, lista_sin_exito = crear_hijos_fuzzing(url,hilos,cookie)
+   return lista_posibles_vulnerabilidades, lista_sin_exito
 
 '''
 raise MaxRetryError(_pool, url, error or ResponseError(cause)) urllib3.exceptions.MaxRetryError: 
