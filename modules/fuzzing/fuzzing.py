@@ -162,12 +162,11 @@ class Lanzar_fuzzing(threading.Thread):
       self.url = url
       self.tipo = tipo
       self.cookie = cookie
-      self.lista_posibles_vulnerabilidades = {"xss":[],"sqli":[],"lfi":[]}
-      self.lista_sin_exito = {"xss":[],"sqli":[],"lfi":[]}
+      self.json_fuzzing_forms = {"forms":{}}
 
    def run(self):
       print ("Starting " + self.nombre)
-      enviar_peticiones(self.driver, self.url, self.diccionario, self.tipo, self.lista_posibles_vulnerabilidades, self.lista_sin_exito, self.cookie, -1)
+      enviar_peticiones(self.driver, self.url, self.diccionario, self.tipo, self.json_fuzzing_forms, self.cookie, -1)
       self.driver.quit()
       print ("Exiting " + self.nombre)
 
@@ -179,11 +178,8 @@ class Lanzar_fuzzing(threading.Thread):
    def get_driver(self):
       return self.driver
    
-   def get_lista_posibles_vulnerabilidades(self):
-      return self.lista_posibles_vulnerabilidades
-
-   def get_lista_sin_exito(self):
-      return self.lista_sin_exito
+   def get_json_fuzzing_forms(self):
+      return self.json_fuzzing_forms
 
 class Form():
    def __init__(self, driver_form):
@@ -217,7 +213,7 @@ class Form():
       return self.form.get_attribute("action")
 
    def get_id(self):
-      return self.form.id
+      return self.form.get_attribute("id")
 
    def get_form(self):
       lista_forms = {}
@@ -273,7 +269,7 @@ def actualizar_formulario(driver,formulario_iteracion, url, iframe_posicion = -1
    except UnexpectedAlertPresentException:
       return actualizar_formulario(driver,formulario_iteracion,url)
 
-def enviar_peticiones(driver, url, diccionario, tipo, lista_posibles_vulnerabilidades, lista_sin_exito, cookie=[], iframe_posicion = -1, iframe_profundidad = 0):
+def enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, cookie=[], iframe_posicion = -1, iframe_profundidad = 0):
    if iframe_posicion == -1:
       driver.get(url)   
       if len(cookie) > 0:
@@ -287,7 +283,7 @@ def enviar_peticiones(driver, url, diccionario, tipo, lista_posibles_vulnerabili
          for iframe in range(iframes):
             iframe_profundidad += 1
 
-            enviar_peticiones(driver, url, diccionario, tipo, lista_posibles_vulnerabilidades, lista_sin_exito, cookie, iframe, iframe_profundidad)
+            enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, cookie, iframe, iframe_profundidad)
             driver.get(url)
             time.sleep(0.5)
             iframe_profundidad -= 1
@@ -302,50 +298,68 @@ def enviar_peticiones(driver, url, diccionario, tipo, lista_posibles_vulnerabili
          formulario, inputs = actualizar_formulario(driver,formulario_iteracion, url, iframe_posicion, iframe_profundidad)
          for input_individual in range(len(inputs)):
             formulario.set_input(input_individual,valor)
+         form_nombre = formulario.get_nombre()
+         form_id = formulario.get_id()
+         form_utilizar = ""
          vulnerabilidad_tiempo = formulario.enviar_peticion()
+         if form_id == "":
+            if form_nombre == "":
+               form_utilizar = "form {0}-{1}".format(iframe_profundidad,iframe_posicion)
+            else:
+               form_utilizar = form_nombre
+         else:
+            form_utilizar = form_id
+
+         if json_fuzzing["forms"].get(form_utilizar) is None:
+            json_fuzzing["forms"].update({form_utilizar:[]})
+         json_fuzzing["forms"][form_utilizar].append({"inputs":[],"xss":False,"sqli":False,"lfi":False})
+         json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["inputs"] = formulario.get_peticion()
          if vulnerabilidad_tiempo:
             if tipo == "xss":
-               lista_posibles_vulnerabilidades["xss"].append("XSS DETECTADO En el form {0} -> \"{1}\"".format(formulario.get_id(),formulario.get_peticion()))
+               json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["xss"] = True
+               #lista_posibles_vulnerabilidades["xss"].append("XSS DETECTADO En el form {0} -> \"{1}\"".format(form_utilizar,formulario.get_peticion()))
             elif tipo == "sqli":
-               lista_posibles_vulnerabilidades["sqli"].append("SQLi DETECTADO En el form {0} -> \"{1}\"".format(formulario.get_id(),formulario.get_peticion()))
+               json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["sqli"] = True
+               #lista_posibles_vulnerabilidades["sqli"].append("SQLi DETECTADO En el form {0} -> \"{1}\"".format(form_utilizar,formulario.get_peticion()))
             elif tipo == "lfi":
-               lista_posibles_vulnerabilidades["lfi"].append("LFI DETECTADO En el form {0} -> \"{1}\"".format(formulario.get_id(),formulario.get_peticion()))
+               json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["lfi"] = True
+               #lista_posibles_vulnerabilidades["lfi"].append("LFI DETECTADO En el form {0} -> \"{1}\"".format(form_utilizar,formulario.get_peticion()))
             continue
          time.sleep(0.1)
- 
-         validarXSS(driver,formulario,lista_posibles_vulnerabilidades,lista_sin_exito)
-         validarSQLi(driver,formulario,lista_posibles_vulnerabilidades,lista_sin_exito)
-         validarLFI(driver,formulario,lista_posibles_vulnerabilidades,lista_sin_exito)
+   
+         validarXSS(driver,json_fuzzing,form_utilizar)
+         validarSQLi(driver,json_fuzzing,form_utilizar)
+         validarLFI(driver,json_fuzzing,form_utilizar)
          del formulario
    return True
 
-def validarXSS(driver, formulario, lista_posibles_vulnerabilidades, lista_sin_exito):
+def validarXSS(driver, json_fuzzing, form_utilizar):
    try:
       alerta = driver.switch_to.alert
       if alerta.text is not None:
          alerta.accept()
-         lista_posibles_vulnerabilidades["xss"].append("XSS DETECTADO En el form {0} -> \"{1}\"".format(formulario.get_id(),formulario.get_peticion()))
+         json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["xss"] = True
    except NoAlertPresentException:
-      lista_sin_exito["xss"].append("XSS -> \"{0}\"".format(formulario.get_peticion()))
+      json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["xss"] = False
 
-def validarSQLi(driver, formulario, lista_posibles_vulnerabilidades, lista_sin_exito):
+def validarSQLi(driver, json_fuzzing, form_utilizar):
    diccionario = Singleton_Diccionarios_validacion()
    for cadena in diccionario.get_validar_sqli():
       existe = re.search(re.compile(cadena), driver.page_source)
       if existe is not None:
-         lista_posibles_vulnerabilidades["sqli"].append("SQLi DETECTADO En el form {0} -> \"{1}\"".format(formulario.get_id(),formulario.get_peticion()))
-         continue
-      lista_sin_exito["sqli"].append("SQLi -> \"{1}\"".format(cadena,formulario.get_peticion()))
+         json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["sqli"] = True
+         return True
+      json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["sqli"] = False
    del diccionario
 
-def validarLFI(driver, formulario, lista_posibles_vulnerabilidades, lista_sin_exito):
+def validarLFI(driver, json_fuzzing, form_utilizar):
    diccionario = Singleton_Diccionarios_validacion()
    for cadena in diccionario.get_validar_lfi():
       existe = re.search(re.compile(cadena), driver.page_source)
       if existe is not None:
-         lista_posibles_vulnerabilidades["lfi"].append("LFI DETECTADO En el form {0} -> \"{1}\"".format(formulario.get_id(),formulario.get_peticion()))
-         continue
-      lista_sin_exito["lfi"].append("LFI -> \"{1}\"".format(cadena, formulario.get_peticion()))
+         json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["lfi"] = True
+         return True
+      json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["lfi"] = False
    del diccionario
    
 def obtener_divisor_diccionario_dividido(diccionario, hilos):
@@ -361,8 +375,7 @@ def obtener_divisor_diccionario_dividido(diccionario, hilos):
 
 def crear_hijos_fuzzing(url, hilos, cookie=[]):
    diccionarios = Singleton_Diccionarios_ataque()
-   lista_posibles_vulnerabilidades = {"xss":[],"sqli":[],"lfi":[]}
-   lista_sin_exito = {"xss":[],"sqli":[],"lfi":[]}
+   json_fuzzing = {"sitio":url, "forms": {}}
    for diccionario in diccionarios.get_diccionarios():
       lotes_palabras, residuo_lotes_palabras = obtener_divisor_diccionario_dividido(diccionarios.get_diccionario(diccionario), hilos)
       hijos = [] 
@@ -382,15 +395,11 @@ def crear_hijos_fuzzing(url, hilos, cookie=[]):
          hijos[hilo].join()
 
       for hilo in range(hilos):
-         categoria_vulnerabilidad = hijos[hilo].get_lista_posibles_vulnerabilidades()
-         for categoria in categoria_vulnerabilidad:
-            lista_posibles_vulnerabilidades[categoria] += categoria_vulnerabilidad[categoria]
+         forms = hijos[hilo].get_json_fuzzing_forms()
+         print(forms)
 
-         categoria_vulnerabilidad = hijos[hilo].get_lista_sin_exito()
-         for categoria in categoria_vulnerabilidad:
-            lista_sin_exito[categoria] += categoria_vulnerabilidad[categoria]
    del diccionarios
-   return lista_posibles_vulnerabilidades, lista_sin_exito
+   return json_fuzzing
    
 def obtener_valores_iniciales(parametros):
    url = parametros["url"]
@@ -415,8 +424,8 @@ def convertir_cookie(cookie):
 
 def execute(parametros):
    url, hilos, cookie = obtener_valores_iniciales(parametros)
-   lista_posibles_vulnerabilidades, lista_sin_exito = crear_hijos_fuzzing(url,hilos,cookie)
-   return lista_posibles_vulnerabilidades, lista_sin_exito
+   json_fuzzing = crear_hijos_fuzzing(url,hilos,cookie)
+   return json_fuzzing
 
 '''
 raise MaxRetryError(_pool, url, error or ResponseError(cause)) urllib3.exceptions.MaxRetryError: 

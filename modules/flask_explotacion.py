@@ -5,6 +5,7 @@ from datetime import datetime
 from modules.alertas import alertas
 from modules.fuzzing import fuzzing
 from modules.ejecucion import ejecucion
+from modules.reportes import reportes
 ################################################## CONEXION MONGODB ##################################################
 '''
     Checar estado de la conexion
@@ -142,20 +143,14 @@ from modules.ejecucion import ejecucion
 
 ################################################## FUZZING ##################################################
 
-# json_fuzzing = {
-#     "url":"https://xss-game.appspot.com/level1",
-#     "hilos":1,
-#     "diccionario_ataque_xss":"./fuzzing/xss.txt",
-#     "diccionario_ataque_sqli":"./fuzzing/sqli.txt",
-#     "diccionario_ataque_lfi":"./fuzzing/lfi.txt",
-#     "diccionario_validacion_sqli":"./fuzzing/sqli_manejadores.txt",
-#     "diccionario_validacion_lfi":"./fuzzing/lfi_sistemas.txt",
-#     "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
-#     "manejador":"",
-#     "sistema_operativo":"Linux"
-# }
+json_fuzzing = {
+    "url":"https://xss-game.appspot.com/level1",
+    "hilos":4,
+    "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
+}
 
-# fuzzing.execute(json_fuzzing)
+res = fuzzing.execute(json_fuzzing)
+print(res)
 ################################################## FUZZING ##################################################
 
 ################################################## EJECUCION ##################################################
@@ -167,6 +162,123 @@ from modules.ejecucion import ejecucion
     programarlos en intervalos específicos. 
     Esto debe correr como demonio haciendo la identificación y análisis de sitios.
 '''
-
-
 ################################################## EJECUCION ##################################################
+
+################################################## REPORTES ##################################################
+
+
+json_fuzzing = {
+    "fuzzing": {
+        "sitio":"http://localhost",
+        "forms": {
+            "form1": [
+                {
+                    "inputs": [
+                        {
+                            "nombre": "valor"
+                        },
+                        {
+                            "nombre": "valor"
+                        }
+                    ],
+                    "xss": True,
+                    "sqli": False,
+                    "lfi": False
+                },
+                {
+                    "inputs": [
+                        {
+                            "nombre": "valor"
+                        },
+                        {
+                            "nombre": "valor"
+                        }
+                    ],
+                    "xss": False,
+                    "sqli": False,
+                    "lfi": False
+                },
+                {
+                    "inputs": [
+                        {
+                            "nombre": "valor"
+                        },
+                        {
+                            "nombre": "valor"
+                        }
+                    ],
+                    "xss": True,
+                    "sqli": False,
+                    "lfi": True
+                }
+            ],
+            "form2": [
+                {
+                    "inputs": [
+                        {
+                            "nombre": "valor"
+                        },
+                        {
+                            "nombre": "valor"
+                        }
+                    ],
+                    "xss": False,
+                    "sqli": False,
+                    "lfi": False
+                },
+                {
+                    "inputs": [
+                        {
+                            "nombre": "valor"
+                        },
+                        {
+                            "nombre": "valor"
+                        }
+                    ],
+                    "xss": False,
+                    "sqli": False,
+                    "lfi": False
+                },
+                {
+                    "inputs": [
+                        {
+                            "nombre": "valor"
+                        },
+                        {
+                            "nombre": "valor"
+                        }
+                    ],
+                    "xss": True,
+                    "sqli": True,
+                    "lfi": True
+                }
+            ]
+        }
+    }
+}
+
+json_reporte = {
+    "sitio":"seguridad.unam.mx",
+    "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+    "analisis":[
+        {
+            "categoria":"Informacion del sitio",
+            "grafica":"",
+            "cabecera":["Categoría","Dato","Versión"],
+            "datos":[
+                ["Servidor","Apache","1.14"],
+                ["CMS","Wordpress",""]
+            ]
+        },
+        {
+            "categoria":"Resultados",
+            "grafica":"grafica.png",
+            "cabecera":["Sitio","Motivo","Estado"],
+            "datos":[
+                ["http://localhost","Ejecucion del exploit \"exploit1.sh\"","Fracaso"],
+                ["http://localhost","Ejecucion del exploit \"exploit2.sh\"","Exitoso"]
+            ]
+        }
+    ]
+}
+#reportes.execute(json_reporte)

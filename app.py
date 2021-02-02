@@ -75,14 +75,11 @@ def iniciar_analisis(peticion_json):
     '''
     json_fuzzing = {
         "url":"http://www.altoromutual.com:8080/login.jsp",
-        "hilos":1,
+        "hilos":4,
         "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0"
     }
-    respuesta_fuzzing1, respuesta_fuzzing2 = fuzzing.execute(json_fuzzing)
-    print("Posibles")
-    for res in respuesta_fuzzing1:
-        print(res, respuesta_fuzzing1[res])
-        print()
+    respuesta_fuzzing = fuzzing.execute(json_fuzzing)
+    print(respuesta_fuzzing)
 
 @app.route("/")
 def index():
