@@ -396,7 +396,11 @@ def crear_hijos_fuzzing(url, hilos, cookie=[]):
 
       for hilo in range(hilos):
          forms = hijos[hilo].get_json_fuzzing_forms()
-         print(forms)
+         for form in forms["forms"]:
+            if form in json_fuzzing["forms"]:
+               json_fuzzing["forms"][form].extend(forms["forms"][form])
+            else:
+               json_fuzzing["forms"][form] = forms["forms"][form]
 
    del diccionarios
    return json_fuzzing

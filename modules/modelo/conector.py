@@ -160,3 +160,41 @@ class Conector():
             with sesion.start_transaction():
                 coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
                 coleccion_exploits.create_index("exploit", unique = True)
+
+########################################################## FUZZING ##########################################################
+
+    def fuzzing_insertar_datos(self,json_cargar_datos):
+        coleccion_fuzzing = self.base_datos[strings.COLECCION_FUZZING]
+        try:
+            coleccion_fuzzing.insert_one(json_cargar_datos)
+        except errors.DuplicateKeyError:
+            print("Ya existe un exploit con el mismo nombre")
+
+    def fuzzing_obtener_estaditisticas(self):
+        coleccion_fuzzing = self.base_datos[strings.COLECCION_FUZZING]
+        forms_vulnerables = {}
+        forms = coleccion_fuzzing.find()
+        for form in forms:
+            forms_vulnerables["sitio"] = form["sitio"]
+            for llave in form["forms"].keys():
+                forms_vulnerables[llave] = {
+                    "xss":{ "exitoso":0,
+                            "fracaso":0},
+                    "sqli":{ "exitoso":0,
+                            "fracaso":0},
+                    "lfi":{ "exitoso":0,
+                            "fracaso":0}}
+
+        for llave in forms_vulnerables:
+            if llave == "sitio":
+                continue
+            for ataque in ["xss","sqli","lfi"]:
+                fuzzing = coleccion_fuzzing.aggregate([ {"$group":{"_id":"$forms.{0}.{1}".format(llave,ataque)}} ])
+                for resultado_ataque in fuzzing:
+                    for resultado_ataque_estado in resultado_ataque["_id"]:
+                        if resultado_ataque_estado == True:
+                            forms_vulnerables[llave][ataque]["exitoso"] += 1
+                        else:
+                            forms_vulnerables[llave][ataque]["fracaso"] += 1
+        
+        return forms_vulnerables

@@ -114,11 +114,11 @@ class Reporte():
             }
 
             .fracaso {
-                background-color: red;
+                background-color: #ff000091;
             }
 
             .exito {
-                background-color: #19d019;
+                background-color: #027fff99;
             }
 
             .inconcluso {
@@ -138,6 +138,10 @@ class Reporte():
 
             .tabla-descripcion-renglon {
                 padding: 10px;
+            }
+
+            .contenedor-grafica{
+                margin-top:40px;
             }
 
             .linea-divisora {
@@ -222,10 +226,20 @@ class Reporte():
         '''.format(categoria)
         return body_categoria
 
+    def get_body_titulo_grafica(self, titulo):
+        body_titulo = '''
+            <h3 class="subtitulo">
+                {0}
+            </h3>
+        '''.format(titulo)
+        return body_titulo
+
     def get_body_grafica(self, grafica):
         body_categoria = '''
-            <div class="contenedor-grafica">
-                <img src="{0}" class="grafica">
+            <div class="contenedor-grafica">                           
+                </iframe>                           
+                    <iframe src="{0}" width="100%" height="400">
+                </iframe>
             </div>
         '''.format(grafica)
         return body_categoria
@@ -299,10 +313,12 @@ class Reporte():
         for categoria in self.analisis:
             grafica = 0
             body_analisis += self.get_body_categoria(categoria["categoria"])
+            body_analisis += self.get_body_titulo_grafica(categoria["titulo"])
             if categoria["grafica"] != "":
                 body_analisis += self.get_body_grafica(categoria["grafica"])
                 grafica = 1
             body_analisis += self.get_body_descripcion(grafica, categoria["cabecera"],categoria["datos"])
+            body_analisis += '''<hr class="linea-doble-divisora">'''
         return body_analisis
 
     def get_body(self):

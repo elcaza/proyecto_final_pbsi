@@ -8,6 +8,7 @@ from flask_cors import CORS
 from base64 import decode, encode
 from os import path
 from datetime import datetime
+import plotly.graph_objects as go
 
 ## Modulos
 from modules.obtencion_informacion import obtener_informacion
@@ -18,6 +19,7 @@ from modules.exploits import exploits
 from modules.explotacion import explotacion
 from modules.fuzzing import fuzzing
 from modules.modelo.conector import Conector
+from modules.reportes import reportes
 #from modules.ejecucion import ejecucion
 
 root = path.abspath(path.dirname(__file__))
@@ -73,13 +75,109 @@ def iniciar_analisis(peticion_json):
 
         Errores menores:
     '''
-    json_fuzzing = {
-        "url":"http://www.altoromutual.com:8080/login.jsp",
-        "hilos":4,
-        "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0"
+    # json_fuzzing = {
+    #     "url":"http://www.altoromutual.com:8080/login.jsp",
+    #     "hilos":4,
+    #     "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0"
+    # }
+    # respuesta_fuzzing = fuzzing.execute(json_fuzzing)
+    # con = Conector()
+    # con.fuzzing_insertar_datos(respuesta_fuzzing)
+    con = Conector()
+    fuzzing_estadisticas = con.fuzzing_obtener_estaditisticas()
+    #for sitio in range(len(fuzzing_estadisticas["sitios"])):
+    j = 0
+    json_reporte = {
+    "sitio":"seguridad.unam.mx",
+    "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+    "analisis":[]
     }
-    respuesta_fuzzing = fuzzing.execute(json_fuzzing)
-    print(respuesta_fuzzing)
+    for i in range(1):
+        reporte = root+"/modules/reportes/ifram_grafica"
+        ataques, ataques_resultado = fuzzing_datos_generales(fuzzing_estadisticas,reporte+"{0}.html".format(j))
+        analisis = crear_reporte_fuzzing_general(ataques,ataques_resultado,reporte+"{0}.html".format(j),fuzzing_estadisticas["sitio"])
+        json_reporte["analisis"].append(analisis)
+        j += 1
+        estado, ataques, lista_resultados_exitosos, lista_resultados_fracasos = fuzzing_datos_individuales(fuzzing_estadisticas,reporte+"{0}.html".format(j))
+        analisis = crear_reporte_fuzzing_individual(lista_resultados_exitosos, lista_resultados_fracasos,reporte+"{0}.html".format(j),fuzzing_estadisticas["sitio"])
+        json_reporte["analisis"].append(analisis)
+        j += 1
+    
+    reportes.execute(json_reporte)
+
+    # for form in fuzzing_estadisticas:
+    #         for ataque in fuzzing_estadisticas[form]:
+    #             print("Formulario {0} -> \n\t{1} - Exitoso {2} : Fracaso {3}".format(form,ataque,fuzzing_estadisticas[form][ataque]["exitoso"],fuzzing_estadisticas[form][ataque]["fracaso"]))
+
+def fuzzing_datos_generales(fuzzing_estadisticas,reporte):
+    exito = 0
+    fracaso = 0
+    ataques = ["Exito","Fracaso"]
+    for form in fuzzing_estadisticas:
+        if "sitio" == form:
+            continue
+        for ataque in fuzzing_estadisticas[form]:
+            exito += fuzzing_estadisticas[form][ataque]["exitoso"]
+            fracaso += fuzzing_estadisticas[form][ataque]["fracaso"]
+    ataques_resultado = [exito, fracaso]
+    fuzzing_diagrama = go.Figure(data=[go.Pie(labels=ataques, values=ataques_resultado)])
+    
+    fuzzing_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
+    return ataques, ataques_resultado
+
+def fuzzing_datos_individuales(fuzzing_estadisticas,reporte):
+    lista_resultados_exitosos = [0,0,0]
+    lista_resultados_fracasos = [0,0,0]
+    for form in fuzzing_estadisticas:
+        if "sitio" == form:
+            continue
+        for ataque in fuzzing_estadisticas[form]:
+            if ataque == "xss":
+                lista_resultados_exitosos[0] += fuzzing_estadisticas[form][ataque]["exitoso"]
+                lista_resultados_fracasos[0] += fuzzing_estadisticas[form][ataque]["fracaso"]
+            if ataque == "sqli":
+                lista_resultados_exitosos[1] += fuzzing_estadisticas[form][ataque]["exitoso"]
+                lista_resultados_fracasos[1] += fuzzing_estadisticas[form][ataque]["fracaso"]
+            if ataque == "lfi":
+                lista_resultados_exitosos[2] += fuzzing_estadisticas[form][ataque]["exitoso"]
+                lista_resultados_fracasos[2] += fuzzing_estadisticas[form][ataque]["fracaso"]
+    ataques = ["XSS","SQLi","LFI"]
+    fuzzing_diagrama = go.Figure(data=[
+        go.Bar(name="Exitoso", x=ataques, y=lista_resultados_exitosos),
+        go.Bar(name="Fracaso", x=ataques, y=lista_resultados_fracasos)
+    ])
+    fuzzing_diagrama.update_layout(barmode='group')
+    
+    fuzzing_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
+    return ["Exitoso","Fracaso"], ataques, lista_resultados_exitosos, lista_resultados_fracasos
+
+def crear_reporte_fuzzing_general(ataques, ataques_resultado, reporte, sitio):
+    analisis = {
+                "categoria":"Fuzzing",
+                "titulo":"Resultados generales",
+                "grafica":reporte,
+                "cabecera":["Sitio","Motivo","Estado"],
+                "datos":[
+                    [sitio,"Número de peticiones exitosas: {0}".format(ataques_resultado[0]),ataques[0]],
+                    [sitio,"Número de peticiones sin exito: {0}".format(ataques_resultado[1]),ataques[1]]]
+    }
+    return analisis
+
+def crear_reporte_fuzzing_individual(lista_resultados_exitosos, lista_resultados_fracasos, reporte, sitio):
+    analisis = {
+                "categoria":"Fuzzing",
+                "titulo":"Resultados individuales",
+                "grafica":reporte,
+                "cabecera":["Sitio","Motivo","Estado"],
+                "datos":[
+                    [sitio,"Número de peticiones exitosas XSS: {0}".format(lista_resultados_exitosos[0]),"Exito"],
+                    [sitio,"Número de peticiones sin exito XSS: {0}".format(lista_resultados_fracasos[0]),"Fracaso"],
+                    [sitio,"Número de peticiones exitosas SQLi: {0}".format(lista_resultados_exitosos[1]),"Exito"],
+                    [sitio,"Número de peticiones sin exito SQLi: {0}".format(lista_resultados_fracasos[1]),"Fracaso"],
+                    [sitio,"Número de peticiones exitosas LFI: {0}".format(lista_resultados_exitosos[2]),"Exito"],
+                    [sitio,"Número de peticiones sin exito LFI: {0}".format(lista_resultados_fracasos[2]),"Fracaso"]]
+    }
+    return analisis
 
 @app.route("/")
 def index():
@@ -165,4 +263,3 @@ peticion = {
 if __name__ == "__main__":
     iniciar_analisis(peticion)
     app.run(host='127.0.0.1', port=3000, debug=True)
-    print("golas")
