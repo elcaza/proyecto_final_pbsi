@@ -39,6 +39,8 @@ app.config['SECRET_KEY'] = 'datosrandomjamasvistos'
 '''
 
 def iniciar_analisis(peticion_json):
+    con = Conector()
+    ############################################################# OBTENER INFORMACION #############################################################
     ''' 
         Obtener informacion
         Estado : En desarrollo
@@ -62,6 +64,7 @@ def iniciar_analisis(peticion_json):
     '''
     # respuesta_obtener_informacion = obtener_informacion.execute(peticion_json)
     # print(respuesta_obtener_informacion)
+    ############################################################# ANALISIS #############################################################
     '''
         Analisis
         Estado : Por desarrollar
@@ -75,6 +78,7 @@ def iniciar_analisis(peticion_json):
 
         Errores menores:
     '''
+    ############################################################# FUZZING #############################################################
     # json_fuzzing = {
     #     "url":"http://www.altoromutual.com:8080/login.jsp",
     #     "hilos":4,
@@ -83,31 +87,34 @@ def iniciar_analisis(peticion_json):
     # respuesta_fuzzing = fuzzing.execute(json_fuzzing)
     # con = Conector()
     # con.fuzzing_insertar_datos(respuesta_fuzzing)
-    con = Conector()
     fuzzing_estadisticas = con.fuzzing_obtener_estaditisticas()
     #for sitio in range(len(fuzzing_estadisticas["sitios"])):
-    j = 0
+    
     json_reporte = {
     "sitio":"seguridad.unam.mx",
     "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-    "analisis":[]
+    "analisis":[],
     }
-    for i in range(1):
-        reporte = root+"/modules/reportes/ifram_grafica"
-        ataques, ataques_resultado = fuzzing_datos_generales(fuzzing_estadisticas,reporte+"{0}.html".format(j))
-        analisis = crear_reporte_fuzzing_general(ataques,ataques_resultado,reporte+"{0}.html".format(j),fuzzing_estadisticas["sitio"])
-        json_reporte["analisis"].append(analisis)
-        j += 1
-        estado, ataques, lista_resultados_exitosos, lista_resultados_fracasos = fuzzing_datos_individuales(fuzzing_estadisticas,reporte+"{0}.html".format(j))
-        analisis = crear_reporte_fuzzing_individual(lista_resultados_exitosos, lista_resultados_fracasos,reporte+"{0}.html".format(j),fuzzing_estadisticas["sitio"])
-        json_reporte["analisis"].append(analisis)
-        j += 1
-    
-    reportes.execute(json_reporte)
 
-    # for form in fuzzing_estadisticas:
-    #         for ataque in fuzzing_estadisticas[form]:
-    #             print("Formulario {0} -> \n\t{1} - Exitoso {2} : Fracaso {3}".format(form,ataque,fuzzing_estadisticas[form][ataque]["exitoso"],fuzzing_estadisticas[form][ataque]["fracaso"]))
+    #crear_reportes_fuzzing(fuzzing_estadisticas, json_reporte)
+    ############################################################# EXPLOTACION #############################################################
+
+    # json_explotacion = {
+    #     "dominio":"altoromutual.com:8080", #"dominios.com"
+    #     "puerto": 1001, 
+    #     "pagina": "http://www.altoromutual.com:8080/login.jsp"
+    # }
+
+    # json_identificar = {
+    #     "cms_nombre":"Drupal",
+    #     "cms_categoria":""
+    # }
+
+    # res = con.exploit_buscar_cms(json_identificar,3)
+    # respuesta_explotacion = explotacion.execute(json_explotacion,res["exploits"])
+    # con.explotacion_insertar_datos(respuesta_explotacion)
+    explotacion_estadisticas = con.explotacion_obtener_estadisticas()
+    crear_reportes_explotacion(explotacion_estadisticas,json_reporte)
 
 def fuzzing_datos_generales(fuzzing_estadisticas,reporte):
     exito = 0
@@ -178,6 +185,62 @@ def crear_reporte_fuzzing_individual(lista_resultados_exitosos, lista_resultados
                     [sitio,"Número de peticiones sin exito LFI: {0}".format(lista_resultados_fracasos[2]),"Fracaso"]]
     }
     return analisis
+
+def crear_reportes_fuzzing(fuzzing_estadisticas, json_reporte):
+    j = 0
+    for i in range(1):
+        reporte = root+"/modules/reportes/ifram_grafica"
+        ataques, ataques_resultado = fuzzing_datos_generales(fuzzing_estadisticas,reporte+"{0}.html".format(j))
+        analisis = crear_reporte_fuzzing_general(ataques,ataques_resultado,reporte+"{0}.html".format(j),fuzzing_estadisticas["sitio"])
+        json_reporte["analisis"].append(analisis)
+        j += 1
+        estado, ataques, lista_resultados_exitosos, lista_resultados_fracasos = fuzzing_datos_individuales(fuzzing_estadisticas,reporte+"{0}.html".format(j))
+        analisis = crear_reporte_fuzzing_individual(lista_resultados_exitosos, lista_resultados_fracasos,reporte+"{0}.html".format(j),fuzzing_estadisticas["sitio"])
+        json_reporte["analisis"].append(analisis)
+        j += 1
+    
+    reportes.execute(json_reporte)
+
+def explotacion_datos_generales(explotacion_estadisticas,reporte):
+    exito = 0
+    fracaso = 0
+    inconcluso = 0
+    ataques = ["Exito","Fracaso","Inconcluso"]
+    for explotacion in explotacion_estadisticas:
+        if "sitio" == explotacion:
+            continue
+        exito += explotacion_estadisticas[explotacion]["exitoso"]
+        fracaso += explotacion_estadisticas[explotacion]["fracaso"]
+        inconcluso += explotacion_estadisticas[explotacion]["inconcluso"]
+    ataques_resultado = [exito, fracaso, inconcluso]
+    fuzzing_diagrama = go.Figure(data=[go.Pie(labels=ataques, values=ataques_resultado)])
+    
+    fuzzing_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
+    return ataques, ataques_resultado
+
+def crear_reporte_explotacion_general(ataques, ataques_resultado, reporte, sitio):
+    analisis = {
+                "categoria":"Explotacion",
+                "titulo":"Resultados generales",
+                "grafica":reporte,
+                "cabecera":["Sitio","Motivo","Estado"],
+                "datos":[
+                    [sitio,"Número de peticiones exitosas: {0}".format(ataques_resultado[0]),ataques[0]],
+                    [sitio,"Número de peticiones sin exito: {0}".format(ataques_resultado[1]),ataques[1]],
+                    [sitio,"Número de peticiones inconclusas: {0}".format(ataques_resultado[2]),ataques[2]]]
+    }
+    return analisis
+
+def crear_reportes_explotacion(explotacion_estadisticas, json_reporte):
+    j = 0
+    for i in range(1):
+        reporte = root+"/modules/reportes/ifram_grafica_explotacion"
+        ataques, ataques_resultado = explotacion_datos_generales(explotacion_estadisticas,reporte+"{0}.html".format(j))
+        analisis = crear_reporte_explotacion_general(ataques,ataques_resultado,reporte+"{0}.html".format(j),explotacion_estadisticas["sitio"])
+        json_reporte["analisis"].append(analisis)
+        j += 1
+    
+    reportes.execute(json_reporte)
 
 @app.route("/")
 def index():

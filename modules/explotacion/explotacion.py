@@ -1,6 +1,7 @@
 from subprocess import check_output, CalledProcessError, TimeoutExpired
 from os import path
 import threading
+from time import sleep
 
 class Lanzar_exploit(threading.Thread):
     def __init__(self, threadID, nombre, parametros, exploit):
@@ -9,7 +10,7 @@ class Lanzar_exploit(threading.Thread):
         self.threadID = threadID
         self.parametros = parametros
         self.exploit = exploit
-        self.resultado = b"Inconcluso"
+        self.resultado = 0
         
     def run(self):
         print ("Starting " + self.nombre)
@@ -23,6 +24,14 @@ class Lanzar_exploit(threading.Thread):
 
     def get_resultado(self):
         return self.resultado
+    
+    def get_nombre(self):
+        nombre = self.exploit["exploit"].rsplit("/")[-1]
+        nombre = nombre.replace(".","_")
+        return nombre
+
+    def get_json_explotacion(self):
+        return {self.get_nombre():self.get_resultado()}
 
 # Area para modificar constantes
 def modificar_exploit_dominio(dominio, exploit, exploit_temporal):
@@ -58,7 +67,7 @@ def otorgar_permisos_exploit(exploit_temp):
 
 def ejecutar_exploit(exploit):
     try:
-        resultado = check_output(exploit,shell=True,timeout=300)
+        resultado = check_output(exploit,shell=True,timeout=10)
     except TimeoutExpired:
         return b"Inconcluso"
     return resultado
@@ -101,7 +110,7 @@ def definir_cantidad_hilos(lista_exploits):
     return modulo
 
 def crear_hilos_exploit(parametros, lista_exploits):
-    resultados = []
+    json_explotacion = {"sitio":parametros["pagina"],"explotaciones":{}}
     hijos = []
     hilos = definir_cantidad_hilos(lista_exploits)
 
@@ -116,16 +125,18 @@ def crear_hilos_exploit(parametros, lista_exploits):
             hijos[hilo].start()
 
         for hilo in range(hilos):
-            hijos[hilo].join(310)
+            hijos[hilo].join(12)
 
-        for hijo in hijos:
-            resultados.append(hijo.get_resultado())
-        
+        for hilo in range(hilos):
+            explotacion = hijos[hilo].get_json_explotacion()
+            json_explotacion["explotaciones"].update(explotacion)
+
+
         hijos = []
 
-    for res in resultados:
-        print("resultado",res)
+    return json_explotacion
 
 def execute(parametros, exploits):
     lista_exploits = obtener_exploits(exploits)
-    crear_hilos_exploit(parametros, lista_exploits)
+    json_explotacion = crear_hilos_exploit(parametros, lista_exploits)
+    return json_explotacion

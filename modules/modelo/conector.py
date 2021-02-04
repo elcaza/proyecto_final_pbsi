@@ -198,3 +198,36 @@ class Conector():
                             forms_vulnerables[llave][ataque]["fracaso"] += 1
         
         return forms_vulnerables
+
+########################################################## EXPLOTACION ##########################################################
+    def explotacion_insertar_datos(self,json_cargar_datos):
+        coleccion_explotacion = self.base_datos[strings.COLECCION_EXPLOTACION]
+        try:
+            coleccion_explotacion.insert_one(json_cargar_datos)
+        except errors.DuplicateKeyError:
+            print("Ya existe un exploit con el mismo nombre")
+
+    def explotacion_obtener_estadisticas(self):
+        coleccion_explotacion = self.base_datos[strings.COLECCION_EXPLOTACION]
+        explotacion = {}
+        explotaciones = coleccion_explotacion.find()
+        for exploit in explotaciones:
+            explotacion["sitio"] = exploit["sitio"]   
+            for llave in exploit["explotaciones"].keys():
+                explotacion[llave] = {
+                            "exitoso":0,
+                            "fracaso":0,
+                            "inconcluso":0}
+            
+        for llave in explotacion:
+            if llave == "sitio":
+                continue
+            exploit = coleccion_explotacion.aggregate([{"$group":{"_id":"$explotaciones.{0}".format(llave)}}])
+            for resultado_exploit in exploit:
+                if resultado_exploit["_id"] == 1:
+                    explotacion[llave]["exitoso"] = 1
+                if resultado_exploit["_id"] == -1:
+                    explotacion[llave]["fracaso"] = 1
+                if resultado_exploit["_id"] == 0:
+                    explotacion[llave]["inconcluso"] = 1
+        return explotacion
