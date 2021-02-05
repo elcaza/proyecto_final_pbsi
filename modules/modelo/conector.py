@@ -70,7 +70,7 @@ class Conector():
                 elif profundidad == 2:
                     softwares = coleccion_exploits.find({
                                                     "software_nombre":json_software["software_nombre"],
-                                                    "software_version":{"$regex":json_software["software_nombre"],"$options":"i"}})
+                                                    "software_version":{"$regex":json_software["software_version"],"$options":"i"}})
                 else: 
                     softwares = coleccion_exploits.find({
                                                     "software_nombre":{"$regex":json_software["software_nombre"],"$options":"i"},
@@ -207,26 +207,19 @@ class Conector():
     def explotacion_obtener_estadisticas(self):
         coleccion_explotacion = self.base_datos[strings.COLECCION_EXPLOTACION]
         explotacion = {}
-        explotaciones = coleccion_explotacion.find()
-        for exploit in explotaciones:
-            explotacion["sitio"] = exploit["sitio"]   
-            for llave in exploit["explotaciones"].keys():
-                explotacion[llave] = {
-                            "exitoso":0,
-                            "fracaso":0,
-                            "inconcluso":0}
-            
-        for llave in explotacion:
-            if llave == "sitio":
-                continue
-            exploit = coleccion_explotacion.aggregate([{"$group":{"_id":"$explotaciones.{0}".format(llave)}}])
-            for resultado_exploit in exploit:
-                if resultado_exploit["_id"] == 1:
-                    explotacion[llave]["exitoso"] = 1
-                if resultado_exploit["_id"] == -1:
-                    explotacion[llave]["fracaso"] = 1
-                if resultado_exploit["_id"] == 0:
-                    explotacion[llave]["inconcluso"] = 1
+        explotaciones = coleccion_explotacion.find_one()
+        for exploit in explotaciones["explotaciones"]:
+            explotacion[exploit] = {
+                "exitoso":0,
+                "fracaso":0,
+                "inconcluso":0}
+            for puerto in explotaciones["explotaciones"][exploit]:
+                if explotaciones["explotaciones"][exploit][puerto] == 1:
+                    explotacion[exploit]["exitoso"] += 1
+                if explotaciones["explotaciones"][exploit][puerto] == 0:
+                    explotacion[exploit]["inconcluso"] += 1
+                if explotaciones["explotaciones"][exploit][puerto] == -1:
+                    explotacion[exploit]["fracaso"] += 1
         return explotacion
 
     def explotacion_borrar_temp(self):

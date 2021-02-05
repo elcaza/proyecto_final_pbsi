@@ -10,16 +10,19 @@ class Lanzar_exploit(threading.Thread):
         self.threadID = threadID
         self.parametros = parametros
         self.exploit = exploit
-        self.resultado = 0
+        self.set_puertos()
+        self.set_sitio()
+        self.resultado = {}
         
     def run(self):
         print ("Starting " + self.nombre)
         exploit_temporal, exploit_preparado = limpiar_exploit(self.exploit["exploit"], self.exploit["lenguaje"])
-        cargar_parametros(self.parametros, self.exploit["exploit"], exploit_temporal)
-        otorgar_permisos_exploit(exploit_temporal)
-        self.resultado = ejecutar_exploit(exploit_preparado)
-        self.resultado = validar_resulado(self.resultado)
-        eliminiar_exploit_temporal(exploit_temporal)
+        for puerto in range(len(self.puertos)):
+            cargar_parametros(self.sitio, self.puertos[puerto], self.exploit["exploit"], exploit_temporal)
+            otorgar_permisos_exploit(exploit_temporal)
+            self.resultado[self.puertos[puerto]] = ejecutar_exploit(exploit_preparado)
+            self.resultado[self.puertos[puerto]] = validar_resulado(self.resultado[self.puertos[puerto]])
+            eliminiar_exploit_temporal(exploit_temporal)
         print ("Exiting " + self.nombre)
 
     def get_resultado(self):
@@ -32,6 +35,18 @@ class Lanzar_exploit(threading.Thread):
 
     def get_json_explotacion(self):
         return {self.get_nombre():self.get_resultado()}
+    
+    def set_puertos(self):
+        if "puertos" in self.parametros:
+            self.puertos = self.parametros["puertos"]
+        else:
+            self.puertos = []
+
+    def set_sitio(self):
+        if "sitio" in self.parametros:
+            self.sitio = self.parametros["sitio"]
+        else:
+            self.sitio = ""
 
 # Area para modificar constantes
 def modificar_exploit_dominio(dominio, exploit, exploit_temporal):
@@ -67,7 +82,7 @@ def otorgar_permisos_exploit(exploit_temp):
 
 def ejecutar_exploit(exploit):
     try:
-        resultado = check_output(exploit,shell=True,timeout=10)
+        resultado = check_output(exploit,shell=True,timeout=3)
     except TimeoutExpired:
         return b"Inconcluso"
     return resultado
@@ -81,13 +96,11 @@ def limpiar_exploit(exploit, lenguaje):
     exploit_preparado = lenguaje+exploit_temporal
     return exploit_temporal, exploit_preparado
 
-def cargar_parametros(parametros, exploit, exploit_temporal):
-    if "dominio" in parametros:
-        modificar_exploit_dominio(parametros["dominio"],exploit, exploit_temporal)
-    if "puerto" in parametros:
-        modificar_exploit_puerto(parametros["puerto"],exploit, exploit_temporal)
-    if "pagina" in parametros:
-        modificar_exploit_pagina(parametros["pagina"], exploit, exploit_temporal)
+def cargar_parametros(sitio, puerto, exploit, exploit_temporal):
+    modificar_exploit_dominio(sitio,exploit, exploit_temporal)
+    modificar_exploit_puerto(puerto,exploit, exploit_temporal)
+    # if "pagina" in parametros:
+    #     modificar_exploit_pagina(parametros["pagina"], exploit, exploit_temporal)
 
 def validar_resulado(resultado):
     if b"Exito" in resultado:
@@ -110,7 +123,7 @@ def definir_cantidad_hilos(lista_exploits):
     return modulo
 
 def crear_hilos_exploit(parametros, lista_exploits):
-    json_explotacion = {"sitio":parametros["pagina"],"explotaciones":{}}
+    json_explotacion = {"explotaciones":{}}
     hijos = []
     hilos = definir_cantidad_hilos(lista_exploits)
 
@@ -125,13 +138,11 @@ def crear_hilos_exploit(parametros, lista_exploits):
             hijos[hilo].start()
 
         for hilo in range(hilos):
-            hijos[hilo].join(12)
+            hijos[hilo].join(600)
 
         for hilo in range(hilos):
             explotacion = hijos[hilo].get_json_explotacion()
             json_explotacion["explotaciones"].update(explotacion)
-
-
         hijos = []
 
     return json_explotacion

@@ -91,18 +91,50 @@ def iniciar_analisis(peticion_json):
     json_recibido = {
         "sitio":"altoromutual.com:8080",
         "informacion":{
-            "Servidor":"Apache",
+            "DNS":[
+                {
+                    "ip":"127.0.0.1",
+                    "registros":["ns","mx","a","aaaa"]
+                }
+            ],
+            "Puertos":[
+                {
+                    "puerto":"22",
+                    "servicio":"ssh"
+                }
+            ]
+        },
+        "analisis":{
+            "CMS":{
+                "nombre":"drupal",
+                "version":"7.57"
+            },
+            "Servidor":{
+                "nombre":"Apache",
+                "version":"1.14"
+            },
+            "Cifrados":[
+                {
+                    "nombre":"SSL",
+                    "version":"2"
+                },
+                {
+                    "nombre":"ECDH",
+                    "version":"256"
+                }
+            ]
         },
         "paginas":[
             {
                 "sitio":"https://xss-game.appspot.com/level1",
+                #"forms":[{}]
             }
         ],
         "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
-        "analisis":{},
         "estado":{
             "fecha":""
         }
+        #"Explotacion":[{}]
     }
 
     json_reporte = {
@@ -125,29 +157,54 @@ def iniciar_analisis(peticion_json):
         fuzzing_estadisticas = con.fuzzing_obtener_estaditisticas()
         con.fuzzing_borrar_temp()
         numero_grafica = crear_reportes_fuzzing(fuzzing_estadisticas, json_reporte, numero_grafica)
-    reportes.execute(json_reporte)
-    #for sitio in range(len(fuzzing_estadisticas["sitios"])):
     
-
-    #
     ############################################################# EXPLOTACION #############################################################
 
-    # json_explotacion = {
-    #     "dominio":"altoromutual.com:8080", #"dominios.com"
-    #     "puerto": 1001, 
-    #     "pagina": "http://www.altoromutual.com:8080/login.jsp"
-    # }
+    json_explotacion, json_identificar = obtener_datos_consulta_exploits(json_recibido)
 
-    # json_identificar = {
-    #     "cms_nombre":"Drupal",
-    #     "cms_categoria":""
-    # }
+    json_explotacion = {
+        "sitio":"altoromutual.com:8080",
+        "puertos": ["22","445","497"],
+        #"pagina": ["http://www.altoromutual.com:8080/login.jsp","http://www.altoromutual.com:8080/search.jsp"],
+    }
 
-    # res = con.exploit_buscar_cms(json_identificar,3)
-    # respuesta_explotacion = explotacion.execute(json_explotacion,res["exploits"])
-    # con.explotacion_insertar_datos(respuesta_explotacion)
-    # explotacion_estadisticas = con.explotacion_obtener_estadisticas()
-    # crear_reportes_explotacion(explotacion_estadisticas,json_reporte)
+    json_identificar = {
+        "software":[
+            {
+                "software_nombre":"Apache",
+                "software_version":"1.12"
+            },
+            {
+                "software_nombre":"Drupal",
+                "software_version":"7.57"
+            }
+        ],
+        "cms":[
+            {
+                "cms_nombre":"Drupal",
+                "cms_categoria":"Plugin",
+                "cms_extension_nombre":"Form 7",
+                "cms_extension_version":"1.12"
+            },
+            {
+                "cms_nombre":"Wordpress",
+                "cms_categoria":"Plugin",
+                "cms_extension_nombre":"",
+                "cms_extension_version":""
+            }
+        ],
+        "profundidad":2
+    }
+
+
+    exploits = buscar_exploits(json_identificar, con)
+    explotaciones = explotacion.execute(json_explotacion,exploits)
+    json_recibido["explotaciones"] = explotaciones
+    con.explotacion_insertar_datos(json_recibido["explotaciones"])
+    explotacion_estadisticas = con.explotacion_obtener_estadisticas()
+    con.explotacion_borrar_temp()
+    crear_reportes_explotacion(explotacion_estadisticas,json_reporte, numero_grafica)
+    reportes.execute(json_reporte)
 
 def fuzzing_datos_generales(fuzzing_estadisticas,reporte):
     exito = 0
@@ -262,16 +319,39 @@ def crear_reporte_explotacion_general(ataques, ataques_resultado, reporte, sitio
     }
     return analisis
 
-def crear_reportes_explotacion(explotacion_estadisticas, json_reporte):
-    j = 0
-    for i in range(1):
-        reporte = root+"/modules/reportes/ifram_grafica_explotacion"
-        ataques, ataques_resultado = explotacion_datos_generales(explotacion_estadisticas,reporte+"{0}.html".format(j))
-        analisis = crear_reporte_explotacion_general(ataques,ataques_resultado,reporte+"{0}.html".format(j),explotacion_estadisticas["sitio"])
-        json_reporte["analisis"].append(analisis)
-        j += 1
+def crear_reportes_explotacion(explotacion_estadisticas, json_reporte, numero_grafica):
+    reporte = root+"/modules/reportes/ifram_grafica_explotacion"
+    ataques, ataques_resultado = explotacion_datos_generales(explotacion_estadisticas,reporte+"{0}.html".format(numero_grafica))
+    analisis = crear_reporte_explotacion_general(ataques,ataques_resultado,reporte+"{0}.html".format(numero_grafica),json_reporte["sitio"])
+    json_reporte["analisis"].append(analisis)
+    numero_grafica += 1
+
+def obtener_datos_consulta_exploits(json_recibido):
+    return True, True
+
+def buscar_exploits(json_identificar, con):
+    exploits = []
+    for software in json_identificar["software"]:
+        json_software = {
+            "software_nombre":software["software_nombre"],
+            "software_version":software["software_version"],
+        }
+        exploit_software = con.exploit_buscar_software(json_software,json_identificar["profundidad"])
+        for exploit in exploit_software["exploits"]:
+            exploits.append(exploit)
     
-    reportes.execute(json_reporte)
+    for cms in json_identificar["cms"]:
+        json_cms = {
+            "cms_nombre":cms["cms_nombre"],
+            "cms_categoria":cms["cms_categoria"],
+            "cms_extension_nombre":cms["cms_extension_nombre"],
+            "cms_extension_version":cms["cms_extension_version"]
+        }
+        exploit_cms = con.exploit_buscar_cms(json_cms,json_identificar["profundidad"])
+        for exploit in exploit_cms["exploits"]:
+            exploits.append(exploit)
+
+    return exploits
 
 @app.route("/")
 def index():
