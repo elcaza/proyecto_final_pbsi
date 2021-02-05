@@ -312,13 +312,14 @@ class Reporte():
         body_analisis = ""
         for categoria in self.analisis:
             grafica = 0
-            body_analisis += self.get_body_categoria(categoria["categoria"])
+            if categoria["categoria"] != "":
+                body_analisis += self.get_body_categoria(categoria["categoria"])
             body_analisis += self.get_body_titulo_grafica(categoria["titulo"])
             if categoria["grafica"] != "":
                 body_analisis += self.get_body_grafica(categoria["grafica"])
                 grafica = 1
             body_analisis += self.get_body_descripcion(grafica, categoria["cabecera"],categoria["datos"])
-            body_analisis += '''<hr class="linea-doble-divisora">'''
+            #body_analisis += '''<hr class="linea-doble-divisora">'''
         return body_analisis
 
     def get_body(self):

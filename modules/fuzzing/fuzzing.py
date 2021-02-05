@@ -266,12 +266,15 @@ def actualizar_formulario(driver,formulario_iteracion, url, iframe_posicion = -1
       formulario = Form(driver.find_elements_by_xpath(".//form")[formulario_iteracion])
       inputs = formulario.get_lista_inputs()
       return formulario, inputs
-   except UnexpectedAlertPresentException:
+   except (UnexpectedAlertPresentException,TimeoutException):
       return actualizar_formulario(driver,formulario_iteracion,url)
 
 def enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, cookie=[], iframe_posicion = -1, iframe_profundidad = 0):
    if iframe_posicion == -1:
-      driver.get(url)   
+      try:
+         driver.get(url)   
+      except TimeoutException:
+         enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, cookie, iframe_posicion, iframe_profundidad)
       if len(cookie) > 0:
          for cookie_individual in cookie:
             driver.add_cookie(cookie_individual)
@@ -312,7 +315,7 @@ def enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, cookie=[], i
 
          if json_fuzzing["forms"].get(form_utilizar) is None:
             json_fuzzing["forms"].update({form_utilizar:[]})
-         json_fuzzing["forms"][form_utilizar].append({"inputs":[],"xss":False,"sqli":False,"lfi":False})
+         json_fuzzing["forms"][form_utilizar].append({"inputs":[],"tipo":tipo,"xss":False,"sqli":False,"lfi":False})
          json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["inputs"] = formulario.get_peticion()
          if vulnerabilidad_tiempo:
             if tipo == "xss":
@@ -375,7 +378,7 @@ def obtener_divisor_diccionario_dividido(diccionario, hilos):
 
 def crear_hijos_fuzzing(url, hilos, cookie=[]):
    diccionarios = Singleton_Diccionarios_ataque()
-   json_fuzzing = {"sitio":url, "forms": {}}
+   json_fuzzing = {"forms": {}}
    for diccionario in diccionarios.get_diccionarios():
       lotes_palabras, residuo_lotes_palabras = obtener_divisor_diccionario_dividido(diccionarios.get_diccionario(diccionario), hilos)
       hijos = [] 
