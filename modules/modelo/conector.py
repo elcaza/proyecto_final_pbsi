@@ -85,7 +85,6 @@ class Conector():
                     softwares_iterados["exploits"].append({"ruta":ruta,"lenguaje":lenguaje})
                 return softwares_iterados
 
-
     def exploit_buscar_cms(self, json_cms, profundidad):
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
@@ -200,6 +199,7 @@ class Conector():
         coleccion_fuzzing.delete_many({})
 
 ########################################################## EXPLOTACION ##########################################################
+    
     def explotacion_insertar_datos(self,json_cargar_datos):
         coleccion_explotacion = self.base_datos[strings.COLECCION_EXPLOTACION]
         coleccion_explotacion.insert_one(json_cargar_datos)
@@ -225,3 +225,35 @@ class Conector():
     def explotacion_borrar_temp(self):
         coleccion_explotacion = self.base_datos[strings.COLECCION_EXPLOTACION]
         coleccion_explotacion.delete_many({})
+
+########################################################## PERSISTENCIA ##########################################################
+    
+    def guardar_analisis(self, json_recibido):
+        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        coleccion_analisis.insert_one(json_recibido)
+
+########################################################## CONSULTAS ##########################################################
+
+    def informacion_sitio(self, sitio):
+        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        sitio = coleccion_analisis.find_one({"sitio":sitio})
+        informacion = sitio["informacion"]
+        return informacion
+
+    def analisis_sitio(self, sitio):
+        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        sitio = coleccion_analisis.find_one({"sitio":sitio})
+        analisis = sitio["analisis"]
+        return analisis
+
+    def fuzzing_sitio(self, sitio):
+        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        sitio = coleccion_analisis.find_one({"sitio":sitio})
+        fuzzing = sitio["paginas"]
+        return fuzzing
+
+    def explotacion_sitio(self, sitio):
+        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        sitio = coleccion_analisis.find_one({"sitio":sitio})
+        explotacion = sitio["explotaciones"]
+        return explotacion

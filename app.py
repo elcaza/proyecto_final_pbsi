@@ -39,7 +39,7 @@ app.config['SECRET_KEY'] = 'datosrandomjamasvistos'
         Consulta
 '''
 
-def iniciar_analisis(peticion_json):
+def iniciar_analisis():
     con = Conector()
     ############################################################# OBTENER INFORMACION #############################################################
     ''' 
@@ -63,7 +63,34 @@ def iniciar_analisis(peticion_json):
             Robtex:
                 Se repiten los resultados en varias ocasiones                
     '''
-    # respuesta_obtener_informacion = obtener_informacion.execute(peticion_json)
+    peticion = {
+        "sitio":"http://seguridad.unam.mx",
+        "dnsdumpster" : {
+            "revision":True,
+            "dns" : True,
+            "txt" : True,
+            "host" : True,
+            "mx" : False
+
+        },
+        "robtex" : {
+            "revision":True,
+            "informacion":True,
+            "dns_forward":False,
+            "mx_forward":True,
+            "host_forward":False,
+            "host_reverse":True
+        },
+        "puertos" : { 
+            "revision" : True,
+            "opcion" : "rango",
+            "rango" : {
+                "inicio" : 20,
+                "final" : 100
+            }
+        }
+    }
+    # respuesta_obtener_informacion = obtener_informacion.execute(peticion)
     # print(respuesta_obtener_informacion)
     ############################################################# ANALISIS #############################################################
     '''
@@ -80,14 +107,6 @@ def iniciar_analisis(peticion_json):
         Errores menores:
     '''
     ############################################################# FUZZING #############################################################
-    # json_fuzzing = {
-    #     "url":"http://www.altoromutual.com:8080/login.jsp",
-    #     "hilos":4,
-    #     "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0"
-    # }
-    # respuesta_fuzzing = fuzzing.execute(json_fuzzing)
-    # con = Conector()
-    # con.fuzzing_insertar_datos(respuesta_fuzzing)
     json_recibido = {
         "sitio":"altoromutual.com:8080",
         "informacion":{
@@ -196,16 +215,36 @@ def iniciar_analisis(peticion_json):
         "profundidad":2
     }
 
-
     exploits = buscar_exploits(json_identificar, con)
     explotaciones = explotacion.execute(json_explotacion,exploits)
-    json_recibido["explotaciones"] = explotaciones
-    con.explotacion_insertar_datos(json_recibido["explotaciones"])
+    json_recibido.update(explotaciones)
+    print(json_recibido)
+    con.explotacion_insertar_datos(json_recibido)
     explotacion_estadisticas = con.explotacion_obtener_estadisticas()
     con.explotacion_borrar_temp()
     crear_reportes_explotacion(explotacion_estadisticas,json_reporte, numero_grafica)
     reportes.execute(json_reporte)
 
+    ############################################################# PERSISTENCIA #############################################################
+
+    con.guardar_analisis(json_recibido)
+
+    informacion = obtener_informacion_sitio(con, json_recibido["sitio"])
+    print(informacion)
+
+    analisis = obtener_informacion_analisis(con, json_recibido["sitio"])
+    print(analisis)
+
+    fuzzings = obtener_informacion_fuzzing(con, json_recibido["sitio"])
+    print(fuzzings)
+
+    explotaciones = obtener_informacion_explotacion(con, json_recibido["sitio"])
+    print(explotaciones)
+
+"""
+    Generar reportes
+"""
+# Fuzzing
 def fuzzing_datos_generales(fuzzing_estadisticas,reporte):
     exito = 0
     total = 0
@@ -249,6 +288,28 @@ def fuzzing_datos_individuales(fuzzing_estadisticas,reporte):
     fuzzing_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
     return ["Exitoso","Fracaso"], ataques, lista_resultados_exitosos, total
 
+# Explotacion
+def explotacion_datos_generales(explotacion_estadisticas,reporte):
+    exito = 0
+    fracaso = 0
+    inconcluso = 0
+    ataques = ["Exito","Fracaso","Inconcluso"]
+    for explotacion in explotacion_estadisticas:
+        if "sitio" == explotacion:
+            continue
+        exito += explotacion_estadisticas[explotacion]["exitoso"]
+        fracaso += explotacion_estadisticas[explotacion]["fracaso"]
+        inconcluso += explotacion_estadisticas[explotacion]["inconcluso"]
+    ataques_resultado = [exito, fracaso, inconcluso]
+    fuzzing_diagrama = go.Figure(data=[go.Pie(labels=ataques, values=ataques_resultado)])
+    
+    fuzzing_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
+    return ataques, ataques_resultado
+
+"""
+    Crear reportes
+"""
+# Fuzzing
 def crear_reporte_fuzzing_general(ataques, ataques_resultado, reporte, sitio):
     analisis = {
                 "categoria":"Fuzzing",
@@ -289,23 +350,7 @@ def crear_reportes_fuzzing(fuzzing_estadisticas, json_reporte, numero_grafica):
     numero_grafica += 1
     return numero_grafica
 
-def explotacion_datos_generales(explotacion_estadisticas,reporte):
-    exito = 0
-    fracaso = 0
-    inconcluso = 0
-    ataques = ["Exito","Fracaso","Inconcluso"]
-    for explotacion in explotacion_estadisticas:
-        if "sitio" == explotacion:
-            continue
-        exito += explotacion_estadisticas[explotacion]["exitoso"]
-        fracaso += explotacion_estadisticas[explotacion]["fracaso"]
-        inconcluso += explotacion_estadisticas[explotacion]["inconcluso"]
-    ataques_resultado = [exito, fracaso, inconcluso]
-    fuzzing_diagrama = go.Figure(data=[go.Pie(labels=ataques, values=ataques_resultado)])
-    
-    fuzzing_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
-    return ataques, ataques_resultado
-
+# Explotacion
 def crear_reporte_explotacion_general(ataques, ataques_resultado, reporte, sitio):
     analisis = {
                 "categoria":"Explotacion",
@@ -326,6 +371,10 @@ def crear_reportes_explotacion(explotacion_estadisticas, json_reporte, numero_gr
     json_reporte["analisis"].append(analisis)
     numero_grafica += 1
 
+"""
+    Utilidades
+        Falta obtener los datos para consultar los exploits, estos se recuperan del analisis y obtener informacion
+"""
 def obtener_datos_consulta_exploits(json_recibido):
     return True, True
 
@@ -352,6 +401,29 @@ def buscar_exploits(json_identificar, con):
             exploits.append(exploit)
 
     return exploits
+
+"""
+   Módulo de consultas 
+"""
+# Obtener informacion del sitio
+def obtener_informacion_sitio(con, sitio):
+    sitio = con.informacion_sitio(sitio)
+    return sitio
+
+# Obtener informacion del analisis
+def obtener_informacion_analisis(con, sitio):
+    analisis = con.analisis_sitio(sitio)
+    return analisis
+
+# Obtener informacion del fuzzing
+def obtener_informacion_fuzzing(con, sitio):
+    fuzzing = con.fuzzing_sitio(sitio)
+    return fuzzing
+
+# Obtener informacion de la explotacion
+def obtener_informacion_explotacion(con, sitio):
+    explotacion = con.explotacion_sitio(sitio)
+    return explotacion
 
 @app.route("/")
 def index():
@@ -406,34 +478,6 @@ def index():
                 Bjoern (Es muy rápido, no lo he probado) 
 '''
 
-peticion = {
-	"sitio":"http://seguridad.unam.mx",
-	"dnsdumpster" : {
-		"revision":True,
-		"dns" : True,
-		"txt" : True,
-		"host" : True,
-		"mx" : False
-
-	},
-	"robtex" : {
-		"revision":True,
-		"informacion":True,
-		"dns_forward":False,
-		"mx_forward":True,
-		"host_forward":False,
-		"host_reverse":True
-	},
-	"puertos" : { 
-		"revision" : True,
-		"opcion" : "rango",
-		"rango" : {
-			"inicio" : 20,
-			"final" : 100
-		}
-	}
-}
-
 if __name__ == "__main__":
-    iniciar_analisis(peticion)
+    iniciar_analisis()
     app.run(host='127.0.0.1', port=3000, debug=True)
