@@ -1,5 +1,17 @@
+import requests
+import json
+
+def ejecutar(peticion, headers):
+    r = requests.post("http://127.0.0.1:3000/ejecucion",data=json.dumps(peticion), headers=headers)
+    print(r.text)
+
+headers = {
+    "Content-Type": "application/json; charset=utf-8"
+}
+
 peticion = {
-    "sitio":"http://seguridad.unam.mx",
+    "sitio":"prueba:8080",
+    "ejecucion":1612745454,
     # "sitio":"seguridad.unam.mx"
     # Obtener informacion
     "dnsdumpster" : {
@@ -34,51 +46,4 @@ peticion = {
     "profundidad":2
 }
 
-peticion_transformada = {
-    "sitio":"altoromutual.com:8080",
-    "informacion":{
-        "DNS":[
-            {
-                "ip":"127.0.0.1",
-                "registros":["ns","mx","a","aaaa"]
-            }
-        ],
-        "Puertos":[
-            {
-                "puerto":"22",
-                "servicio":"ssh"
-            }
-        ]
-    },
-    "analisis":{
-        "CMS":{
-            "nombre":"drupal",
-            "version":"7.57"
-        },
-        "Servidor":{
-            "nombre":"Apache",
-            "version":"1.14"
-        },
-        "Cifrados":[
-            {
-                "nombre":"SSL",
-                "version":"2"
-            },
-            {
-                "nombre":"ECDH",
-                "version":"256"
-            }
-        ]
-    },
-    "paginas":[
-        {
-            "sitio":"https://xss-game.appspot.com/level1",
-            #"forms":[{}]
-        }
-    ],
-    "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
-    "estado":{
-        "fecha":""
-    }
-    #"Explotacion":[{}]
-}
+ejecutar(peticion, headers)

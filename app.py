@@ -14,19 +14,17 @@ import plotly.graph_objects as go
 from modules.obtencion_informacion import obtener_informacion
 from modules.alertas import alertas
 #from modules.analisis import analisis
-#from modules.consulta import consulta
 from modules.exploits import exploits
 from modules.explotacion import explotacion
 from modules.fuzzing import fuzzing
 from modules.modelo.conector import Conector
 from modules.reportes import reportes
-from modules.estadisticas import estadisticas
-#from modules.ejecucion import ejecucion
+from modules.ejecucion import ejecucion as programacion
 
 root = path.abspath(path.dirname(__file__))
 app = Flask(__name__)
 CORS(app)
-app.config['SECRET_KEY'] = 'datosrandomjamasvistos'
+app.config['SECRET_KEY'] = 'ojalaSePudieraLlorar_grasa'
 
 '''
     Modo de ejecucion:
@@ -39,207 +37,203 @@ app.config['SECRET_KEY'] = 'datosrandomjamasvistos'
         Consulta
 '''
 
-def iniciar_analisis():
+def iniciar_analisis(peticion):
     con = Conector()
-    ############################################################# OBTENER INFORMACION #############################################################
-    ''' 
-        Obtener informacion
-        Estado : En desarrollo
-        Errores:
-            DNSDumpster:
-                List index out of range
-            Robtex:
-                429 error retrieving https://freeapi.robtex.com/ipquery/132.248.124.130: {"status":"ratelimited"}:
-                    TypeError: 'NoneType' object is not subscriptable
-            Google:
-                No da resultados
-            Bing:
-                No da resultados
-            IPV4Info:
-                No da resultados
-        Errores menores:
-            DNSDumpster:
-                Se repiten los resultados en varias ocasiones
-            Robtex:
-                Se repiten los resultados en varias ocasiones                
-    '''
-    peticion = {
-        "sitio":"http://seguridad.unam.mx",
-        "dnsdumpster" : {
-            "revision":True,
-            "dns" : True,
-            "txt" : True,
-            "host" : True,
-            "mx" : False
 
-        },
-        "robtex" : {
-            "revision":True,
-            "informacion":True,
-            "dns_forward":False,
-            "mx_forward":True,
-            "host_forward":False,
-            "host_reverse":True
-        },
-        "puertos" : { 
-            "revision" : True,
-            "opcion" : "rango",
-            "rango" : {
-                "inicio" : 20,
-                "final" : 100
-            }
-        }
-    }
-    # respuesta_obtener_informacion = obtener_informacion.execute(peticion)
-    # print(respuesta_obtener_informacion)
-    ############################################################# ANALISIS #############################################################
-    '''
-        Analisis
-        Estado : Por desarrollar
-    '''
-    # respuesta_analisis = analisis.execute(peticion_json)
-    # print(respuesta_analisis)
-    '''
-        Fuzzing
-        Estado : En desarrollo
-        Errores : 
-
-        Errores menores:
-    '''
-    ############################################################# FUZZING #############################################################
-    json_recibido = {
-        "sitio":"altoromutual.com:8080",
+    peticion_proceso = {
+        "sitio":peticion["sitio"],
+        "ejecucion":"",
         "informacion":{
-            "DNS":[
-                {
-                    "ip":"127.0.0.1",
-                    "registros":["ns","mx","a","aaaa"]
-                }
-            ],
-            "Puertos":[
-                {
-                    "puerto":"22",
-                    "servicio":"ssh"
-                }
-            ]
+            "":""
         },
         "analisis":{
-            "CMS":{
-                "nombre":"drupal",
-                "version":"7.57"
-            },
-            "Servidor":{
-                "nombre":"Apache",
-                "version":"1.14"
-            },
-            "Cifrados":[
-                {
-                    "nombre":"SSL",
-                    "version":"2"
-                },
-                {
-                    "nombre":"ECDH",
-                    "version":"256"
-                }
-            ]
+            "":""
         },
         "paginas":[
-            {
-                "sitio":"https://xss-game.appspot.com/level1",
-                #"forms":[{}]
-            }
         ],
         "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
         "estado":{
-            "fecha":""
+            "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
         }
-        #"Explotacion":[{}]
     }
 
-    json_reporte = {
-        "sitio":"seguridad.unam.mx",
-        "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-        "analisis":[],
-    }
+    if peticion["ejecucion"] != "":
+        programacion.execute(peticion)
+        return "True"
+    else:
+        ############################################################# OBTENER INFORMACION #############################################################
+        """ 
+            Obtener informacion
+            Estado : En desarrollo
+            Errores:
+                DNSDumpster:
+                    *List index out of range
+                Robtex:
+                    429 error retrieving https://freeapi.robtex.com/ipquery/132.248.124.130: {"status":"ratelimited"}:
+                        TypeError: 'NoneType' object is not subscriptable
+                Google:
+                    No da resultados
+            Errores menores:
+                DNSDumpster:
+                    Se repiten los resultados en varias ocasiones
+                Robtex:
+                    Se repiten los resultados en varias ocasiones                
+        """
+        # respuesta_obtener_informacion = obtener_informacion.execute(peticion)
+        # print(respuesta_obtener_informacion)
+        ############################################################# ANALISIS #############################################################
+        """
+            Analisis
+            Estado : En desarrollo
+        """
+        # respuesta_analisis = analisis.execute(peticion_json)
+        # print(respuesta_analisis)
+        ############################################################# FUZZING #############################################################
+        """
+            Fuzzing
+            Estado : En desarrollo
+            Errores :
+                Falta hacer bypass 
 
-    numero_grafica = 0
+            Errores menores:
+        """
+        peticion_proceso = {
+            "sitio":peticion["sitio"],
+            "informacion":{
+                "DNS":[
+                    {
+                        "ip":"127.0.0.1",
+                        "registros":["ns","mx","a","aaaa"]
+                    }
+                ],
+                "Puertos":[
+                    {
+                        "puerto":"22",
+                        "servicio":"ssh"
+                    }
+                ]
+            },
+            "analisis":{
+                "CMS":{
+                    "nombre":"drupal",
+                    "version":"7.57"
+                },
+                "Servidor":{
+                    "nombre":"Apache",
+                    "version":"1.14"
+                },
+                "Cifrados":[
+                    {
+                        "nombre":"SSL",
+                        "version":"2"
+                    },
+                    {
+                        "nombre":"ECDH",
+                        "version":"256"
+                    }
+                ]
+            },
+            "paginas":[
+                {
+                    "sitio":"https://xss-game.appspot.com/level1",
+                }
+            ],
+            "cookie":peticion["cookie"],
+            "estado":{
+                "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            }
+        }
 
-    for posicion_pagina in range(len(json_recibido["paginas"])):
+        peticion_reporte = {
+            "sitio":peticion_proceso["sitio"],
+            "fecha":peticion_proceso["estado"]["fecha"],
+            "analisis":[],
+        }
+
+        numero_grafica = 0
+
+        numero_grafica = reporte_fuzzing(con, peticion_proceso, peticion_reporte, numero_grafica)
+        
+        ############################################################# EXPLOTACION #############################################################
+
+        #datos_explotacion, datos_identificados = obtener_datos_consulta_exploits(peticion_proceso)
+
+        datos_explotacion = {
+            "sitio":"altoromutual.com:8080",
+            "puertos": ["22","445","497"],
+            #"pagina": ["http://www.altoromutual.com:8080/login.jsp","http://www.altoromutual.com:8080/search.jsp"],
+        }
+
+        datos_identificados = {
+            "software":[
+                {
+                    "software_nombre":"Apache",
+                    "software_version":"1.12"
+                },
+                {
+                    "software_nombre":"Drupal",
+                    "software_version":"7.57"
+                }
+            ],
+            "cms":[
+                {
+                    "cms_nombre":"Drupal",
+                    "cms_categoria":"Plugin",
+                    "cms_extension_nombre":"Form 7",
+                    "cms_extension_version":"1.12"
+                },
+                {
+                    "cms_nombre":"Wordpress",
+                    "cms_categoria":"Plugin",
+                    "cms_extension_nombre":"",
+                    "cms_extension_version":""
+                }
+            ],
+            "profundidad":2
+        }
+
+        numero_grafica = reporte_explotacion(con, datos_explotacion, datos_identificados, peticion_proceso, peticion_reporte, numero_grafica)
+        ############################################################# CONSULTA #############################################################
+
+        con.guardar_analisis(peticion_proceso)
+
+        informacion = obtener_informacion_sitio(con, peticion_proceso["sitio"])
+
+        analisis = obtener_informacion_analisis(con, peticion_proceso["sitio"])
+
+        fuzzings = obtener_informacion_fuzzing(con, peticion_proceso["sitio"])
+
+        explotaciones = obtener_informacion_explotacion(con, peticion_proceso["sitio"])
+
+        return "True"
+"""
+    Reportes
+"""
+def reporte_fuzzing(con, peticion_proceso, peticion_reporte, numero_grafica):
+    for posicion_pagina in range(len(peticion_proceso["paginas"])):
         json_fuzzing = {
-            "url":json_recibido["paginas"][posicion_pagina]["sitio"],
+            "url":peticion_proceso["paginas"][posicion_pagina]["sitio"],
             "hilos":4,
-            "cookie":json_recibido["cookie"]
+            "cookie":peticion_proceso["cookie"]
         }
         forms = fuzzing.execute(json_fuzzing)
-        json_recibido["paginas"][posicion_pagina].update(forms)
-        con.fuzzing_insertar_datos(json_recibido["paginas"][posicion_pagina])
+        peticion_proceso["paginas"][posicion_pagina].update(forms)
+        con.fuzzing_insertar_datos(peticion_proceso["paginas"][posicion_pagina])
         fuzzing_estadisticas = con.fuzzing_obtener_estaditisticas()
         con.fuzzing_borrar_temp()
-        numero_grafica = crear_reportes_fuzzing(fuzzing_estadisticas, json_reporte, numero_grafica)
-    
-    ############################################################# EXPLOTACION #############################################################
+        numero_grafica = crear_reportes_fuzzing(fuzzing_estadisticas, peticion_reporte, numero_grafica)
+    return numero_grafica
 
-    json_explotacion, json_identificar = obtener_datos_consulta_exploits(json_recibido)
-
-    json_explotacion = {
-        "sitio":"altoromutual.com:8080",
-        "puertos": ["22","445","497"],
-        #"pagina": ["http://www.altoromutual.com:8080/login.jsp","http://www.altoromutual.com:8080/search.jsp"],
-    }
-
-    json_identificar = {
-        "software":[
-            {
-                "software_nombre":"Apache",
-                "software_version":"1.12"
-            },
-            {
-                "software_nombre":"Drupal",
-                "software_version":"7.57"
-            }
-        ],
-        "cms":[
-            {
-                "cms_nombre":"Drupal",
-                "cms_categoria":"Plugin",
-                "cms_extension_nombre":"Form 7",
-                "cms_extension_version":"1.12"
-            },
-            {
-                "cms_nombre":"Wordpress",
-                "cms_categoria":"Plugin",
-                "cms_extension_nombre":"",
-                "cms_extension_version":""
-            }
-        ],
-        "profundidad":2
-    }
-
-    exploits = buscar_exploits(json_identificar, con)
-    explotaciones = explotacion.execute(json_explotacion,exploits)
-    json_recibido.update(explotaciones)
-    print(json_recibido)
-    con.explotacion_insertar_datos(json_recibido)
+def reporte_explotacion(con, datos_explotacion, datos_identificados, peticion_proceso, peticion_reporte, numero_grafica):
+    exploits = buscar_exploits(datos_identificados, con)
+    explotaciones = explotacion.execute(datos_explotacion,exploits)
+    peticion_proceso.update(explotaciones)
+    con.explotacion_insertar_datos(peticion_proceso)
     explotacion_estadisticas = con.explotacion_obtener_estadisticas()
     con.explotacion_borrar_temp()
-    crear_reportes_explotacion(explotacion_estadisticas,json_reporte, numero_grafica)
-    reportes.execute(json_reporte)
-
-    ############################################################# PERSISTENCIA #############################################################
-
-    con.guardar_analisis(json_recibido)
-
-    informacion = obtener_informacion_sitio(con, json_recibido["sitio"])
-    print(informacion)
-
-    analisis = obtener_informacion_analisis(con, json_recibido["sitio"])
-    print(analisis)
-
-    fuzzings = obtener_informacion_fuzzing(con, json_recibido["sitio"])
-    print(fuzzings)
-
-    explotaciones = obtener_informacion_explotacion(con, json_recibido["sitio"])
-    print(explotaciones)
+    numero_grafica = crear_reportes_explotacion(explotacion_estadisticas,peticion_reporte, numero_grafica)
+    reportes.execute(peticion_reporte)
+    return numero_grafica
 
 """
     Generar reportes
@@ -338,15 +332,15 @@ def crear_reporte_fuzzing_individual(lista_resultados_exitosos, lista_resultados
     }
     return analisis
 
-def crear_reportes_fuzzing(fuzzing_estadisticas, json_reporte, numero_grafica):
+def crear_reportes_fuzzing(fuzzing_estadisticas, peticion_reporte, numero_grafica):
     reporte = root+"/modules/reportes/ifram_grafica"
     ataques, ataques_resultado = fuzzing_datos_generales(fuzzing_estadisticas,reporte+"{0}.html".format(numero_grafica))
     analisis = crear_reporte_fuzzing_general(ataques,ataques_resultado,reporte+"{0}.html".format(numero_grafica),fuzzing_estadisticas["sitio"])
-    json_reporte["analisis"].append(analisis)
+    peticion_reporte["analisis"].append(analisis)
     numero_grafica += 1
     estado, ataques, lista_resultados_exitosos, lista_resultados_fracasos = fuzzing_datos_individuales(fuzzing_estadisticas,reporte+"{0}.html".format(numero_grafica))
     analisis = crear_reporte_fuzzing_individual(lista_resultados_exitosos, lista_resultados_fracasos,reporte+"{0}.html".format(numero_grafica),fuzzing_estadisticas["sitio"])
-    json_reporte["analisis"].append(analisis)
+    peticion_reporte["analisis"].append(analisis)
     numero_grafica += 1
     return numero_grafica
 
@@ -364,39 +358,40 @@ def crear_reporte_explotacion_general(ataques, ataques_resultado, reporte, sitio
     }
     return analisis
 
-def crear_reportes_explotacion(explotacion_estadisticas, json_reporte, numero_grafica):
+def crear_reportes_explotacion(explotacion_estadisticas, peticion_reporte, numero_grafica):
     reporte = root+"/modules/reportes/ifram_grafica_explotacion"
     ataques, ataques_resultado = explotacion_datos_generales(explotacion_estadisticas,reporte+"{0}.html".format(numero_grafica))
-    analisis = crear_reporte_explotacion_general(ataques,ataques_resultado,reporte+"{0}.html".format(numero_grafica),json_reporte["sitio"])
-    json_reporte["analisis"].append(analisis)
+    analisis = crear_reporte_explotacion_general(ataques,ataques_resultado,reporte+"{0}.html".format(numero_grafica),peticion_reporte["sitio"])
+    peticion_reporte["analisis"].append(analisis)
     numero_grafica += 1
+    return numero_grafica
 
 """
     Utilidades
         Falta obtener los datos para consultar los exploits, estos se recuperan del analisis y obtener informacion
 """
-def obtener_datos_consulta_exploits(json_recibido):
+def obtener_datos_consulta_exploits(peticion_proceso):
     return True, True
 
-def buscar_exploits(json_identificar, con):
+def buscar_exploits(datos_identificados, con):
     exploits = []
-    for software in json_identificar["software"]:
+    for software in datos_identificados["software"]:
         json_software = {
             "software_nombre":software["software_nombre"],
             "software_version":software["software_version"],
         }
-        exploit_software = con.exploit_buscar_software(json_software,json_identificar["profundidad"])
+        exploit_software = con.exploit_buscar_software(json_software,datos_identificados["profundidad"])
         for exploit in exploit_software["exploits"]:
             exploits.append(exploit)
     
-    for cms in json_identificar["cms"]:
+    for cms in datos_identificados["cms"]:
         json_cms = {
             "cms_nombre":cms["cms_nombre"],
             "cms_categoria":cms["cms_categoria"],
             "cms_extension_nombre":cms["cms_extension_nombre"],
             "cms_extension_version":cms["cms_extension_version"]
         }
-        exploit_cms = con.exploit_buscar_cms(json_cms,json_identificar["profundidad"])
+        exploit_cms = con.exploit_buscar_cms(json_cms,datos_identificados["profundidad"])
         for exploit in exploit_cms["exploits"]:
             exploits.append(exploit)
 
@@ -425,18 +420,24 @@ def obtener_informacion_explotacion(con, sitio):
     explotacion = con.explotacion_sitio(sitio)
     return explotacion
 
+"""
+    Programar tarea
+        Ejecucion
+"""
+
 @app.route("/")
 def index():
     return render_template("app.html")
 
-# @app.route("/ejecucion",methods=["GET","POST"])
-# def ejecucion():
-#     if request.method == "POST":
-#         peticion_json = request.get_json()
-#         validar_json_ejecucion(peticion_json)
-#         iniciar_analisis(peticion_json)
-#         print(respuesta)
-#         return respuesta
+@app.route("/ejecucion",methods=["GET","POST"])
+def ejecucion():
+    if request.method == "POST":
+        peticion_json = request.json
+        #validar_json_ejecucion(peticion_json)
+        respuesta = iniciar_analisis(peticion_json)
+        return respuesta
+    if request.method == "GET":
+        return "GET no"
 
 # @app.route("/consulta", methods=["GET","POST"])
 # def consulta():
@@ -456,15 +457,6 @@ def index():
 #         print(respuesta)
 #         return respuesta
 
-# @app.route("/programar",methods=["GET","POST"])
-# def programar():
-#     if request.method == "POST":
-#         peticion_json = request.get_json()
-#         validar_json_programar(peticion_json)
-#         respuesta = programar.execute(peticion_json)
-#         print(respuesta)
-#         return respuesta
-
 # Ejecucion de Flask
 '''
     Nota:
@@ -479,5 +471,4 @@ def index():
 '''
 
 if __name__ == "__main__":
-    iniciar_analisis()
     app.run(host='127.0.0.1', port=3000, debug=True)
