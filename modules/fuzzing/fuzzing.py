@@ -153,6 +153,8 @@ class Lanzar_fuzzing(threading.Thread):
       threading.Thread.__init__(self)
       self.sin_navegador = webdriver.ChromeOptions()
       self.sin_navegador.add_argument('headless')      
+      self.sin_navegador.add_argument('--no-sandbox')
+      self.sin_navegador.add_argument('--disable-dev-shm-usage')
       self.driver = webdriver.Chrome("/usr/bin/chromedriver",options=self.sin_navegador)
       #self.driver = webdriver.Chrome()
       self.driver.set_page_load_timeout(5)
