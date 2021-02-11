@@ -16,7 +16,7 @@ Conflicts=getty@tty1.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /home/kali/Proyectos/proyecto_final_pbsi/analisis_{0}.py
+ExecStart=/usr/bin/python3 /home/kali/proyectos/proyecto_final_pbsi/analisis_{0}.py
 StandardInput=tty-force
 
 [Install]
@@ -87,7 +87,7 @@ while True:
     time.sleep(60)
     '''
 
-    with open ("/home/kali/Proyectos/proyecto_final_pbsi/analisis_{0}.py".format(servicio),"w") as script:
+    with open ("/home/kali/proyectos/proyecto_final_pbsi/analisis_{0}.py".format(servicio),"w") as script:
         script.write(carga)
         print("creado")
 
