@@ -1,0 +1,23 @@
+{
+    "routes":[
+		"README.txt",
+		"htaccess.txt",
+		"admin.xml",
+		"administrator/components/com_admin/admin.xml",
+		"administrator/components/com_joomlaupdate/config.xml",
+		"administrator/components/com_actionlogs/actionlogs.xml",
+		"administrator/components/com_admin/sql/updates/mysql/",
+		"administrator/components/com_privacy/privacy.xml",
+		"administrator/manifests/files/joomla.xml",
+		"administrator/components/com_actionlogs/actionlogs.xml",
+		"administrator/components/com_admin/sql/updates/mysql/",
+		"administrator/components/com_privacy/privacy.xml",
+		"administrator/manifests/files/joomla.xml",
+		"administrator/language/en-GB/install.xml",
+		"administrator/modules/mod_latestactions/mod_latestactions.xml",
+		"administrator/modules/mod_privacy_dashboard/mod_privacy_dashboard.xml",
+		"media/system/js/associations-edit-uncompressed.js",
+		"plugins/user/terms/terms.xml",
+		"administrator/language/en-GB/"
+	]
+}

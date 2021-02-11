@@ -10,7 +10,10 @@ import pathlib
 from bs4 import BeautifulSoup as bs
 from urllib.request import urlopen
 import re
+import sys
 from os import path
+from jsmin import jsmin
+from xml.etree.ElementTree import fromstring, ElementTree
 
 class Utilerias():
 	def __init__(self):
@@ -46,6 +49,25 @@ class Utilerias():
 		respuesta = self.get_peticion(sitio)
 		return BeautifulSoup(respuesta.content, "html.parser")
 
+	def buscar_archivo_comun(self,lista_urls):
+		files_comunes = []
+		i = 0
+		for url in lista_urls:
+			respuesta = self.get_peticion(url)
+			if (respuesta.status_code == 200) and self.directorio_existente(url):
+				files_comunes.append(url)
+			i += 1
+		return files_comunes
+
+	def generar_urls(self,sitio,lista_urls):
+		urls = []
+		for url in lista_urls:
+			if sitio[-1] == "/":
+				urls.append(sitio + url)
+			else:
+				urls.append(sitio + "/" + url)
+		return urls
+
 class Wordpress():
 
 	def __init__(self,sitio):
@@ -54,7 +76,48 @@ class Wordpress():
 
 	def inicio_wordpress(self,deteccion_cms,tmp_diccionario):
 		info = self.carga_configuracion()
-		tmp_diccionario["Version"] = self.obtener_version_wordpress()
+		tmp_cms = {}
+		tmp_cms["nombre"] = "wordpress"
+		tmp_cms["version"] = self.obtener_version_wordpress()
+		tmp_diccionario["CMS"] = tmp_cms
+		informacion_expuesta = self.obtener_informacion_sensible(info)
+		tmp_diccionario["Plugins"] = informacion_expuesta.pop("plugins")
+		tmp_diccionario["Librerias"] = []
+		tmp_diccionario["Archivos"] = informacion_expuesta.pop("exposed_files")
+
+	def obtener_informacion_sensible(self,wordpress_info):
+		informacion_recopilada = {}
+		for info in wordpress_info:
+			if info["type"] == "json":
+				respuesta = self.util.get_peticion(path.join(self.sitio,info["resource"]))
+				try:
+					datos = json.loads(respuesta.text)
+					n = []
+					for d in datos:
+						n.append(d[info["key"]])
+					informacion_recopilada[info["info"]] = n
+				except json.decoder.JSONDecodeError:
+					informacion_recopilada[info["info"]] = []
+			if info["type"] == "file":
+				archivos_expuestos = []
+				for archivo in info["dir_files"]:
+					print(self.sitio + archivo)
+					respuesta = self.util.get_peticion(path.join(self.sitio,archivo))
+					status_code_redirect = -1
+					if len(respuesta.history) > 0:
+						status_code_redirect = respuesta.history[0].status_code
+					if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):
+						archivos_expuestos.append(archivo)
+					else:
+						respuesta = requests.post(path.join(self.sitio,archivo),headers=self.util.get_fake_user_agent())
+						if len(respuesta.history) > 0:
+							status_code_redirect = respuesta.history[0].status_code
+						if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):
+							archivos_expuestos.append(archivo)
+				informacion_recopilada[info["info"]] = archivos_expuestos
+		return informacion_recopilada
+
+
 
 	def obtener_version_wordpress(self):
 		version = self.busqueda_tag_meta()
@@ -88,7 +151,7 @@ class Wordpress():
 		respuesta = self.util.get_peticion(self.sitio)
 		match = self.expresion_regular("content=\"[w|W]ord[p|P]ress.*>",respuesta.text)
 		if(match != None):
-			match = expresion_regular("[0-9].*\"",match)
+			match = self.expresion_regular("[0-9].*\"",match)
 			return match[:-1]
 		return "Desconocida"
 
@@ -122,9 +185,11 @@ class Wordpress():
 
 	def carga_configuracion(self):
 		config_file = self.util.obtener_path_file("config/","config_wordpress",".json")
+		#print(config_file)
 		with open(config_file) as configuracion:
-			datos = json.load(configuracion)
-			informacion = datos["wordpress"]
+			datos = jsmin(configuracion.read())
+			config = json.loads(datos)
+			informacion = config["wordpress"]
 			return informacion
 
 class Moodle():
@@ -134,7 +199,72 @@ class Moodle():
 
 	def inicio_moodle(self,deteccion_cms,tmp_diccionario):
 		info = self.carga_configuracion()
-		tmp_diccionario["Version"] = self.detect_version(info["version_file"])
+		tmp_cms = {}
+		tmp_cms["nombre"] = "moodle"
+		tmp_cms["version"] = self.detect_version(info["version_file"])
+		tmp_diccionario["CMS"] = tmp_cms
+		tmp_diccionario["Plugins"] = self.get_plugins_moodle(info["plugs"])
+		tmp_diccionario["Librerias"] = self.get_librerias_moodle(info["libs"])
+		tmp_diccionario["Archivos"] = self.get_archivos_moodle(info["dir_files"])
+
+	def get_plugins_moodle(self,location_of_plugins):
+		plugins_for_verify = []
+		for location_plugin in location_of_plugins:
+			if self.url[-1] =="/":
+				plugins_for_verify.append(self.url + location_plugin.strip())
+			else:
+				plugins_for_verify.append(self.url + "/" + location_plugin.strip())
+		plugins_raw = self.util.buscar_archivo_comun(plugins_for_verify)
+		if len(plugins_raw) == 0:
+			return ["No se encontraron plugins."]
+		else:
+			plugins = []
+			for plugin_raw in plugins_raw:
+				plugins.append(plugin_raw[len(self.url):plugin_raw.rfind("/")])
+			list_plugins=[]
+			for plugin in plugins:
+				list_plugins.append(plugin)
+			return list_plugins
+
+	def get_librerias_moodle(self,librerias):
+		if self.url[-1] == "/":
+			tmp_url = self.url + librerias
+		else:
+			tmp_url = self.url + "/" + librerias
+
+		respuesta = self.util.get_peticion(tmp_url)
+		if respuesta.status_code == 200 and self.util.directorio_existente(tmp_url):
+			lib_ver = {}
+			tree = ElementTree(fromstring(respuesta.content))
+			root = tree.getroot()
+			lista_librerias = []
+			for directorio in root:
+				libreria = directorio[1].text
+				version_libreria = directorio[3].text
+				if type(version_libreria) == type(None):
+					version_libreria = ""
+				lib_ver[libreria] = version_libreria
+				lista_librerias.append(libreria + " v " + version_libreria)
+			return lista_librerias
+		else:
+			return []
+
+	def get_archivos_moodle(self,dir_archivos):
+		verificar_archivos = []
+		for localizar_archivo in dir_archivos:
+			if self.url[-1] == "/":
+				verificar_archivos.append(self.url + localizar_archivo.strip())
+			else:
+				verificar_archivos.append(self.url + "/" + localizar_archivo.strip())
+		archivos = self.util.buscar_archivo_comun(verificar_archivos)
+		if len(archivos) == 0:
+			return []
+		else:
+			lista_archivos = []
+			for archivo in archivos:
+				lista_archivos.append(archivo)
+			return lista_archivos
+
 
 	def detect_version(self,version_file):
 		if self.url[-1] == "/":
@@ -151,7 +281,7 @@ class Moodle():
 			version = respuesta.text[tmp_1:tmp_2].strip()
 			version = version[:3]
 		else:
-			version = "Desconocida"
+			version = ""
 		return version
 
 	def detect_cms(self):
@@ -186,15 +316,18 @@ class Drupal():
 		self.util = Utilerias()
 
 	def inicio_drupal(self,deteccion_cms,tmp_diccionario):
+		tmp_cms = {}
 		config = self.carga_configuracion()
-		tmp_diccionario['Version'] = self.detect_version(config)
+		version = self.detect_version(config)
 		ver = version.strip().split('.')[0]
 		modulos = config['directorios'][0][ver][0]['modules']
 		archivos = config['directorios'][0]['expuestos']
-		#resultados["vulnerabilidades"] = detect_vulnes(self.url,version)
-		#resultados["plugins"] = realiza_peticiones(self.url,modulos,"modulos",300)
-		#resultados["librerias"] = ["Drupal almacena sus librerias/plugins en /modules, el resultado de estos se presenta en plugins"]
-		#resultados["archivos"] = realiza_peticiones(self.url,archivos,"archivos visibles")
+		tmp_cms["nombre"] = "drupal"
+		tmp_cms["version"] = version
+		tmp_diccionario["CMS"] = tmp_cms
+		tmp_diccionario["Plugins"] = self.realiza_peticiones(modulos,"modulos",300)
+		tmp_diccionario["Librerias"] = []
+		tmp_diccionario["Archivos"] = self.realiza_peticiones(archivos,"archivos visibles")
 
 	def detect_version(self,config):
 		version = None
@@ -214,7 +347,7 @@ class Drupal():
 						version = " " + respuesta.text.split(',')[0].split(' ')[1]
 		if version:
 			return version
-		return "Desconocida"
+		return ""
 
 	def calcula_codigos(self,url,archivos):
 		peticiones = 0
@@ -241,8 +374,6 @@ class Drupal():
 				# if root:
 				# 	#return "drupal",root
 				# 	return "drupal"
-			else:
-				print("No es drupal")
 		return None
 
 	def carga_configuracion(self):
@@ -252,7 +383,6 @@ class Drupal():
 			return datos["drupal"][0]
 		print("No se pudo abrir archivo de configuracion")
 		return None
-
 
 	def busca_respuesta(self, elementos, respuesta):
 		cont = 0
@@ -270,10 +400,48 @@ class Drupal():
 				return True
 		return False
 
+	def realiza_peticiones(self,recursos,busqueda,codigo=0):
+		result_list = list()
+		for recurso in recursos:
+			req = self.util.get_peticion(self.url + recurso)
+			if busqueda == "modulos":
+				if req.status_code not in range(codigo, codigo + 99) and req.status_code != 404:
+					result_list.append(recurso)
+			elif busqueda == "archivos visibles":
+				if req.status_code == 200:
+					result_list.append(recurso)
+		return result_list
+
 class Joomla():
 	def __init__(self,sitio):
 		self.sitio = sitio
 		self.util = Utilerias()
+
+	def inicio_joomla(self,deteccion_cms,tmp_diccionario):
+		tmp_cms = {}
+		tmp_cms["nombre"] = "joomla"
+		tmp_cms["version"] = self.obtener_version_joomla()
+		tmp_diccionario["CMS"] = tmp_cms
+		tmp_diccionario["Plugins"] = []
+		tmp_diccionario["Librerias"] = []
+		tmp_diccionario["Archivos"] = self.obtener_archivos_joomla(self.util.generar_urls(self.sitio,self.cargar_configuracion()))
+
+	def obtener_version_joomla(self):
+		soup = self.util.obtener_contenido_html(self.sitio+"README.txt")
+		for linea in (soup.text).splitlines():
+			regex = re.compile("([Jj]oomla!)*\d*\.\d\s([Vv]ersion)")
+			if regex.search(linea):
+				break
+		version = re.findall("\d+\.\d+",linea)
+		return version[0]
+
+	def obtener_archivos_joomla(self,urls):
+		archivos_detectados = []
+		for archivo in urls:
+			respuesta = self.util.get_peticion(archivo)
+			if respuesta.status_code == 200:
+				archivos_detectados.append(archivo)
+		return archivos_detectados
 
 	def detect_cms(self):
 		joomla_encontrado = False
@@ -307,18 +475,23 @@ class Joomla():
 				return True
 		return False
 
+	def cargar_configuracion(self):
+		try:
+			configuracion = self.util.obtener_path_file("config/","config_joomla",".json")
+			with open(configuracion) as json_archivo:
+				datos = json.load(json_archivo)
+				routes = datos["routes"]
+				return routes
+		except IOError:
+			exit()
+
 
 class Obtencion_informacion():
 
 	def __init__(self):
-		self.sitio = "https://wordpress.com/"
+		self.sitio = sys.argv[1]
 		self.tmp_diccionario = {}
 		self.json_informacion = {}
-		# self.url_without_file()
-		# self.get_version_server()
-		# self.get_headers()
-		# self.get_cifrados()
-		# self.get_robots()
 		self.menu()
 
 	def url_without_file(self):
@@ -331,8 +504,15 @@ class Obtencion_informacion():
 
 	def get_version_server(self):
 		f = Utilerias()
+		tmp_dic = {}
 		self.version = f.get_peticion(self.sitio).headers["Server"]
-		self.tmp_diccionario['Servidor'] = self.version
+		tmp_version = self.version.split("/")
+		tmp_dic["nombre"] = tmp_version[0]
+		if len(tmp_version) > 0:
+			tmp_dic["version"] = tmp_version[1]
+		else:
+			tmp_dic["version"] = ""
+		self.tmp_diccionario['Servidor'] = tmp_dic
 		return self.tmp_diccionario
 
 	def get_headers(self):
@@ -361,11 +541,17 @@ class Obtencion_informacion():
 	def get_robots(self):
 		self.robot_parser = RobotFileParser()
 		try:
-			self.robot_parser.set_url(f'{self.sitio}/robots.txt')
+			self.robot_parser.set_url(f'{self.sitio}robots.txt')
 			self.robot_parser.read()
 		except(URLError):
 			self.robot_parser = None
 		print(self.robot_parser)
+
+	def get_directorios(self):
+		comando = "dirb " + self.sitio
+		args = shlex.split(comando)
+		self.directorios = subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout
+		print(self.directorios)
 
 	def menu(self):
 		self.get_version_server()
@@ -373,6 +559,8 @@ class Obtencion_informacion():
 		detected_cms = None
 		detect_root = None
 		detect_list = ["Drupal","Moodle","Joomla","Wordpress"]
+		#self.get_robots()
+		#self.get_directorios()
 		#try:
 		for cms_key in detect_list:
 			if "Drupal" == cms_key:
@@ -385,7 +573,6 @@ class Obtencion_informacion():
 				r_objeto = Wordpress(self.sitio)
 			deteccion_cms = r_objeto.detect_cms()
 			if deteccion_cms:
-				self.tmp_diccionario["CMS"] = deteccion_cms
 				break
 		if deteccion_cms:
 			if deteccion_cms == 'drupal':
