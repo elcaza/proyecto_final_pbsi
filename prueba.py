@@ -11,7 +11,7 @@ headers = {
 
 peticion = {
     "sitio":"prueba:8080",
-    "ejecucion":1612745454,
+    "ejecucion":"",
     # "sitio":"seguridad.unam.mx"
     # Obtener informacion
     "dnsdumpster" : {

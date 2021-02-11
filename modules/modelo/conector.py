@@ -194,6 +194,51 @@ class Conector():
                         
         return forms_estadisticas
 
+    # def fuzzing_obtener_alertas(self):
+    #     coleccion_fuzzing = self.base_datos[strings.COLECCION_FUZZING]
+    #     forms_alertas = {}
+    #     forms = coleccion_fuzzing.find_one()
+    #     forms_alertas["sitio"] = forms["sitio"]
+    #     motivo = ""
+    #     for form in forms["forms"]:
+    #         for index in forms["forms"][form]:
+    #             if index["xss"] == True:
+    #                 motivo += "XSS Detectado en Form -> {0}, inputs -> {1}\n".format(form, index["inputs"])
+    #             if index["sqli"] == True:
+    #                 motivo += "SQLi Detectado en Form -> {0}, inputs -> {1}\n".format(form, index["inputs"])
+    #             if index["lfi"] == True:
+    #                 motivo += "LFI Detectado en Form -> {0}, inputs -> {1}\n".format(form, index["inputs"])
+    #     forms_alertas["motivo"] = motivo
+    #     forms_alertas["estado"] = "Posiblemente vulnerable"
+    #     return forms_alertas
+
+    def fuzzing_obtener_alertas(self):
+        coleccion_fuzzing = self.base_datos[strings.COLECCION_FUZZING]
+        forms_alertas = {}
+        forms = coleccion_fuzzing.find_one()
+        forms_alertas["sitio"] = forms["sitio"]
+        motivo = ""
+        xss = 0
+        sqli = 0
+        lfi = 0
+        for form in forms["forms"]:
+            for index in forms["forms"][form]:
+                if index["xss"] == True:
+                    xss += 1
+                if index["sqli"] == True:
+                    sqli += 1
+                if index["lfi"] == True:
+                    lfi += 1
+            motivo += '''
+            Form: {0}
+            {1} XSS Detectados
+            {2} SQLi Detectados
+            {3} LFI Detectados
+            '''.format(form, xss, sqli, lfi)
+        forms_alertas["motivo"] = motivo
+        forms_alertas["estado"] = "Posiblemente vulnerable"
+        return forms_alertas
+
     def fuzzing_borrar_temp(self):
         coleccion_fuzzing = self.base_datos[strings.COLECCION_FUZZING]
         coleccion_fuzzing.delete_many({})
@@ -205,6 +250,20 @@ class Conector():
         coleccion_explotacion.insert_one(json_cargar_datos)
 
     def explotacion_obtener_estadisticas(self):
+        coleccion_explotacion = self.base_datos[strings.COLECCION_EXPLOTACION]
+        explotacion_alertas = {}
+        explotaciones = coleccion_explotacion.find_one()
+        explotacion_alertas["sitio"] = explotaciones["sitio"]
+        motivo = ""
+        for exploit in explotaciones["explotaciones"]:
+            for puerto in explotaciones["explotaciones"][exploit]:
+                if explotaciones["explotaciones"][exploit][puerto] == 1:
+                    motivo += "Exploit {0} ejecutado con éxito".format(exploit)
+        explotacion_alertas["motivo"] = motivo
+        explotacion_alertas["estado"] = "Vulnerable"
+        return explotacion_alertas
+
+    def explotacion_obtener_alertas(self):
         coleccion_explotacion = self.base_datos[strings.COLECCION_EXPLOTACION]
         explotacion = {}
         explotaciones = coleccion_explotacion.find_one()

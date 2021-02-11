@@ -137,17 +137,22 @@ class Correo():
         return sitio_vulnerable
 
     def get_body_motivo(self, motivo):
-        motivo = """
+        motivos = """
                             <tr>
                                 <td style="padding: 0; margin: 0; padding-left: 10px; padding-top: 20px;">
                                     Motivo
                                 </td>
                                 <td style="padding: 0; margin: 0;  padding-left: 10px; padding-top: 20px;">
-                                    {0}
-                                </td>
+
+                """
+        for seccion in motivo.split("\n"):
+            motivos += "<p>{0}</p>".format(seccion)
+
+        motivos += """
+                                      </td>
                             </tr>
-            """.format(motivo)
-        return motivo
+            """
+        return motivos
 
     def get_body_estado(self, estado):
         estado = """
