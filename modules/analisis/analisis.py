@@ -14,6 +14,7 @@ import sys
 from os import path
 from jsmin import jsmin
 from xml.etree.ElementTree import fromstring, ElementTree
+from Wappalyzer import Wappalyzer, WebPage
 
 class Utilerias():
 	def __init__(self):
@@ -84,6 +85,7 @@ class Wordpress():
 		tmp_diccionario["Plugins"] = informacion_expuesta.pop("plugins")
 		tmp_diccionario["Librerias"] = []
 		tmp_diccionario["Archivos"] = informacion_expuesta.pop("exposed_files")
+		tmp_diccionario["Temas"] = informacion_expuesta.pop("themes")
 
 	def obtener_informacion_sensible(self,wordpress_info):
 		informacion_recopilada = {}
@@ -101,7 +103,7 @@ class Wordpress():
 			if info["type"] == "file":
 				archivos_expuestos = []
 				for archivo in info["dir_files"]:
-					print(self.sitio + archivo)
+					#print(self.sitio + archivo)
 					respuesta = self.util.get_peticion(path.join(self.sitio,archivo))
 					status_code_redirect = -1
 					if len(respuesta.history) > 0:
@@ -328,6 +330,7 @@ class Drupal():
 		tmp_diccionario["Plugins"] = self.realiza_peticiones(modulos,"modulos",300)
 		tmp_diccionario["Librerias"] = []
 		tmp_diccionario["Archivos"] = self.realiza_peticiones(archivos,"archivos visibles")
+		#tmp_diccionario["Vulnerabilidades"] = self.detect_vulnerabilidades()
 
 	def detect_version(self,config):
 		version = None
@@ -483,6 +486,7 @@ class Joomla():
 				routes = datos["routes"]
 				return routes
 		except IOError:
+			print("Entra aqui")
 			exit()
 
 
@@ -505,13 +509,17 @@ class Obtencion_informacion():
 	def get_version_server(self):
 		f = Utilerias()
 		tmp_dic = {}
-		self.version = f.get_peticion(self.sitio).headers["Server"]
-		tmp_version = self.version.split("/")
-		tmp_dic["nombre"] = tmp_version[0]
-		if len(tmp_version) > 0:
-			tmp_dic["version"] = tmp_version[1]
-		else:
-			tmp_dic["version"] = ""
+		wappalyzer = Wappalyzer.latest()
+		webpage = WebPage.new_from_url(self.sitio)
+		tmp = wappalyzer.analyze_with_versions_and_categories(webpage)
+		for llave,valor in tmp.items():
+			for llave2,valor2 in valor.items():
+				if llave2 == "categories" and valor2[0] == "Web servers":
+					tmp_dic["nombre"] = llave
+					try:
+						tmp_dic["version"] = valor["versions"][0]
+					except:
+						tmp_dic["version"] = []
 		self.tmp_diccionario['Servidor'] = tmp_dic
 		return self.tmp_diccionario
 
@@ -520,7 +528,13 @@ class Obtencion_informacion():
 		self.headers = []
 		comando = "python3 shcheck.py -d -j " + self.sitio
 		args = shlex.split(comando)
-		tmp_headers = json.loads(subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout)[self.sitio]
+		tmp_headers_json = json.loads(subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout)
+		try:
+			tmp_headers = tmp_headers_json[self.sitio]
+		except:
+			tmp_keys = list(tmp_headers_json.keys())
+			tmp_sitio = tmp_keys[0]
+			tmp_headers = tmp_headers_json[tmp_sitio]
 		self.headers_dic = tmp_headers['present']
 		for llave, valor in self.headers_dic.items():
 			header = llave + " - " + valor
@@ -553,15 +567,61 @@ class Obtencion_informacion():
 		self.directorios = subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout
 		print(self.directorios)
 
+	def get_lenguajes(self):
+		lenguajes = []
+		tmp_leng = {}
+		wappalyzer = Wappalyzer.latest()
+		webpage = WebPage.new_from_url(self.sitio)
+		resultado = wappalyzer.analyze_with_versions_and_categories(webpage)
+		l = open("lenguajes.txt","r")
+		for lenguaje in l.readlines():
+			lenguaje = lenguaje.rstrip('\n')
+			for llave,valor in resultado.items():
+				if lenguaje.lower() in llave.lower():
+					tmp_leng["nombre"] = llave
+					for llave2, valor2 in valor.items():
+						if llave2 == "versions":
+							try:
+								tmp_leng["version"] = valor2
+							except:
+								tmp_leng["version"] = []
+					lenguajes.append(tmp_leng)
+		self.tmp_diccionario["Lenguajes"] = lenguajes
+		return self.tmp_diccionario
+
+	def get_frameworks(self):
+		frameworks = []
+		tmp_frame = {}
+		wappalyzer = Wappalyzer.latest()
+		webpage = WebPage.new_from_url(self.sitio)
+		resultado = wappalyzer.analyze_with_versions_and_categories(webpage)
+		f = open("frameworks.txt","r")
+		for frame in f.readlines():
+			frame = frame.rstrip('\n')
+			for llave,valor in resultado.items():
+				if frame.lower() in llave.lower():
+					tmp_frame["nombre"] = llave
+					for llave2, valor2 in valor.items():
+						if llave2 == "versions":
+							try:
+								tmp_frame["version"] = valor2
+							except:
+								tmp_frame["version"] = []
+					frameworks.append(tmp_frame)
+		self.tmp_diccionario["Frameworks"] = frameworks
+		return self.tmp_diccionario
+
+
+
 	def menu(self):
 		self.get_version_server()
 		self.get_headers()
+		self.get_lenguajes()
+		self.get_frameworks()
 		detected_cms = None
 		detect_root = None
 		detect_list = ["Drupal","Moodle","Joomla","Wordpress"]
-		#self.get_robots()
-		#self.get_directorios()
-		#try:
+
 		for cms_key in detect_list:
 			if "Drupal" == cms_key:
 				r_objeto = Drupal(self.sitio)
@@ -589,6 +649,7 @@ class Obtencion_informacion():
 				r_objeto.inicio_wordpress(deteccion_cms,self.tmp_diccionario)
 		self.json_informacion[self.sitio] = self.tmp_diccionario
 		print(self.json_informacion)
+		#print(self.json_informacion)
 		#except KeyError as e:
 		#	print("No esta soportado para la version")
 		#except:
