@@ -40,27 +40,29 @@ app.config['SECRET_KEY'] = 'ojalaSePudieraLlorar_grasa'
 def iniciar_analisis(peticion):
     con = Conector()
 
-    peticion_proceso = {
-        "sitio":peticion["sitio"],
-        "ejecucion":"",
-        "informacion":{
-            "":""
-        },
-        "analisis":{
-            "":""
-        },
-        "paginas":[
-        ],
-        "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
-        "estado":{
-            "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-        }
-    }
-
     if peticion["ejecucion"] != "":
         programacion.execute(peticion)
         return "Análisis programado"
     else:
+        peticion_proceso = {
+            "sitio":peticion["sitio"],
+            "cookie":peticion["cookie"],
+            "estado":{
+                "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            }
+        }
+
+        peticion_reporte = {
+            "sitio":peticion_proceso["sitio"],
+            "fecha":peticion_proceso["estado"]["fecha"],
+            "analisis":[],
+        }
+
+        peticion_alerta = {
+            "subject":"Alerta generada automáticamente",
+            "sitios":[],
+            "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+        }
         ############################################################# OBTENER INFORMACION #############################################################
         """ 
             Obtener informacion
@@ -79,8 +81,8 @@ def iniciar_analisis(peticion):
                 Robtex:
                     Se repiten los resultados en varias ocasiones                
         """
-        # respuesta_obtener_informacion = obtener_informacion.execute(peticion)
-        # print(respuesta_obtener_informacion)
+        respuesta_obtener_informacion = obtener_informacion.execute(peticion)
+        peticion_proceso["informacion"] = respuesta_obtener_informacion
         ############################################################# ANALISIS #############################################################
         """
             Analisis
@@ -97,23 +99,7 @@ def iniciar_analisis(peticion):
 
             Errores menores:
         """
-        peticion_proceso = {
-            "sitio":peticion["sitio"],
-            "informacion":{
-                "DNS":[
-                    {
-                        "ip":"127.0.0.1",
-                        "registros":["ns","mx","a","aaaa"]
-                    }
-                ],
-                "Puertos":[
-                    {
-                        "puerto":"22",
-                        "servicio":"ssh"
-                    }
-                ]
-            },
-            "analisis":{
+        peticion_proceso["analisis"] = {
                 "CMS":{
                     "nombre":"drupal",
                     "version":"7.57"
@@ -132,37 +118,16 @@ def iniciar_analisis(peticion):
                         "version":"256"
                     }
                 ]
-            },
-            "paginas":[
+            }
+        
+        peticion_proceso["paginas"] =[
                 {
                     "sitio":"http://www.altoromutual.com:8080/login.jsp",
+                },
+                {
                     "sitio":"https://xss-game.appspot.com/level1",
-                    "sitio":"http://www.altoromutual.com:8080/login.jsp"
                 }
-            ],
-            "cookie":peticion["cookie"],
-            "estado":{
-                "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-            }
-        }
-
-        peticion_reporte = {
-            "sitio":peticion_proceso["sitio"],
-            "fecha":peticion_proceso["estado"]["fecha"],
-            "analisis":[],
-        }
-
-        peticion_alerta = {
-            "subject":"Alerta generada automáticamente",
-            "sitios":[],
-            "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-        }
-
-        # {
-        #     "sitio":"http://sitio1.com",
-        #     "motivo":"CMS vulnerable a Drupalgeddon2",
-        #     "estado":"Comprometido"
-        # }
+            ]
 
         numero_grafica = 0
 
@@ -235,6 +200,7 @@ def enviar_alertas(peticion_alerta):
     Reportes
 """
 def reporte_fuzzing(con, peticion_proceso, peticion_reporte, peticion_alerta, numero_grafica):
+    print(peticion_proceso["paginas"])
     for posicion_pagina in range(len(peticion_proceso["paginas"])):
         json_fuzzing = {
             "url":peticion_proceso["paginas"][posicion_pagina]["sitio"],
@@ -249,7 +215,7 @@ def reporte_fuzzing(con, peticion_proceso, peticion_reporte, peticion_alerta, nu
         peticion_alerta["sitios"].append(fuzzing_alertas)
         con.fuzzing_borrar_temp()
         numero_grafica = crear_reportes_fuzzing(fuzzing_estadisticas, peticion_reporte, numero_grafica)
-
+        
     return numero_grafica
 
 def reporte_explotacion(con, datos_explotacion, datos_identificados, peticion_proceso, peticion_reporte, peticion_alerta, numero_grafica):

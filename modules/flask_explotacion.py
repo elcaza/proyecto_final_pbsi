@@ -1,11 +1,13 @@
-from modules.modelo.conector import Conector
-from modules.exploits import exploits
-from modules.explotacion import explotacion
-from datetime import datetime
-from modules.alertas import alertas
-from modules.fuzzing import fuzzing
-from modules.ejecucion import ejecucion
-from modules.reportes import reportes
+#from modules.modelo.conector import Conector
+#from modules.exploits import exploits
+#from modules.explotacion import explotacion
+#from datetime import datetime
+#from modules.alertas import alertas
+#from modules.fuzzing import fuzzing
+#from modules.ejecucion import ejecucion
+#from modules.reportes import reportes
+#from modules.obtencion_informacion import obtener_informacion
+from obtencion_informacion import obtener_informacion
 ################################################## CONEXION MONGODB ##################################################
 '''
     Checar estado de la conexion
@@ -143,14 +145,14 @@ from modules.reportes import reportes
 
 ################################################## FUZZING ##################################################
 
-json_fuzzing = {
-    "url":"https://xss-game.appspot.com/level1",
-    "hilos":4,
-    "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
-}
+# json_fuzzing = {
+#     "url":"https://xss-game.appspot.com/level1",
+#     "hilos":4,
+#     "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
+# }
 
-res = fuzzing.execute(json_fuzzing)
-print(res)
+# res = fuzzing.execute(json_fuzzing)
+# print(res)
 ################################################## FUZZING ##################################################
 
 ################################################## EJECUCION ##################################################
@@ -166,28 +168,59 @@ print(res)
 
 ################################################## REPORTES ##################################################
 
-json_reporte = {
-    "sitio":"seguridad.unam.mx",
-    "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-    "analisis":[
-        {
-            "categoria":"Informacion del sitio",
-            "grafica":"",
-            "cabecera":["Categoría","Dato","Versión"],
-            "datos":[
-                ["Servidor","Apache","1.14"],
-                ["CMS","Wordpress",""]
-            ]
-        },
-        {
-            "categoria":"Resultados",
-            "grafica":"grafica.png",
-            "cabecera":["Sitio","Motivo","Estado"],
-            "datos":[
-                ["http://localhost","Ejecucion del exploit \"exploit1.sh\"","Fracaso"],
-                ["http://localhost","Ejecucion del exploit \"exploit2.sh\"","Exitoso"]
-            ]
-        }
-    ]
+# json_reporte = {
+#     "sitio":"seguridad.unam.mx",
+#     "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+#     "analisis":[
+#         {
+#             "categoria":"Informacion del sitio",
+#             "grafica":"",
+#             "cabecera":["Categoría","Dato","Versión"],
+#             "datos":[
+#                 ["Servidor","Apache","1.14"],
+#                 ["CMS","Wordpress",""]
+#             ]
+#         },
+#         {
+#             "categoria":"Resultados",
+#             "grafica":"grafica.png",
+#             "cabecera":["Sitio","Motivo","Estado"],
+#             "datos":[
+#                 ["http://localhost","Ejecucion del exploit \"exploit1.sh\"","Fracaso"],
+#                 ["http://localhost","Ejecucion del exploit \"exploit2.sh\"","Exitoso"]
+#             ]
+#         }
+#     ]
+# }
+# #reportes.execute(json_reporte)
+
+################################################## OBTENER INFORMACION ##################################################
+json_obtener_informacion = {
+	"sitio":"http://altoromutual.com",
+	"dnsdumpster" : {
+		"revision":True,
+		"dns" : True,
+		"txt" : True,
+		"host" : True,
+		"mx" : True
+
+	},
+	"robtex" : {
+		"revision":True,
+		"informacion":True,
+		"dns_forward":True,
+		"mx_forward":True,
+		"host_forward":True,
+		"host_reverse":True
+	},
+	"puertos" : { 
+		"revision" : True,
+		"opcion" : "rango",
+		"rango" : {
+			"inicio" : 0,
+			"final" : 100
+		}
+	}
 }
-#reportes.execute(json_reporte)
+
+resultado = obtener_informacion.execute(json_obtener_informacion)

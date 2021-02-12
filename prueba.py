@@ -10,33 +10,32 @@ headers = {
 }
 
 peticion = {
-    "sitio":"prueba:8080",
+	"sitio":"http://altoromutual.com:8080",
     "ejecucion":"",
-    # "sitio":"seguridad.unam.mx"
-    # Obtener informacion
-    "dnsdumpster" : {
-        "revision":True,
-        "dns" : True,
-        "txt" : True,
-        "host" : True,
-        "mx" : False
-    },
-    "robtex" : {
-        "revision":True,
-        "informacion":True,
-        "dns_forward":False,
-        "mx_forward":True,
-        "host_forward":False,
-        "host_reverse":True
-    },
-    "puertos" : { 
-        "revision" : True,
-        "opcion" : "rango",
-        "rango" : {
-            "inicio" : 20,
-            "final" : 100
-        }
-    },
+	"dnsdumpster" : {
+		"revision":True,
+		"dns" : True,
+		"txt" : True,
+		"host" : True,
+		"mx" : True
+
+	},
+	"robtex" : {
+		"revision":True,
+		"informacion":True,
+		"dns_forward":True,
+		"mx_forward":True,
+		"host_forward":True,
+		"host_reverse":True
+	},
+	"puertos" : { 
+		"revision" : True,
+		"opcion" : "rango",
+		"rango" : {
+			"inicio" : 8070,
+			"final" : 8090
+		}
+	},
     # Analisis
     "algo":"",
     #Fuzzing

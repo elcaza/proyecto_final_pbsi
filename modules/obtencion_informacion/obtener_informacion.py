@@ -3,6 +3,7 @@
 
 import json
 import random
+from time import sleep, time
 #from googlesearch import search
 from dnsdumpster.DNSDumpsterAPI import DNSDumpsterAPI
 #from py_ms_cognitive import PyMsCognitiveWebSearch
@@ -24,7 +25,11 @@ class Robtex_informacion():
 		self.opciones_robtex = opciones_robtex
 		self.base_api_url = 'https://freeapi.robtex.com/'
 		self.dominio = dominio
-		self.ip_address = socket.gethostbyname(self.dominio)
+		print(self.dominio)
+		try:
+			self.ip_address = socket.gethostbyname(self.dominio)
+		except socket.gaierror:
+			self.ip_address = ""
 		self.informacion_robtex = {}
 
 	def ip_query(self):
@@ -57,35 +62,50 @@ class Robtex_informacion():
 			return None
 	
 	def clasificacion_registros(self):
-		temp_NS = []
-		temp_A = []
-		temp_MX = []
-		dns_forward = {}
-		dns_reverse = {}
-		forward = self.pdns_forward()
-		ip = self.ip_query()
-		dns_reverse = self.pdns_reverse()
-		if self.opciones_robtex["informacion"]:
-			informacion = {}
-			informacion["ip"] = self.ip_address
-			informacion["ciudad"] = ip["city"]
-			informacion["pais"] = ip["country"]
-			informacion["red"] = ip["bgproute"]
-			self.informacion_robtex["informacion"] = informacion
-		if("list" in str(type(forward))):
-			for registro in forward:
-				self.tipos_registros(registro,temp_NS,temp_A,temp_MX,"forward")
+		if self.ip_address == "":
+			temp_NS = []
+			temp_A = []
+			temp_MX = []
+			dns_forward = {}
+			dns_reverse = {}
+			forward = self.pdns_forward()
+			ip = self.ip_query()
+			contador = 0
+			while ip == None:
+				print("Timeout Robtex",contador)
+				sleep(60)
+				contador += 1
+				ip = self.ip_query()
+			print("IP Pass")
+			while forward == None:
+				print("Timeout Robtex",contador)
+				sleep(60)
+				contador += 1
+				forward = self.pdns_forward()
+			print("FW Pass")
+			dns_reverse = self.pdns_reverse()
+			if self.opciones_robtex["informacion"]:
+				informacion = {}
+				informacion["ip"] = self.ip_address
+				informacion["ciudad"] = ip["city"]
+				informacion["pais"] = ip["country"]
+				informacion["red"] = ip["bgproute"]
+				self.informacion_robtex["informacion"] = informacion
+			if("list" in str(type(forward))):
+				for registro in forward:
+					self.tipos_registros(registro,temp_NS,temp_A,temp_MX,"forward")
+			else:
+				self.tipos_registros(self.pdns_forward,temp_NS,temp_A,temp_MX,"forward")
+			temp_NS = []
+			temp_A = []
+			temp_MX = []
+			if("list" in str(type(dns_reverse))):
+				for registro in dns_reverse:
+					self.tipos_registros(registro,temp_NS,temp_A,temp_MX,"reverse")
+			else:
+				self.tipos_registros(dns_reverse,temp_NS,temp_A,temp_MX,"reverse")
 		else:
-			self.tipos_registros(self.pdns_forward,temp_NS,temp_A,temp_MX,"forward")
-		temp_NS = []
-		temp_A = []
-		temp_MX = []
-		if("list" in str(type(dns_reverse))):
-			for registro in dns_reverse:
-				self.tipos_registros(registro,temp_NS,temp_A,temp_MX,"reverse")
-		else:
-			self.tipos_registros(dns_reverse,temp_NS,temp_A,temp_MX,"reverse")
-		
+			self.informacion_robtex["informacion"] = {}
 		return self.informacion_robtex
 
 	def tipos_registros(self,registro,temp_NS,temp_A,temp_MX,tipo_busqueda):
@@ -112,8 +132,6 @@ class Robtex_informacion():
 		else:
 			if self.opciones_robtex["host_reverse"]:
 				self.informacion_robtex["host_reverse"] = temp_A
-
-
 
 class Obtener_informacion():
 
@@ -188,7 +206,6 @@ class Obtener_informacion():
 		robtex_final = robtex.clasificacion_registros()
 		self.json_informacion["Robtex"] = robtex_final
 
-
 	def scanner_puertos(self):
 		print("Entra a Scanner de puertos")
 		puertos_completos = {}
@@ -225,7 +242,7 @@ class Obtener_informacion():
 				elif separar_linea[1] == "closed":
 					puertos_cerrados.append(temp_informacion)
 					puertos_completos["cerrados"] = puertos_cerrados
-				elif sepra_linea[1] == "sin_filtrar":
+				elif separar_linea[1] == "sin_filtrar":
 					puertos_sin_filtrar.append(temp_informacion)
 					puertos_completos["sin_filtrar"] = puertos_sin_filtrar
 		self.json_informacion["Puertos"] = puertos_completos
@@ -239,21 +256,25 @@ class Obtener_informacion():
 		temp_registros = {}
 		contador_datos = 0
 		registros = DNSDumpsterAPI().search(self.sitio)
-		registros = registros["dns_records"]
-		if self.opciones_dnsdumpster["txt"]:
-			informacion_dnsdumpster["txt"] = registros["txt"]
-		if self.opciones_dnsdumpster["dns"]:
-			for registro_dns in registros["dns"]:
-				dns.append(self.clasificacion_dnsdumspter(registro_dns,temp_registros,contador_datos))
-			informacion_dnsdumpster['dns'] = dns
-		if self.opciones_dnsdumpster["mx"]:
-			for registro_mx in registros["mx"]:
-				mx.append(self.clasificacion_dnsdumspter(registro_mx,temp_registros,contador_datos))
-			informacion_dnsdumpster['mx'] = mx
-		if self.opciones_dnsdumpster["host"]:
-			for registro_host in registros["host"]:
-				host.append(self.clasificacion_dnsdumspter(registro_host,temp_registros,contador_datos))
-			informacion_dnsdumpster['host'] = host
+		if len(registros) != 0:
+			registros = registros["dns_records"]
+			if self.opciones_dnsdumpster["txt"]:
+				informacion_dnsdumpster["txt"] = registros["txt"]
+			if self.opciones_dnsdumpster["dns"]:
+				for registro_dns in registros["dns"]:
+					dns.append(self.clasificacion_dnsdumspter(registro_dns,temp_registros,contador_datos))
+					temp_registros = {}
+				informacion_dnsdumpster['dns'] = dns
+			if self.opciones_dnsdumpster["mx"]:
+				for registro_mx in registros["mx"]:
+					mx.append(self.clasificacion_dnsdumspter(registro_mx,temp_registros,contador_datos))
+					temp_registros = {}
+				informacion_dnsdumpster['mx'] = mx
+			if self.opciones_dnsdumpster["host"]:
+				for registro_host in registros["host"]:
+					host.append(self.clasificacion_dnsdumspter(registro_host,temp_registros,contador_datos))
+					temp_registros = {}
+				informacion_dnsdumpster['host'] = host
 		self.json_informacion["Dnsdumpster"] = informacion_dnsdumpster
 
 	def clasificacion_dnsdumspter(self,registros_tipos,temp_registros,contador_datos):
@@ -275,10 +296,7 @@ class Obtener_informacion():
 				contador_datos += 1
 			if contador_datos == 5:
 				return temp_registros
-				temp_registros = {}
-				contador_datos = 0
-		return 
-
+		return temp_registros
 
 #def renovar_tor_ip():
 #	with Controller.from_port(port = 9051) as controller:
@@ -295,6 +313,10 @@ def obtener_sitio_dominio(sitio_limpiar):
 	#Quita el www a un sitio
 	if(separar_base[0] == "www"):
 		separar_base.pop(0)
+	separar_puerto = separar_base[-1].split(":")
+	if( re.search("\d+",separar_puerto[-1]) is not None ):
+		separar_puerto.pop(-1)
+	separar_base[-1] = "".join(separar_puerto)
 	site_dominio = '.'.join(separar_base)
 	return site_dominio
 
@@ -302,6 +324,6 @@ def obtener_sitio_dominio(sitio_limpiar):
 def execute(parametros):
 	sitio_limpio = obtener_sitio_dominio(parametros["sitio"])
 	informacion = Obtener_informacion(sitio_limpio,parametros)
-	with open("reporte_informacion.json","w") as file_informacion:
-		json.dump(informacion.json_informacion, file_informacion, indent=4)
+	# with open("reporte_informacion.json","w") as file_informacion:
+	# 	json.dump(informacion.json_informacion, file_informacion, indent=4)
 	return informacion.json_informacion
