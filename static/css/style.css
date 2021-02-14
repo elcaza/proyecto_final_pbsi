@@ -86,7 +86,8 @@ General
 */
 
 body {
-    background: gray;
+    background: #33383a;
+    font-family: sans-serif;
 }
 
 .main__container {
@@ -95,18 +96,28 @@ body {
     
 }
 
-.nav {
+.nav,footer {
     text-align: right;
-    min-height: 20px;
-    background: gainsboro;
+    min-height: 40px;
+    background: #054767;
     padding: 10px;
     box-sizing: border-box;
+    color: #fefefe;
 }
 
 .nav__nuevo,
 .nav__consultas,
 .nav__configuraciones {
     display: inline;
+    margin: 10px;
+}
+
+.nav__nuevo:hover,
+.nav__consultas:hover,
+.nav__configuraciones:hover {
+    color: #3777a5
+    transition: 1s;
+    border-bottom: 1px solid;
 }
 
 /* Nuevo análisis */
@@ -114,24 +125,53 @@ body {
 
 }
 
+button {
+    min-width: 150px;
+    min-height: 45px;
+    background-color: #064766;
+    border-radius: 5px;
+    color: #fefefe;
+    font-size: 1em;
+    margin: 10px;
+}
+
+button:hover {
+    background-color: #053347;
+    transition: .5s;
+    border: 1px solid #0a6ec0;
+}
+
 .scan {
     text-align: center;
+    max-width: 500px;
+    margin: auto;
+    border: 2px solid;
+    border-color: #064766;
 }
 
 .scan__options-container {
     display: block;
-    margin: 20px auto;
+    margin: 0px auto;
     min-height: 50px;
-    width: 50%;
+    width: 100%;
     text-align: center;
 }
 
-.scan__options__url {
-    
+.scan__options__url,
+.scan__options__file {
+    width: 50%;
+    display: inline-block;
+    text-align: center;
+    background-color: gray;
+    min-height: 30px;
+    box-sizing: border-box;
+    padding: 10px;
 }
 
-.scan__options__file {
-    
+.scan__options__url:hover,
+.scan__options__file:hover {
+    background-color: rgb(29, 165, 255);
+    transition: .5s;
 }
 
 .scan__url {
@@ -172,7 +212,11 @@ body {
 }
 
 .modulos__nombre {
-
+    display: inline-block;
+    position: relative;
+    top: 12px;
+    left: 5px;
+    font-size: 1.5em;
 }
 
 .modulos__switch {
@@ -217,7 +261,7 @@ body {
 }
   
 input:checked + .modulos__slider {
-    background-color: #2196F3;
+    background-color: #054767;
 }
 
 input:focus + .modulos__slider {
