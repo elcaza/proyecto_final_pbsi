@@ -52,6 +52,35 @@ START CSS
 ===========================================
 */
 
+
+/**
+===========================================
+Interacción javascript
+===========================================
+*/
+
+body.vista_nuevo .main__nuevo {
+    display: block;
+}
+
+body.vista_consultas .main__consultas{
+    display: block;
+}
+
+body.vista_configuraciones .main__configuraciones {
+    display: block;
+}
+
+body.url .scan__options__url{
+    background-color: #064766;
+    color: #fefefe;
+}
+
+body.file .scan__options__file{
+    background-color: #064766;
+    color: #fefefe;
+}
+
 /**
 ===========================================
 Sections Paddigs
@@ -61,6 +90,7 @@ Sections Paddigs
 .main__nuevo,
 .main__consultas,
 .main__configuraciones {
+    display: none;
     box-sizing: border-box;
     padding: 10px;
     background-color: gainsboro;
@@ -287,13 +317,16 @@ input:checked + .modulos__slider:before {
 }
 
 .modulos__config {
-
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 .modulos__opcion__nombre {
     display: inline-block;
     width: 20%;
     vertical-align: top;
+    padding: 30px 0 0 0;
+    box-sizing: border-box;
 }
 
 .modulos__opcion__descripcion {
