@@ -69,6 +69,61 @@ class Utilerias():
 				urls.append(sitio + "/" + url)
 		return urls
 
+	def escaner_cms_vulnes(self,cms,version):
+		db = True
+		if (db):
+			vulnes = self.carga_vulnerabilidades(cms)
+			if not(vulnes):
+				vulnes = self.buscar_vulnerabilidades(cms)
+				self.actualizar_vulnerabilidades(cms,vulnes)
+		else:
+			vulnes = self.buscar_vulnerabilidades(cms)
+			self.actualizar_vulnerabilidades(cms,vulnes)
+		regex_vulnes = re.compile("("+version+")")
+		return self.identificar_vulnerabilidades(vulnes,regex_vulnes)
+
+	def carga_vulnerabilidades(self,nombre_db):
+		abs_path = pathlib.Path(__file__).parent.absolute()
+		abs_path = str(abs_path) + "/vulnes_db/" + nombre_db + ".json"
+		try:
+			with open(abs_path) as db:
+				datos = json.load(db)
+			return datos
+		except:
+			print("Error al abrir archivos de base de datos")
+			return False
+
+	def buscar_vulnerabilidades(self,cms):
+		url_cve_mitre = "https://cve.mitre.org/cgi-bin/cvekey.cgi?keyword="
+		soup = self.obtener_contenido_html(url_cve_mitre)
+		table = soup.find('div', id="TableWithRules")
+		rows = table.findAll('tr')
+		rows.pop(0)
+		vulnes = []
+		for row in rows:
+			cve = row.find(nowrap = "nowrap").text
+			description = row.findChildren(valign = "top")[1].text
+			vulnes.append({"cve":cve,"description":description})
+		return vulnes
+
+	def actualizar_vulnerabilidades(self, nombre_db, vulnes):
+		abs_path = pathlib.Path(__file__).parent.absolute()
+		abs_path = str(abs_path) + "/vulnes_db/" + nombre_db + ".json"
+		try:
+			with open(abs_path, "w") as db:
+				json.dump(vulnes,db)
+		except:
+			print("Error no se puede abrir el archivo de vulnerabilidades")
+
+	def identificar_vulnerabilidades(self, vulnes_db, regex):
+		vulnes_cms = []
+		for vulnerabilidad in vulnes_db:
+			cve = vulnerabilidad['cve']
+			description = vulnerabilidad['description']
+			if regex.search(description):
+				vulnes_cms.append({"cve":cve,"description":description})
+		return vulnes_cms
+
 class Wordpress():
 
 	def __init__(self,sitio):
@@ -86,6 +141,11 @@ class Wordpress():
 		tmp_diccionario["Librerias"] = []
 		tmp_diccionario["Archivos"] = informacion_expuesta.pop("exposed_files")
 		tmp_diccionario["Temas"] = informacion_expuesta.pop("themes")
+		if(tmp_cms["version"] != ""):
+			tmp_diccionario["Vulnerabilidades"] = self.obtener_vulnerabilidades(tmp_cms["version"])
+		else:
+			tmp_diccionario["Vulnerabilidades"] = []
+
 
 	def obtener_informacion_sensible(self,wordpress_info):
 		informacion_recopilada = {}
@@ -194,6 +254,16 @@ class Wordpress():
 			informacion = config["wordpress"]
 			return informacion
 
+	def obtener_vulnerabilidades(self,version):
+		vulnerabilidades = self.util.escaner_cms_vulnes("wordpress",version)
+		lista_vulnerabilidades = []
+		if (len(vulnerabilidades) != 0):
+			for element in vulnerabilidades:
+				lista_vulnerabilidades.append(element.get("cve"))
+				#lista_vulnerabilidades.append(element.get("description"))
+		return lista_vulnerabilidades
+
+
 class Moodle():
 	def __init__(self,sitio):
 		self.url = sitio
@@ -208,6 +278,7 @@ class Moodle():
 		tmp_diccionario["Plugins"] = self.get_plugins_moodle(info["plugs"])
 		tmp_diccionario["Librerias"] = self.get_librerias_moodle(info["libs"])
 		tmp_diccionario["Archivos"] = self.get_archivos_moodle(info["dir_files"])
+		tmp_diccionario["Vulnerabilidades"] = self.detect_vulnerabilidades(tmp_cms["version"])
 
 	def get_plugins_moodle(self,location_of_plugins):
 		plugins_for_verify = []
@@ -311,6 +382,19 @@ class Moodle():
 			informacion = datos["moodle"]
 			return informacion
 
+	def detect_vulnerabilidades(self,version):
+		vulnerabilidades = self.util.escaner_cms_vulnes("moodle",version)
+		lista_vulnerabilidades = []
+		if (len(vulnerabilidades) == 0):
+			if version == "":
+				return []
+		else:
+			for element in vulnerabilidades:
+				lista_vulnerabilidades.append(element.get("cve"))
+				lista_vulnerabilidades.append(element.get("cve"))
+				#lista_vulnerabilidades.append(element.get("description"))
+		return lista_vulnerabilidades
+
 
 class Drupal():
 	def __init__(self,sitio):
@@ -330,7 +414,7 @@ class Drupal():
 		tmp_diccionario["Plugins"] = self.realiza_peticiones(modulos,"modulos",300)
 		tmp_diccionario["Librerias"] = []
 		tmp_diccionario["Archivos"] = self.realiza_peticiones(archivos,"archivos visibles")
-		#tmp_diccionario["Vulnerabilidades"] = self.detect_vulnerabilidades()
+		tmp_diccionario["Vulnerabilidades"] = self.detect_vulnerabilidades(version)
 
 	def detect_version(self,config):
 		version = None
@@ -415,6 +499,19 @@ class Drupal():
 					result_list.append(recurso)
 		return result_list
 
+	def detect_vulnerabilidades(self,version):
+		if version != "":
+			vulnerabilidades  = self.util.escaner_cms_vulnes("drupal",version)
+			if len(vulnerabilidades) > 0:
+				lista_vulnes = list()
+				for vul in vulnerabilidades:
+					lista_vulnes.append(vul.get("cve"))
+					#lista_vulnes.append(vul.get("description"))
+				return lista_vulnes
+			return []
+		else:
+			return []
+
 class Joomla():
 	def __init__(self,sitio):
 		self.sitio = sitio
@@ -428,6 +525,7 @@ class Joomla():
 		tmp_diccionario["Plugins"] = []
 		tmp_diccionario["Librerias"] = []
 		tmp_diccionario["Archivos"] = self.obtener_archivos_joomla(self.util.generar_urls(self.sitio,self.cargar_configuracion()))
+		tmp_diccionario["Vulnerabilidad"] = self.obtener_vulnerabilidades(tmp_cms["version"])
 
 	def obtener_version_joomla(self):
 		soup = self.util.obtener_contenido_html(self.sitio+"README.txt")
@@ -489,6 +587,18 @@ class Joomla():
 			print("Entra aqui")
 			exit()
 
+	def obtener_vulnerabilidades(self,version):
+		vulnerabilidades = self.util.escaner_cms_vulnes("joomla",version)
+		lista_vulnerabilidades = []
+		if (len(vulnerabilidades) == 0):
+			if version == "":
+				return []
+		else:
+			for element in vulnerabilidades:
+				lista_vulnerabilidades.append(element.get("cve"))
+				#lista_vulnerabilidades.append(element.get("description"))
+			return lista_vulnerabilidades
+
 
 class Obtencion_informacion():
 
@@ -505,6 +615,13 @@ class Obtencion_informacion():
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path[:parsed.path.rfind("/")+1]
 		else:
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path
+
+	def carga_configuracion(self):
+		f = open("./config/config_general.json","r")
+		datos = json.load(f)
+		self.leguajes_configuracion = datos["lenguajes"]
+		self.frameworks_configuracion = datos["frameworks"]
+		self.librerias_configuacion = datos["librerias"]
 
 	def get_version_server(self):
 		f = Utilerias()
@@ -573,8 +690,7 @@ class Obtencion_informacion():
 		wappalyzer = Wappalyzer.latest()
 		webpage = WebPage.new_from_url(self.sitio)
 		resultado = wappalyzer.analyze_with_versions_and_categories(webpage)
-		l = open("lenguajes.txt","r")
-		for lenguaje in l.readlines():
+		for lenguaje in self.leguajes_configuracion:
 			lenguaje = lenguaje.rstrip('\n')
 			for llave,valor in resultado.items():
 				if lenguaje.lower() in llave.lower():
@@ -595,8 +711,7 @@ class Obtencion_informacion():
 		wappalyzer = Wappalyzer.latest()
 		webpage = WebPage.new_from_url(self.sitio)
 		resultado = wappalyzer.analyze_with_versions_and_categories(webpage)
-		f = open("frameworks.txt","r")
-		for frame in f.readlines():
+		for frame in self.frameworks_configuracion:
 			frame = frame.rstrip('\n')
 			for llave,valor in resultado.items():
 				if frame.lower() in llave.lower():
@@ -614,6 +729,7 @@ class Obtencion_informacion():
 
 
 	def menu(self):
+		self.carga_configuracion()
 		self.get_version_server()
 		self.get_headers()
 		self.get_lenguajes()
