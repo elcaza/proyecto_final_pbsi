@@ -679,10 +679,17 @@ class Obtencion_informacion():
 		print(self.robot_parser)
 
 	def get_directorios(self):
+		lista_directorios = []
 		comando = "dirb " + self.sitio
 		args = shlex.split(comando)
-		self.directorios = subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout
-		print(self.directorios)
+		directorios = subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout
+		tmp_url = ""
+		for linea in directorios.split("\n"):
+			if "DIRECTORY" in linea:
+				tmp_url = linea.split()[-1]
+				lista_directorios.append(tmp_url)
+		self.tmp_diccionario["Directorios"] = lista_directorios
+		return self.tmp_diccionario
 
 	def get_lenguajes(self):
 		lenguajes = []
@@ -729,6 +736,7 @@ class Obtencion_informacion():
 
 
 	def menu(self):
+		self.get_directorios()
 		self.carga_configuracion()
 		self.get_version_server()
 		self.get_headers()
