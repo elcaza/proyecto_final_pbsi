@@ -22,8 +22,8 @@ document.addEventListener("DOMContentLoaded", function() {
         body.classList.replace("vista_consultas", "vista_configuraciones");
     });
 
-    button_scan__options__file.addEventListener("click", function(){
-        body.classList.replace("url", "file");
+    button_scan__options__url.addEventListener("click", function(){
+        body.classList.replace("file", "url");
     });
 
     button_scan__options__file.addEventListener("click", function(){

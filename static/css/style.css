@@ -120,6 +120,22 @@ body {
     font-family: sans-serif;
 }
 
+select {
+    display: block;
+    width: 30%;
+    box-sizing: border-box;
+    padding: 5px;
+    min-width: 150px;
+    min-height: 45px;
+    background-color: #064766;
+    border-radius: 5px;
+    color: #fefefe;
+    font-size: 1em;
+    margin: 10px;
+    border-color: #fefefe;
+    border: 1px solid;
+}
+
 .main__container {
     max-width: 1280px;
     margin: auto;
@@ -173,7 +189,7 @@ button:hover {
 
 .scan {
     text-align: center;
-    max-width: 500px;
+    max-width: 700px;
     margin: auto;
     border: 2px solid;
     border-color: #064766;
@@ -207,11 +223,22 @@ button:hover {
 .scan__url {
     display: block;
     margin: 10px auto;
+    width: 90%;
+    border: 1px solid #064766;
+    border-radius: 3px;
+    font-size: 1em;
+    box-sizing: border-box;
+    padding: 5px;
 }
 
 .scan__file {
     display: block;
     margin: 10px auto;
+    width: 90%;
+    border-radius: 3px;
+    font-size: 1em;
+    box-sizing: border-box;
+    padding: 5px;
 }
 
 .scan__start {
