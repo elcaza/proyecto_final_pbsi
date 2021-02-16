@@ -62,6 +62,27 @@
 		"modernizr",
 		"isotope"
 
-	]
+	],
+	"cifrados":{
+		"AES_256_GCM":"seguro",
+		"AES_128_GCM":"seguro",
+		"AES_256_CCM":"seguro",
+		"AES_128_CCM":"seguro",
+		"AES_256_CBC":"problamente inseguro",
+		"AES_128_CBC":"problamente inseguro",
+		"Camellia_256_GCM":"seguro",
+		"Camellia_128_CBC":"probalmanete inseguro",
+		"ARIA_256_GCM":"seguro",
+		"ARIA_128_GCM":"seguro",
+		"ARIA_256_CBC":"problamente inseguro",
+		"SEED_CBC":"problamanete inseguro",
+		"CHACHA20_POLY1305":"seguro",
+		"IDEA_CBC":"inseguro",
+		"RC2_CBC":"inseguro",
+		"RC4":"inseguro",
+		"DES_CBC":"inseguro",
+		"3DES_EDE_CBC":"inseguro",
+		"28147_CNT":"inseguro"
+	}
 
 }
