@@ -661,6 +661,7 @@ class Obtencion_informacion():
 
 	def get_cifrados(self):
 		cifrados = {}
+		tmp_cifrado = []
 		if self.sitio.startswith("https"):
 			with open("./config/config_general.json","r") as cg:
 				configuracion = json.load(cg)
@@ -678,7 +679,11 @@ class Obtencion_informacion():
 							if ("TLS" in valor) or ("SSL" in valor):
 								for cifrado,interprete in configuracion["cifrados"].items():
 									if cifrado in valor:
-										cifrados[valor] = interprete
+										tmp_cifrado = valor.split()
+										if "TLS" in tmp_cifrado[0]:
+											cifrados[tmp_cifrado[0] + tmp_cifrado[1] + " - " + tmp_cifrado[-1]] = interprete
+										else:
+											cifrados[tmp_cifrado[0] + " - " + tmp_cifrado[-1]] = interprete
 				self.tmp_diccionario["Cifrados"] = cifrados
 			except:
 				self.tmp_diccionario["Cifrados"] = {}
