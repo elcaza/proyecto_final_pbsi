@@ -627,7 +627,7 @@ class Obtencion_informacion():
 		f = Utilerias()
 		tmp_dic = {}
 		wappalyzer = Wappalyzer.latest()
-		webpage = WebPage.new_from_url(self.sitio)
+		webpage = WebPage.new_from_url(self.sitio,verify=False)
 		tmp = wappalyzer.analyze_with_versions_and_categories(webpage)
 		for llave,valor in tmp.items():
 			for llave2,valor2 in valor.items():
@@ -660,14 +660,36 @@ class Obtencion_informacion():
 		return self.tmp_diccionario
 
 	def get_cifrados(self):
+		cifrados = {}
+		tmp_cifrado = []
 		if self.sitio.startswith("https"):
-			comando = "testssl.sh/testssl.sh -P --parallel --sneaky " + self.sitio
+			with open("./config/config_general.json","r") as cg:
+				configuracion = json.load(cg)
+
+			comando = "testssl -E --parallel --sneaky --jsonfile salida_ssl.json " + self.sitio
 			args = shlex.split(comando)
 			self.cifrados = subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout
-			print(self.cifrados)
-		else:
-			self.cifrados = "No tiene ningún protocolo de cifrado"
-			print(self.cifrados)
+			try:
+				with open("salida_ssl.json","r") as c:
+					datos = json.load(c)
+				subprocess.run(["rm","salida_ssl.json"])
+				for dato in datos:
+					for llave,valor in dato.items():
+						if llave == "finding":
+							if ("TLS" in valor) or ("SSL" in valor):
+								for cifrado,interprete in configuracion["cifrados"].items():
+									if cifrado in valor:
+										tmp_cifrado = valor.split()
+										if "TLS" in tmp_cifrado[0]:
+											cifrados[tmp_cifrado[0] + tmp_cifrado[1] + " - " + tmp_cifrado[-1]] = interprete
+										else:
+											cifrados[tmp_cifrado[0] + " - " + tmp_cifrado[-1]] = interprete
+				self.tmp_diccionario["Cifrados"] = cifrados
+			except:
+				self.tmp_diccionario["Cifrados"] = {}
+		return self.tmp_diccionario
+
+
 
 	def get_robots(self):
 		self.robot_parser = RobotFileParser()
@@ -695,7 +717,7 @@ class Obtencion_informacion():
 		lenguajes = []
 		tmp_leng = {}
 		wappalyzer = Wappalyzer.latest()
-		webpage = WebPage.new_from_url(self.sitio)
+		webpage = WebPage.new_from_url(self.sitio,verify=False)
 		resultado = wappalyzer.analyze_with_versions_and_categories(webpage)
 		for lenguaje in self.leguajes_configuracion:
 			lenguaje = lenguaje.rstrip('\n')
@@ -716,7 +738,7 @@ class Obtencion_informacion():
 		frameworks = []
 		tmp_frame = {}
 		wappalyzer = Wappalyzer.latest()
-		webpage = WebPage.new_from_url(self.sitio)
+		webpage = WebPage.new_from_url(self.sitio,verify=False)
 		resultado = wappalyzer.analyze_with_versions_and_categories(webpage)
 		for frame in self.frameworks_configuracion:
 			frame = frame.rstrip('\n')
@@ -736,10 +758,11 @@ class Obtencion_informacion():
 
 
 	def menu(self):
-		self.get_directorios()
+		#self.get_directorios()
 		self.carga_configuracion()
 		self.get_version_server()
 		self.get_headers()
+		self.get_cifrados()
 		self.get_lenguajes()
 		self.get_frameworks()
 		detected_cms = None
