@@ -1,5 +1,6 @@
 # Importaciones
 ## Flask
+from modules.strings import COLECCION_ANALISIS
 import re
 from flask import Flask, render_template, request
 from flask_cors import CORS
@@ -66,7 +67,9 @@ def iniciar_analisis(peticion):
         numero_grafica = 0
         ############################################################# OBTENER INFORMACION #############################################################
 
-        reporte_informacion(peticion, peticion_proceso, peticion_reporte, numero_grafica)
+        respuesta_obtener_informacion = obtener_informacion.execute(peticion)
+        peticion_proceso["informacion"] = respuesta_obtener_informacion
+        numero_grafica = reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica)
         ############################################################# ANALISIS #############################################################
 
         # respuesta_analisis = analisis.execute(peticion_json)
@@ -103,7 +106,10 @@ def iniciar_analisis(peticion):
             ]
 
         print("Iniciando Fuzzing")
-        numero_grafica = reporte_fuzzing(peticion_proceso, peticion_reporte, peticion_alerta, numero_grafica)
+
+        enviar_fuzzing(peticion_proceso)
+        alertas_fuzzing(peticion_proceso, peticion_alerta)
+        numero_grafica = reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica)
         ############################################################# EXPLOTACION #############################################################
 
         #datos_explotacion, datos_identificados = obtener_datos_consulta_exploits(peticion_proceso)
@@ -145,7 +151,9 @@ def iniciar_analisis(peticion):
         }
 
         print("Iniciando Explotacion")
-        numero_grafica = reporte_explotacion(con, datos_explotacion, datos_identificados, peticion_proceso, peticion_reporte, peticion_alerta, numero_grafica)
+        enviar_explotacion(con, datos_identificados, datos_explotacion, peticion_proceso)
+        alertas_explotacion(peticion_proceso, peticion_alerta)
+        numero_grafica = reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica)
         ############################################################# ALERTAS #############################################################
         
         print("Enviando alertas")
@@ -186,18 +194,59 @@ def consulta_buscar_analisis(peticion):
         return "No hay coincidencias"
     respueta_json = json.dumps(analisis)
     return respueta_json
+
+def consulta_reporte(peticion):
+    con = Conector()
+    analisis = con.obtener_analisis(peticion)
+    numero_grafica = 0
+    peticion_reporte = {
+        "sitio":analisis["sitio"],
+        "fecha":analisis["fecha"],
+        "analisis":[],
+    }
+    numero_grafica = reporte_informacion(analisis, peticion_reporte, numero_grafica)
+    numero_grafica = reporte_fuzzing(analisis, peticion_reporte, numero_grafica)
+    numero_grafica = reporte_explotacion(analisis, peticion_reporte, numero_grafica)
+    return "Consulta de reporte creado"
+"""
+    Modulos
+"""
+def enviar_fuzzing(peticion_proceso):
+    for posicion_pagina in range(len(peticion_proceso["paginas"])):
+        json_fuzzing = {
+            "url":peticion_proceso["paginas"][posicion_pagina]["sitio"],
+            "hilos":4,
+            "cookie":peticion_proceso["cookie"]
+        }
+        forms = fuzzing.execute(json_fuzzing)
+        peticion_proceso["paginas"][posicion_pagina].update(forms)
+
+def enviar_explotacion(con, datos_identificados, datos_explotacion, peticion_proceso):
+    exploits = buscar_exploits(datos_identificados, con)
+    if len(exploits) != 0:
+        exploits = list({(e["ruta"],e["lenguaje"]):e for e in exploits}.values())
+        explotaciones = explotacion.execute(datos_explotacion,exploits)
+        peticion_proceso.update(explotaciones)
+    else:
+        peticion_proceso.update({"explotaciones":{}})
 """
     Alertas
 """
 def enviar_alertas(peticion_alerta):
     alertas.execute(peticion_alerta)
+
+def alertas_fuzzing(peticion_proceso, peticion_alerta):
+    for posicion_pagina in range(len(peticion_proceso["paginas"])):
+        fuzzing_alertas = fuzzing_obtener_alertas(peticion_proceso["paginas"][posicion_pagina])
+        peticion_alerta["sitios"].append(fuzzing_alertas)        
+
+def alertas_explotacion(peticion_proceso, peticion_alerta):
+    explotacion_alertas = explotacion_obtener_alertas(peticion_proceso)
+    peticion_alerta["sitios"].append(explotacion_alertas)
 """
     Reportes
 """
-def reporte_informacion(peticion, peticion_proceso, peticion_reporte, numero_grafica):
-    respuesta_obtener_informacion = obtener_informacion.execute(peticion)
-    peticion_proceso["informacion"] = respuesta_obtener_informacion
-
+def reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica):
     datos_host = {}
     datos_host["host"] = peticion_proceso["informacion"]["Dnsdumpster"]["host"][0]["dominio"]
     datos_host["ip"] = peticion_proceso["informacion"]["Dnsdumpster"]["host"][0]["ip"]
@@ -210,34 +259,16 @@ def reporte_informacion(peticion, peticion_proceso, peticion_reporte, numero_gra
     numero_grafica = crear_reportes_informacion(informacion_estadisticas, peticion_reporte, datos_host, numero_grafica)
     return numero_grafica
 
-def reporte_fuzzing(peticion_proceso, peticion_reporte, peticion_alerta, numero_grafica):
+def reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica):
     for posicion_pagina in range(len(peticion_proceso["paginas"])):
-        json_fuzzing = {
-            "url":peticion_proceso["paginas"][posicion_pagina]["sitio"],
-            "hilos":4,
-            "cookie":peticion_proceso["cookie"]
-        }
-        forms = fuzzing.execute(json_fuzzing)
-        peticion_proceso["paginas"][posicion_pagina].update(forms)
         fuzzing_estadisticas = fuzzing_obtener_estaditisticas(peticion_proceso["paginas"][posicion_pagina])
-        fuzzing_alertas = fuzzing_obtener_alertas(peticion_proceso["paginas"][posicion_pagina])
-        peticion_alerta["sitios"].append(fuzzing_alertas)        
         numero_grafica = crear_reportes_fuzzing(fuzzing_estadisticas, peticion_reporte, numero_grafica)
         
     return numero_grafica
 
-def reporte_explotacion(con, datos_explotacion, datos_identificados, peticion_proceso, peticion_reporte, peticion_alerta, numero_grafica):
-    exploits = buscar_exploits(datos_identificados, con)
-    if len(exploits) != 0:
-        exploits = list({(e["ruta"],e["lenguaje"]):e for e in exploits}.values())
-        explotaciones = explotacion.execute(datos_explotacion,exploits)
-        peticion_proceso.update(explotaciones)
-        explotacion_estadisticas = explotacion_obtener_estadisticas(peticion_proceso)
-        explotacion_alertas = explotacion_obtener_alertas(peticion_proceso)
-        peticion_alerta["sitios"].append(explotacion_alertas)
-        numero_grafica = crear_reportes_explotacion(explotacion_estadisticas,peticion_reporte, numero_grafica)
-    else:
-        peticion_proceso.update({"explotaciones":{}})
+def reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica):
+    explotacion_estadisticas = explotacion_obtener_estadisticas(peticion_proceso)
+    numero_grafica = crear_reportes_explotacion(explotacion_estadisticas,peticion_reporte, numero_grafica)
     print("Creando el reporte")
     reportes.execute(peticion_reporte)
     return numero_grafica
@@ -624,6 +655,14 @@ def consulta_analisis():
         peticion_json = request.get_json()
         #validar_json_consulta(peticion_json)
         respuesta = consulta_buscar_analisis(peticion_json)
+        return respuesta
+
+@app.route("/reporte", methods=["GET","POST"])
+def reporte():
+    if request.method == "POST":
+        peticion_json = request.get_json()
+        #validar_json_consulta(peticion_json)
+        respuesta = consulta_reporte(peticion_json)
         return respuesta
 
 @app.route("/exploits", methods=["GET","POST"])
