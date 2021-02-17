@@ -76,6 +76,12 @@ def modificar_exploit_pagina(pagina, exploit, exploit_temporal):
     except CalledProcessError:
         print("Ocurrió un error al cambiar la página {0} en {1}".format(pagina,exploit))  
 
+def crear_copia_temporal(exploit, exploit_temporal):
+    try:
+        if not path.exists(exploit_temporal):
+            check_output("cat {0} > {1}".format(exploit, exploit_temporal),shell=True)
+    except CalledProcessError:
+        print("No se creó la copia del exploit")
 # Fin del area
 def otorgar_permisos_exploit(exploit_temp):
     check_output("chmod +x {0}".format(exploit_temp),shell=True)
@@ -83,7 +89,7 @@ def otorgar_permisos_exploit(exploit_temp):
 def ejecutar_exploit(exploit):
     try:
         resultado = check_output(exploit,shell=True,timeout=3)
-    except TimeoutExpired:
+    except (TimeoutExpired, CalledProcessError):
         return b"Inconcluso"
     return resultado
 
@@ -97,10 +103,9 @@ def limpiar_exploit(exploit, lenguaje):
     return exploit_temporal, exploit_preparado
 
 def cargar_parametros(sitio, puerto, exploit, exploit_temporal):
+    crear_copia_temporal(exploit, exploit_temporal)
     modificar_exploit_dominio(sitio,exploit, exploit_temporal)
     modificar_exploit_puerto(puerto,exploit, exploit_temporal)
-    # if "pagina" in parametros:
-    #     modificar_exploit_pagina(parametros["pagina"], exploit, exploit_temporal)
 
 def validar_resulado(resultado):
     if b"Exito" in resultado:
@@ -135,14 +140,22 @@ def crear_hilos_exploit(parametros, lista_exploits):
                 break
 
         for hilo in range(hilos):
-            hijos[hilo].start()
+            try:
+                hijos[hilo].start()
+            except IndexError:
+                break
+        for hilo in range(hilos):
+            try:
+                hijos[hilo].join(600)
+            except IndexError:
+                break
 
         for hilo in range(hilos):
-            hijos[hilo].join(600)
-
-        for hilo in range(hilos):
-            explotacion = hijos[hilo].get_json_explotacion()
-            json_explotacion["explotaciones"].update(explotacion)
+            try: 
+                explotacion = hijos[hilo].get_json_explotacion()
+                json_explotacion["explotaciones"].update(explotacion)
+            except IndexError:
+                break
         hijos = []
 
     return json_explotacion

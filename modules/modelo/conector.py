@@ -94,18 +94,18 @@ class Conector():
                     cmss = coleccion_exploits.find({
                                                         "cms_nombre":json_cms["cms_nombre"],
                                                         "cms_categoria":json_cms["cms_categoria"],
-                                                        "cms_extension_nombre":{"$regex":json_cms["extension_nombre"],"$options":"i"},
-                                                        "cms_extension_version":{"$regex":json_cms["extension_version"],"$options":"i"}})
+                                                        "cms_extension_nombre":{"$regex":json_cms["cms_extension_nombre"],"$options":"i"},
+                                                        "cms_extension_version":{"$regex":json_cms["cms_extension_version"],"$options":"i"}})
                 elif profundidad == 2:
                     cmss = coleccion_exploits.find({
                                                     "cms_nombre":json_cms["cms_nombre"],
                                                     "cms_categoria":json_cms["cms_categoria"],
-                                                    "cms_extension_nombre":{"$regex":".*"},
+                                                    "cms_extension_nombre":{"$regex":json_cms["cms_extension_nombre"],"$options":"i"},
                                                     "cms_extension_version":{"$regex":".*"}})
                 else:
                     cmss = coleccion_exploits.find({
                                                     "cms_nombre":json_cms["cms_nombre"],
-                                                    "cms_categoria":{"$regex":".*"},
+                                                    "cms_categoria":json_cms["cms_categoria"],
                                                     "cms_extension_nombre":{"$regex":".*"},
                                                     "cms_extension_version":{"$regex":".*"}})
                 for cms in cmss:
@@ -117,6 +117,23 @@ class Conector():
                         ruta = "error"
                     cmss_iterados["exploits"].append({"ruta":ruta,"lenguaje":lenguaje})
                 return cmss_iterados
+
+    def exploit_buscar_cve(self, cve):
+        with self.conexion.start_session() as sesion:
+            with sesion.start_transaction():
+                cves_iterados = {"exploits":[]}
+                coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
+                cves = coleccion_exploits.find({"cve":{"$regex":cve,"$options":"i"}})
+                
+                for cve_exploit in cves:
+                    lenguaje = self.definir_lenguaje(cve_exploit["exploit"])
+                    if lenguaje == "error":
+                        lenguaje = "error"
+                    ruta = cve_exploit["ruta"] + "/" + cve_exploit["exploit"]
+                    if not path.exists(ruta):
+                        ruta = "error"
+                    cves_iterados["exploits"].append({"ruta":ruta,"lenguaje":lenguaje})
+                return cves_iterados
 
 ########################################################## OBTENER EXPLOITS ##########################################################
 
@@ -160,130 +177,6 @@ class Conector():
                 coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
                 coleccion_exploits.create_index("exploit", unique = True)
 
-########################################################## FUZZING ##########################################################
-
-    def fuzzing_insertar_datos(self,json_cargar_datos):
-        coleccion_fuzzing = self.base_datos[strings.COLECCION_FUZZING]
-        try:
-            coleccion_fuzzing.insert_one(json_cargar_datos)
-        except errors.DuplicateKeyError:
-            print("Ya existe un exploit con el mismo nombre")
-
-    def fuzzing_obtener_estaditisticas(self):
-        coleccion_fuzzing = self.base_datos[strings.COLECCION_FUZZING]
-        forms_estadisticas = {}
-        forms = coleccion_fuzzing.find_one()
-        forms_estadisticas["sitio"] = forms["sitio"]
-        for form in forms["forms"]:
-            forms_estadisticas[form] = {
-                    "xss":{ "exitoso":0,
-                            "fracaso":0},
-                    "sqli":{ "exitoso":0,
-                            "fracaso":0},
-                    "lfi":{ "exitoso":0,
-                            "fracaso":0}}
-                            
-            for ataques in ["xss","sqli","lfi"]:
-                    fuzzing = coleccion_fuzzing.aggregate([ {"$group":{"_id":"$forms.{0}.{1}".format(form,ataques)}} ])
-                    for resultado_ataque in fuzzing:
-                        for resultado_ataque_estado in resultado_ataque["_id"]:
-                            if resultado_ataque_estado == True:
-                                forms_estadisticas[form][ataques]["exitoso"] += 1
-                            else:
-                                forms_estadisticas[form][ataques]["fracaso"] += 1
-                        
-        return forms_estadisticas
-
-    # def fuzzing_obtener_alertas(self):
-    #     coleccion_fuzzing = self.base_datos[strings.COLECCION_FUZZING]
-    #     forms_alertas = {}
-    #     forms = coleccion_fuzzing.find_one()
-    #     forms_alertas["sitio"] = forms["sitio"]
-    #     motivo = ""
-    #     for form in forms["forms"]:
-    #         for index in forms["forms"][form]:
-    #             if index["xss"] == True:
-    #                 motivo += "XSS Detectado en Form -> {0}, inputs -> {1}\n".format(form, index["inputs"])
-    #             if index["sqli"] == True:
-    #                 motivo += "SQLi Detectado en Form -> {0}, inputs -> {1}\n".format(form, index["inputs"])
-    #             if index["lfi"] == True:
-    #                 motivo += "LFI Detectado en Form -> {0}, inputs -> {1}\n".format(form, index["inputs"])
-    #     forms_alertas["motivo"] = motivo
-    #     forms_alertas["estado"] = "Posiblemente vulnerable"
-    #     return forms_alertas
-
-    def fuzzing_obtener_alertas(self):
-        coleccion_fuzzing = self.base_datos[strings.COLECCION_FUZZING]
-        forms_alertas = {}
-        forms = coleccion_fuzzing.find_one()
-        forms_alertas["sitio"] = forms["sitio"]
-        motivo = ""
-        xss = 0
-        sqli = 0
-        lfi = 0
-        for form in forms["forms"]:
-            for index in forms["forms"][form]:
-                if index["xss"] == True:
-                    xss += 1
-                if index["sqli"] == True:
-                    sqli += 1
-                if index["lfi"] == True:
-                    lfi += 1
-            motivo += '''
-            Form: {0}
-            {1} XSS Detectados
-            {2} SQLi Detectados
-            {3} LFI Detectados
-            '''.format(form, xss, sqli, lfi)
-        forms_alertas["motivo"] = motivo
-        forms_alertas["estado"] = "Posiblemente vulnerable"
-        return forms_alertas
-
-    def fuzzing_borrar_temp(self):
-        coleccion_fuzzing = self.base_datos[strings.COLECCION_FUZZING]
-        coleccion_fuzzing.delete_many({})
-
-########################################################## EXPLOTACION ##########################################################
-    
-    def explotacion_insertar_datos(self,json_cargar_datos):
-        coleccion_explotacion = self.base_datos[strings.COLECCION_EXPLOTACION]
-        coleccion_explotacion.insert_one(json_cargar_datos)
-
-    def explotacion_obtener_estadisticas(self):
-        coleccion_explotacion = self.base_datos[strings.COLECCION_EXPLOTACION]
-        explotacion_alertas = {}
-        explotaciones = coleccion_explotacion.find_one()
-        explotacion_alertas["sitio"] = explotaciones["sitio"]
-        motivo = ""
-        for exploit in explotaciones["explotaciones"]:
-            for puerto in explotaciones["explotaciones"][exploit]:
-                if explotaciones["explotaciones"][exploit][puerto] == 1:
-                    motivo += "Exploit {0} ejecutado con éxito".format(exploit)
-        explotacion_alertas["motivo"] = motivo
-        explotacion_alertas["estado"] = "Vulnerable"
-        return explotacion_alertas
-
-    def explotacion_obtener_alertas(self):
-        coleccion_explotacion = self.base_datos[strings.COLECCION_EXPLOTACION]
-        explotacion = {}
-        explotaciones = coleccion_explotacion.find_one()
-        for exploit in explotaciones["explotaciones"]:
-            explotacion[exploit] = {
-                "exitoso":0,
-                "fracaso":0,
-                "inconcluso":0}
-            for puerto in explotaciones["explotaciones"][exploit]:
-                if explotaciones["explotaciones"][exploit][puerto] == 1:
-                    explotacion[exploit]["exitoso"] += 1
-                if explotaciones["explotaciones"][exploit][puerto] == 0:
-                    explotacion[exploit]["inconcluso"] += 1
-                if explotaciones["explotaciones"][exploit][puerto] == -1:
-                    explotacion[exploit]["fracaso"] += 1
-        return explotacion
-
-    def explotacion_borrar_temp(self):
-        coleccion_explotacion = self.base_datos[strings.COLECCION_EXPLOTACION]
-        coleccion_explotacion.delete_many({})
 
 ########################################################## PERSISTENCIA ##########################################################
     
@@ -292,6 +185,32 @@ class Conector():
         coleccion_analisis.insert_one(json_recibido)
 
 ########################################################## CONSULTAS ##########################################################
+
+    def obtener_analisis_totales(self):
+        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        return coleccion_analisis.count_documents({})
+
+    def obtener_ultima_fecha(self):
+        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        resultados = coleccion_analisis.find({},{"fecha":1,"_id":0}).sort("_id",1).limit(1)
+        for resultado in resultados:
+            return resultado["fecha"]
+
+    def obtener_analisis_generales(self):
+        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        resultados = coleccion_analisis.find({},{"sitio":1,"fecha":1,"_id":0})
+        analisis = []
+        for resultado in resultados:
+            analisis.append("Sitio: {0}, Fecha: {1}".format(resultado["sitio"],resultado["fecha"]))
+        return analisis
+
+    def obtener_analisis(self, peticion):
+        sitio = peticion["sitio"]
+        fecha = peticion["fecha"]
+        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        resultados = coleccion_analisis.find({"sitio":sitio,"fecha":fecha},{"_id":0})
+        for resultado in resultados:
+            return resultado
 
     def informacion_sitio(self, sitio):
         coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
@@ -316,3 +235,5 @@ class Conector():
         sitio = coleccion_analisis.find_one({"sitio":sitio})
         explotacion = sitio["explotaciones"]
         return explotacion
+
+#db.analisis.aggregate( {"$match":{"sitio":"http://altoromutual.com:8080","estado" : { "fecha" : "15/02/2021 21:38:11" }}}, {"$group":{"_id":"$informacion.Puertos.filtrados"}})
