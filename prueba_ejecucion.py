@@ -13,10 +13,8 @@ peticion = {
     "sitio":"http://altoromutual.com:8080",
     "ejecucion":"",
     "puertos" : { 
-	    "rango" : {
 		"inicio" : 8070,
 		"final" : 8090
-	    },
     },
     "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
     "hilos":4,
