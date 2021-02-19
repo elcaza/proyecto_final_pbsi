@@ -1,5 +1,6 @@
 # Importaciones
 ## Flask
+from weakref import ProxyTypes
 from modules.strings import COLECCION_ANALISIS
 import re
 from flask import Flask, render_template, request
@@ -15,7 +16,7 @@ import json
 ## Modulos
 from modules.obtencion_informacion import obtener_informacion
 from modules.alertas import alertas
-#from modules.analisis import analisis
+from modules.analisis import analisis
 from modules.exploits import exploits as exp
 from modules.explotacion import explotacion
 from modules.fuzzing import fuzzing
@@ -49,7 +50,8 @@ def iniciar_analisis(peticion):
         peticion_proceso = {
             "sitio":peticion["sitio"],
             "cookie":peticion["cookie"],
-            "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            "profundidad":peticion["profundidad"]
         }
 
         peticion_reporte = {
@@ -67,41 +69,24 @@ def iniciar_analisis(peticion):
         numero_grafica = 0
         ############################################################# OBTENER INFORMACION #############################################################
 
-        respuesta_obtener_informacion = obtener_informacion.execute(peticion)
-        peticion_proceso["informacion"] = respuesta_obtener_informacion
-        numero_grafica = reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica)
+        # respuesta_obtener_informacion = obtener_informacion.execute(peticion)
+        # peticion_proceso["informacion"] = respuesta_obtener_informacion
+        # numero_grafica = reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica)
         ############################################################# ANALISIS #############################################################
 
-        # respuesta_analisis = analisis.execute(peticion_json)
-        # print(respuesta_analisis)
+        # respuesta_analisis = analisis.execute(peticion_proceso["sitio"])
+        # peticion_proceso["analisis"] = respuesta_analisis
         ############################################################# FUZZING #############################################################
 
-        peticion_proceso["analisis"] = {
-                "CMS":{
-                    "nombre":"drupal",
-                    "version":"7.57"
-                },
-                "Servidor":{
-                    "nombre":"Apache",
-                    "version":"1.14"
-                },
-                "Cifrados":[
-                    {
-                        "nombre":"SSL",
-                        "version":"2"
-                    },
-                    {
-                        "nombre":"ECDH",
-                        "version":"256"
-                    }
-                ]
-            }     
         peticion_proceso["paginas"] =[
+                # {
+                #     "sitio":"http://www.altoromutual.com:8080/login.jsp",
+                # },
+                # {
+                #     "sitio":"http://www.altoromutual.com:8080/search.jsp",
+                # }
                 {
-                    "sitio":"http://www.altoromutual.com:8080/login.jsp",
-                },
-                {
-                    "sitio":"http://www.altoromutual.com:8080/search.jsp",
+                    "sitio":"https://proyectos.filos.unam.mx/guia/admin/login"
                 }
             ]
 
@@ -114,58 +99,18 @@ def iniciar_analisis(peticion):
 
         #datos_explotacion, datos_identificados = obtener_datos_consulta_exploits(peticion_proceso)
 
-        datos_explotacion = {
-            "sitio":peticion_proceso["sitio"],
-            "puertos": ["22","445","497"]
-        }
-
-        datos_identificados = {
-            "software":[
-                {
-                    "software_nombre":"Apache",
-                    "software_version":"1.12"
-                },
-                {
-                    "software_nombre":"Drupal",
-                    "software_version":"7.57"
-                }
-            ],
-            "cms":[
-                {
-                    "cms_nombre":"Drupal",
-                    "cms_categoria":"Plugin",
-                    "cms_extension_nombre":"Form 7",
-                    "cms_extension_version":"1.12"
-                },
-                {
-                    "cms_nombre":"Wordpress",
-                    "cms_categoria":"Plugin",
-                    "cms_extension_nombre":"",
-                    "cms_extension_version":""
-                }
-            ],
-            "cve":[
-              "CVE-2018-123","CVE-2019-5551","CVE-2007-4751"  
-            ],
-            "profundidad":2
-        }
-
         print("Iniciando Explotacion")
-        enviar_explotacion(con, datos_identificados, datos_explotacion, peticion_proceso)
-        alertas_explotacion(peticion_proceso, peticion_alerta)
-        numero_grafica = reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica)
+        # enviar_explotacion(con, datos_identificados, datos_explotacion, peticion_proceso)
+        # alertas_explotacion(peticion_proceso, peticion_alerta)
+        # numero_grafica = reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica)
         ############################################################# ALERTAS #############################################################
         
+        print("Creando el reporte")
+        reportes.execute(peticion_reporte)
         print("Enviando alertas")
         enviar_alertas(peticion_alerta)
         con.guardar_analisis(peticion_proceso)
         ############################################################# CONSULTA #############################################################
-
-        # informacion = obtener_informacion_sitio(con, peticion_proceso["sitio"])
-        # analisis = obtener_informacion_analisis(con, peticion_proceso["sitio"])
-        # fuzzings = obtener_informacion_fuzzing(con, peticion_proceso["sitio"])
-        # explotaciones = obtener_informacion_explotacion(con, peticion_proceso["sitio"])
-
         return "Reporte generado"
 
 def guardar_exploit(peticion):
@@ -249,11 +194,12 @@ def alertas_explotacion(peticion_proceso, peticion_alerta):
 def reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica):
     datos_host = {}
     datos_host["host"] = peticion_proceso["informacion"]["Dnsdumpster"]["host"][0]["dominio"]
+    if datos_host["host"] == "":
+        datos_host["host"] = peticion_proceso["sitio"]
     datos_host["ip"] = peticion_proceso["informacion"]["Dnsdumpster"]["host"][0]["ip"]
     datos_host["dns_inverso"] = peticion_proceso["informacion"]["Dnsdumpster"]["host"][0]["dns_inverso"]
     datos_host["pais"] = peticion_proceso["informacion"]["Dnsdumpster"]["host"][0]["pais"]
     datos_host["cabecera"] = peticion_proceso["informacion"]["Dnsdumpster"]["host"][0]["cabecera"]
-
     informacion_estadisticas = informacion_obtener_estadisticas(peticion_proceso)
 
     numero_grafica = crear_reportes_informacion(informacion_estadisticas, peticion_reporte, datos_host, numero_grafica)
@@ -269,8 +215,6 @@ def reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica):
 def reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica):
     explotacion_estadisticas = explotacion_obtener_estadisticas(peticion_proceso)
     numero_grafica = crear_reportes_explotacion(explotacion_estadisticas,peticion_reporte, numero_grafica)
-    print("Creando el reporte")
-    reportes.execute(peticion_reporte)
     return numero_grafica
 
 """
@@ -486,7 +430,74 @@ def crear_reportes_explotacion(explotacion_estadisticas, peticion_reporte, numer
         Falta obtener los datos para consultar los exploits, estos se recuperan del analisis y obtener informacion
 """
 def obtener_datos_consulta_exploits(peticion_proceso):
-    return True, True
+    datos_identificados = {"software":[],"cms":[], "cve":[], "profundidad": 2}
+    
+    datos_identificados["software"].extend(obtener_software_version_unica(peticion_proceso["analisis"], "Servidor"))
+    cms = obtener_software_version_unica(peticion_proceso["analisis"], "CMS")
+    if len(cms) != 0:
+        cms_nombre = cms[0]["software_nombre"]
+    else:
+        cms_nombre = ""
+
+    datos_identificados["software"].extend(cms)
+    datos_identificados["software"].extend(obtener_sofware_versiones(peticion_proceso["analisis"], "Lenguajes"))
+    datos_identificados["software"].extend(obtener_sofware_versiones(peticion_proceso["analisis"], "Frameworks"))
+    datos_identificados["software"].extend(obtener_sofware_versiones(peticion_proceso["analisis"], "Librerias"))
+    datos_identificados["cms"].extend(obtener_cms_version_unica(peticion_proceso["analisis"], "Plugins", cms_nombre))
+    
+    if "Vulnerabilidades" in peticion_proceso["analisis"]:
+        for cve in peticion_proceso["analisis"]["Vulnerabilidades"]:
+            datos_identificados["cve"].append(cve)
+
+    datos_identificados["profundidad"] = peticion_proceso["profundidad"]
+
+    datos_explotacion = {"sitio":peticion_proceso["sitio"],"puertos":["80"]}
+    # for puerto in peticion_proceso["informacion"]["Puertos"]["abiertos"]:
+    #     datos_explotacion["puertos"].append(puerto["puerto"])
+
+    return datos_explotacion, datos_identificados
+
+def obtener_sofware_versiones(peticion_proceso, caracteristica):
+    datos_identificados = []
+    nombre = ""
+    version = ""
+    if caracteristica in peticion_proceso:
+        if "nombre" in peticion_proceso[caracteristica]:
+            nombre= peticion_proceso[caracteristica]["nombre"]
+        if "version" in peticion_proceso[caracteristica]:
+            if len(peticion_proceso[caracteristica]["version"]) > 0:
+                for tipo in peticion_proceso[caracteristica]["version"]:
+                    version = peticion_proceso[caracteristica]["version"][tipo]
+                    datos_identificados.append({"software_nombre":nombre,"software_version":version})
+            if len(peticion_proceso[caracteristica]["version"]) == 0:
+                datos_identificados.append({"software_nombre":nombre,"software_version":""}) 
+    return datos_identificados
+
+def obtener_software_version_unica(peticion_proceso, caracteristica):
+    datos_identificados = []
+    nombre = ""
+    version = ""
+    if caracteristica in peticion_proceso:
+        if "nombre" in peticion_proceso[caracteristica]:
+            nombre = peticion_proceso[caracteristica]["nombre"]
+        if "version" in peticion_proceso[caracteristica]:
+            version = peticion_proceso[caracteristica]["version"]
+            version = version.replace("x","")
+        datos_identificados.append({"software_nombre":nombre,"software_version":version})
+    return datos_identificados
+
+def obtener_cms_version_unica(peticion_proceso, caracteristica, cms):
+    datos_identificados = []
+    nombre = ""
+    version = ""
+    if caracteristica in peticion_proceso:
+        if "nombre" in peticion_proceso[caracteristica]:
+            nombre = peticion_proceso[caracteristica]["nombre"]
+        if "version" in peticion_proceso[caracteristica]:
+            version = peticion_proceso[caracteristica]["version"]
+        datos_identificados.append({"cms_nombre":cms,"cms_categoria":caracteristica, "cms_extension_nombre":nombre,"cms_extension_version":version})
+    return datos_identificados
+
 
 def buscar_exploits(datos_identificados, con):
     exploits = []

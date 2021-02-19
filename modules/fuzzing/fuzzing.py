@@ -1,5 +1,5 @@
 from selenium import webdriver
-from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException, TimeoutException
+from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, ElementNotInteractableException
 import time
 import threading
 import math
@@ -156,7 +156,7 @@ class Lanzar_fuzzing(threading.Thread):
       self.sin_navegador.add_argument('--no-sandbox')
       self.sin_navegador.add_argument('--disable-dev-shm-usage')
       self.driver = webdriver.Chrome("/usr/bin/chromedriver",options=self.sin_navegador)
-      #self.driver = webdriver.Chrome()
+      #self.driver = webdriver.Chrome("/usr/bin/chromedriver")
       self.driver.set_page_load_timeout(5)
       self.threadID = threadID
       self.nombre = nombre
@@ -244,7 +244,10 @@ class Form():
          return True
 
    def set_input(self, input_individual, valor):
-      self.form_completo["form"]["inputs"][input_individual].send_keys(valor)
+      try:
+         self.form_completo["form"]["inputs"][input_individual].send_keys(valor)
+      except ElementNotInteractableException:
+         pass
       
    def get_lista_inputs(self):
       return self.form_completo["form"]["inputs"]
@@ -421,6 +424,8 @@ def obtener_valores_iniciales(parametros):
 
 def convertir_cookie(cookie):
    cookies_individuales = []
+   if cookie == "":
+      return cookies_individuales
    if cookie.__contains__(","):
       subcookies = cookie.split(",")
       for subcookie in subcookies:
@@ -434,44 +439,18 @@ def convertir_cookie(cookie):
 def execute(parametros):
    url, hilos, cookie = obtener_valores_iniciales(parametros)
    json_fuzzing = crear_hijos_fuzzing(url,hilos,cookie)
+   print(json_fuzzing)
    return json_fuzzing
 
 '''
-raise MaxRetryError(_pool, url, error or ResponseError(cause)) urllib3.exceptions.MaxRetryError: 
-HTTPConnectionPool(host='127.0.0.1', port=35207):
-Max retries exceeded with url: /session/bd53daf2431ca091ab4ed01837ee5d7e/execute/sync (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7fa8d9f4c670>:
-Failed to establish a new connection: [Errno 111] Connection refused'))
+Exception in thread Thread-4:
+Traceback (most recent call last):
+  File "/usr/lib/python3.9/threading.py", line 954, in _bootstrap_inner
+    self.run()
+  File "/home/kali/proyectos/proyecto_final_pbsi/modules/fuzzing/fuzzing.py", line 171, in run
+    enviar_peticiones(self.driver, self.url, self.diccionario, self.tipo, self.json_fuzzing_forms, self.cookie, -1)
+  File "/home/kali/proyectos/proyecto_final_pbsi/modules/fuzzing/fuzzing.py", line 305, in enviar_peticiones
+    formulario.set_input(input_individual,valor)
+  File "/home/kali/proyectos/proyecto_final_pbsi/modules/fuzzing/fuzzing.py", line 247, in set_input
 
-Reiniciar Driver
-
-selenium.common.exceptions.WebDriverException: Message: unknown error: net::ERR_CONNECTION_RESET
-  (Session info: headless)
-'''
-
-'''
-silencio = webdriver.ChromeOptions()
-silencio.add_argument('headless')
-driver = webdriver.Chrome()
-for i in range(250):
-         
-   #driver.get("https://xss-game.appspot.com/level1")
-   driver.get("http://altoromutual.com:8080/index.jsp")
-   #driver.switch_to.frame(driver.find_element_by_tag_name("iframe"))
-   query = driver.find_element_by_id("query")
-   #query.send_keys("<script>alert(\"H\");</script>")
-   query.send_keys(texto[i])
-   #query.send_keys("HOLA")
-   #button = driver.find_element_by_id("button")
-   #button.click()
-   try:
-      query.submit()
-      #print(driver.page_source)
-      time.sleep(0.1)
-      #print(driver.page_source)
-      if driver.switch_to.alert.text is not None:
-         print("XSS")
-         break
-   except NoAlertPresentException:
-      print("Error con Alert", texto[i],i)
-driver.quit()
 '''

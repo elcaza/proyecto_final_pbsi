@@ -41,6 +41,7 @@ syntax error at or near
 unterminated quoted string at or near
 ERROR message: 
 relation \".*\" does not exist
+Query failed
 [DB2]
 sql syntax error
 DB2 SQL Error:SQLCODE

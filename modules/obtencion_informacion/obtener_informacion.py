@@ -84,13 +84,12 @@ class Robtex_informacion():
 				forward = self.pdns_forward()
 			print("FW Pass")
 			dns_reverse = self.pdns_reverse()
-			if self.opciones_robtex["informacion"]:
-				informacion = {}
-				informacion["ip"] = self.ip_address
-				informacion["ciudad"] = ip["city"]
-				informacion["pais"] = ip["country"]
-				informacion["red"] = ip["bgproute"]
-				self.informacion_robtex["informacion"] = informacion
+			informacion = {}
+			informacion["ip"] = self.ip_address
+			informacion["ciudad"] = ip["city"]
+			informacion["pais"] = ip["country"]
+			informacion["red"] = ip["bgproute"]
+			self.informacion_robtex["informacion"] = informacion
 			if("list" in str(type(forward))):
 				for registro in forward:
 					self.tipos_registros(registro,temp_NS,temp_A,temp_MX,"forward")
@@ -123,15 +122,11 @@ class Robtex_informacion():
 			temp_informacion["mx"] = registro['rrdata']
 			temp_MX.append(temp_informacion)
 		if(tipo_busqueda == "forward"):
-			if self.opciones_robtex["dns_forward"]:
-				self.informacion_robtex["dns_forward"] = temp_NS
-			if self.opciones_robtex["host_forward"]:
-				self.informacion_robtex["host_forward"] = temp_A
-			if self.opciones_robtex["mx_forward"]:
-				self.informacion_robtex["mx_forward"] = temp_MX
+			self.informacion_robtex["dns_forward"] = temp_NS
+			self.informacion_robtex["host_forward"] = temp_A
+			self.informacion_robtex["mx_forward"] = temp_MX
 		else:
-			if self.opciones_robtex["host_reverse"]:
-				self.informacion_robtex["host_reverse"] = temp_A
+			self.informacion_robtex["host_reverse"] = temp_A
 
 class Obtener_informacion():
 
@@ -168,12 +163,10 @@ class Obtener_informacion():
 		return self.opciones_puertos
 
 	def ejecutar(self):
-		if self.opciones_dnsdumpster["revision"]:
-			self.busqueda_dnsdumpster()
-		if self.opciones_robtex["revision"]:
-			self.busqueda_robtex()
-		if self.opciones_puertos["revision"]:
-			self.scanner_puertos()
+
+		self.busqueda_dnsdumpster()
+		self.busqueda_robtex()
+		self.scanner_puertos()
 
 	def busqueda_google(self):
 		#print("Entra a google")
@@ -209,18 +202,20 @@ class Obtener_informacion():
 	def scanner_puertos(self):
 		print("Entra a Scanner de puertos")
 		puertos_completos = {}
+		puertos_completos["abiertos"] = []
+		puertos_completos["filtrados"] = []
+		puertos_completos["cerrados"] = []
 		puertos_abiertos = []
 		puertos_cerrados = []
 		puertos_filtrados = []
 		puertos_sin_filtrar = []
-		if self.opciones_puertos["opcion"] == "rango":
-			valores_puertos = self.opciones_puertos["rango"]
-			rango_puertos = str(valores_puertos["inicio"]) + "-" + str(valores_puertos["final"])
-			comando = "nmap --max-retries 0 -p " + rango_puertos + " " + self.sitio
-		elif self.opciones_puertos["top"]:
-			comando = "nmap --max-retries 0 --top-ports " + str(self.opciones_puertos["top"]) + " " + self.sitio
-		elif self.opciones_puertos["completo"]:
-			comando = "nmap --max-retries 0 -p-" + self.sitio
+		valores_puertos = self.opciones_puertos
+		rango_puertos = str(valores_puertos["inicio"]) + "-" + str(valores_puertos["final"])
+		comando = "nmap --max-retries 0 -p " + rango_puertos + " " + self.sitio
+		# elif self.opciones_puertos["top"]:
+		# 	comando = "nmap --max-retries 0 --top-ports " + str(self.opciones_puertos["top"]) + " " + self.sitio
+		# elif self.opciones_puertos["completo"]:
+		# 	comando = "nmap --max-retries 0 -p-" + self.sitio
 		args = shlex.split(comando)
 		salida_comando = subprocess.run(args, stdout=subprocess.PIPE, text=True)
 		separa_salida = salida_comando.stdout.split("\n")
@@ -250,6 +245,16 @@ class Obtener_informacion():
 	def busqueda_dnsdumpster(self):
 		print("Entra a DNSDumpster")
 		informacion_dnsdumpster = {}
+		informacion_dnsdumpster["txt"] = []
+		informacion_dnsdumpster["mx"] = []
+		informacion_dnsdumpster["dns"] = []
+		informacion_dnsdumpster["host"] = [{
+			"dominio":"",
+			"ip":"",
+			"dns_inverso":"",
+			"pais":"",
+			"cabecera":""
+		}]
 		dns = []
 		mx = []
 		host = []
@@ -258,23 +263,20 @@ class Obtener_informacion():
 		registros = DNSDumpsterAPI().search(self.sitio)
 		if len(registros) != 0:
 			registros = registros["dns_records"]
-			if self.opciones_dnsdumpster["txt"]:
-				informacion_dnsdumpster["txt"] = registros["txt"]
-			if self.opciones_dnsdumpster["dns"]:
-				for registro_dns in registros["dns"]:
-					dns.append(self.clasificacion_dnsdumspter(registro_dns,temp_registros,contador_datos))
-					temp_registros = {}
-				informacion_dnsdumpster['dns'] = dns
-			if self.opciones_dnsdumpster["mx"]:
-				for registro_mx in registros["mx"]:
-					mx.append(self.clasificacion_dnsdumspter(registro_mx,temp_registros,contador_datos))
-					temp_registros = {}
-				informacion_dnsdumpster['mx'] = mx
-			if self.opciones_dnsdumpster["host"]:
-				for registro_host in registros["host"]:
-					host.append(self.clasificacion_dnsdumspter(registro_host,temp_registros,contador_datos))
-					temp_registros = {}
-				informacion_dnsdumpster['host'] = host
+
+			informacion_dnsdumpster["txt"] = registros["txt"]
+			for registro_dns in registros["dns"]:
+				dns.append(self.clasificacion_dnsdumspter(registro_dns,temp_registros,contador_datos))
+				temp_registros = {}
+			informacion_dnsdumpster['dns'] = dns
+			for registro_mx in registros["mx"]:
+				mx.append(self.clasificacion_dnsdumspter(registro_mx,temp_registros,contador_datos))
+				temp_registros = {}
+			informacion_dnsdumpster['mx'] = mx
+			for registro_host in registros["host"]:
+				host.append(self.clasificacion_dnsdumspter(registro_host,temp_registros,contador_datos))
+				temp_registros = {}
+			informacion_dnsdumpster['host'] = host
 		self.json_informacion["Dnsdumpster"] = informacion_dnsdumpster
 
 	def clasificacion_dnsdumspter(self,registros_tipos,temp_registros,contador_datos):

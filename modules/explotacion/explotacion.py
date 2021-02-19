@@ -20,6 +20,7 @@ class Lanzar_exploit(threading.Thread):
         for puerto in range(len(self.puertos)):
             cargar_parametros(self.sitio, self.puertos[puerto], self.exploit["exploit"], exploit_temporal)
             otorgar_permisos_exploit(exploit_temporal)
+            print(exploit_preparado)
             self.resultado[self.puertos[puerto]] = ejecutar_exploit(exploit_preparado)
             self.resultado[self.puertos[puerto]] = validar_resulado(self.resultado[self.puertos[puerto]])
             eliminiar_exploit_temporal(exploit_temporal)
@@ -49,14 +50,14 @@ class Lanzar_exploit(threading.Thread):
             self.sitio = ""
 
 # Area para modificar constantes
-def modificar_exploit_dominio(dominio, exploit, exploit_temporal):
+def modificar_exploit_sitio(dominio, exploit, exploit_temporal):
     try:
         if not path.exists(exploit_temporal):
-            check_output("sed \"s|APP_DOMINIO|{0}|g\" {1} > {2}".format(dominio, exploit, exploit_temporal),shell=True)
+            check_output("sed \"s|APP_SITIO|{0}|g\" {1} > {2}".format(dominio, exploit, exploit_temporal),shell=True)
         else:
-            check_output("sed -i \"s|APP_DOMINIO|{0}|g\" {1}".format(dominio, exploit_temporal),shell=True)
+            check_output("sed -i \"s|APP_SITIO|{0}|g\" {1}".format(dominio, exploit_temporal),shell=True)
     except CalledProcessError:
-        print("Ocurrió un error al cambiar el dominio {0} en {1}".format(dominio,exploit))
+        print("Ocurrió un error al cambiar el sitio {0} en {1}".format(dominio,exploit))
         
 def modificar_exploit_puerto(puerto, exploit, exploit_temporal):
     try:
@@ -67,14 +68,14 @@ def modificar_exploit_puerto(puerto, exploit, exploit_temporal):
     except CalledProcessError:
         print("Ocurrió un error al cambiar el puerto {0} en {1}".format(puerto,exploit))
 
-def modificar_exploit_pagina(pagina, exploit, exploit_temporal):
-    try:
-        if not path.exists(exploit_temporal):
-            check_output("sed \"s|APP_PAGINA|{0}|g\" {1} > {2}".format(pagina, exploit, exploit_temporal),shell=True)
-        else:
-            check_output("sed -i \"s|APP_PAGINA|{0}|g\" {1}".format(pagina, exploit_temporal),shell=True)
-    except CalledProcessError:
-        print("Ocurrió un error al cambiar la página {0} en {1}".format(pagina,exploit))  
+# def modificar_exploit_pagina(pagina, exploit, exploit_temporal):
+#     try:
+#         if not path.exists(exploit_temporal):
+#             check_output("sed \"s|APP_PAGINA|{0}|g\" {1} > {2}".format(pagina, exploit, exploit_temporal),shell=True)
+#         else:
+#             check_output("sed -i \"s|APP_PAGINA|{0}|g\" {1}".format(pagina, exploit_temporal),shell=True)
+#     except CalledProcessError:
+#         print("Ocurrió un error al cambiar la página {0} en {1}".format(pagina,exploit))  
 
 def crear_copia_temporal(exploit, exploit_temporal):
     try:
@@ -104,7 +105,7 @@ def limpiar_exploit(exploit, lenguaje):
 
 def cargar_parametros(sitio, puerto, exploit, exploit_temporal):
     crear_copia_temporal(exploit, exploit_temporal)
-    modificar_exploit_dominio(sitio,exploit, exploit_temporal)
+    modificar_exploit_sitio(sitio,exploit, exploit_temporal)
     modificar_exploit_puerto(puerto,exploit, exploit_temporal)
 
 def validar_resulado(resultado):
