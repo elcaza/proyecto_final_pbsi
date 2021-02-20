@@ -67,7 +67,7 @@ body.vista_consultas .main__consultas{
     display: block;
 }
 
-body.vista_configuraciones .main__configuraciones {
+body.vista_configuraciones .main__proximosEscaneos {
     display: block;
 }
 
@@ -81,6 +81,14 @@ body.file .scan__options__file{
     color: #fefefe;
 }
 
+body.url .scan__url {
+    display: block;
+}
+
+body.file .scan__file {
+    display: block;
+}
+
 /**
 ===========================================
 Sections Paddigs
@@ -89,7 +97,7 @@ Sections Paddigs
 
 .main__nuevo,
 .main__consultas,
-.main__configuraciones {
+.main__proximosEscaneos {
     display: none;
     box-sizing: border-box;
     padding: 10px;
@@ -153,15 +161,15 @@ select {
 
 .nav__nuevo,
 .nav__consultas,
-.nav__configuraciones {
+.nav__proximosEscaneos {
     display: inline;
     margin: 10px;
 }
 
 .nav__nuevo:hover,
 .nav__consultas:hover,
-.nav__configuraciones:hover {
-    color: #3777a5
+.nav__proximosEscaneos:hover {
+    color: #3777a5;
     transition: 1s;
     border-bottom: 1px solid;
 }
@@ -221,7 +229,7 @@ button:hover {
 }
 
 .scan__url {
-    display: block;
+    display: none;
     margin: 10px auto;
     width: 90%;
     border: 1px solid #064766;
@@ -232,7 +240,7 @@ button:hover {
 }
 
 .scan__file {
-    display: block;
+    display: none;
     margin: 10px auto;
     width: 90%;
     border-radius: 3px;
@@ -376,6 +384,10 @@ input:checked + .modulos__slider:before {
 
 }
 
+.programar #next_scan {
+    margin-left: 10px;
+}
+
 /* Consultas */
 
 .main__consultas {
@@ -383,7 +395,9 @@ input:checked + .modulos__slider:before {
 }
 
 .consultas {
-    border: 1px solid;
+    vertical-align: top;
+    padding: 20px 0px;
+    box-sizing: border-box;
 }
 
 .consultas__analizados,
@@ -397,6 +411,7 @@ input:checked + .modulos__slider:before {
     box-sizing: border-box;
     border: 1px solid;
     padding: 60px;
+    vertical-align: top;
 }
 
 .consultas__analizados {
@@ -483,7 +498,7 @@ input:checked + .modulos__slider:before {
     text-align: center;
 }
 
-.main__configuraciones {
+.main__proximosEscaneos {
 
 }
 
