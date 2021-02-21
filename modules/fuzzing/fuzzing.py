@@ -2,9 +2,11 @@ from selenium import webdriver
 from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, ElementNotInteractableException
 import time
 import threading
-import math
 import re
+import requests
+import urllib.parse
 from modules import strings
+import json
 
 class SingletonMeta(type):
    _instances = {}
@@ -13,23 +15,6 @@ class SingletonMeta(type):
          instance = super().__call__(*args, **kwargs)
          cls._instances[cls] = instance
       return cls._instances[cls]
-
-class Singleton_Banderas_formulario(metaclass=SingletonMeta):
-   existe = None
-   arreglo_bandera = None
-   def set_banderas_formulario(self,arreglo_banderas):
-      if self.existe is None:    
-         self.banderas= arreglo_banderas
-
-   def get_bandera(self,iteracion):
-      return self.banderas[iteracion]
-
-   def set_bandera(self,iteracion):
-      self.banderas[iteracion] = 1
-
-   def reiniciar_banderas_formulario(self):
-      self.banderas = None
-      self.existe = None
 
 class Singleton_Diccionarios_ataque(metaclass=SingletonMeta):
    def __init__(self, diccionario_xss, diccionario_sqli, diccionario_lfi):
@@ -165,12 +150,15 @@ class Lanzar_fuzzing(threading.Thread):
       self.tipo = tipo
       self.cookie = cookie
       self.json_fuzzing_forms = {"forms":{}}
+      self.json_forms = {"forms":{}}
 
    def run(self):
-      print ("Starting " + self.nombre)
-      enviar_peticiones(self.driver, self.url, self.diccionario, self.tipo, self.json_fuzzing_forms, self.cookie, -1)
+      print ("[+1] Hilo Selenium - " + self.nombre)
+      enviar_peticiones(self.driver, self.url, self.diccionario, self.tipo, self.json_fuzzing_forms, self.json_forms, self.cookie)
       self.driver.quit()
-      print ("Exiting " + self.nombre)
+      print ("[+2] Hilo Request - " + self.nombre)
+      pre_enviar_peticiones(self.json_forms, self.diccionario, self.tipo, self.json_fuzzing_forms, self.cookie)
+      print ("[-] Hilo - " + self.nombre)
 
    def reiniciar_driver(self):
       self.sin_navegador = webdriver.ChromeOptions()
@@ -182,6 +170,9 @@ class Lanzar_fuzzing(threading.Thread):
    
    def get_json_fuzzing_forms(self):
       return self.json_fuzzing_forms
+      
+   def get_forms(self):
+      self.json_fuzzing_forms
 
 class Form():
    def __init__(self, driver_form):
@@ -220,12 +211,16 @@ class Form():
    def get_form(self):
       lista_forms = {}
       lista_inputs = []
+      lista_inputs_nombre = []
 
       for entrada in self.inputs:
          if entrada.get_attribute("type") == "text" or entrada.get_attribute("type") == "password":
-            lista_inputs.append(entrada)
+            if entrada.size["height"] != 0 and entrada.size["width"] != 0: 
+               lista_inputs.append(entrada)
+               lista_inputs_nombre.append(entrada.get_attribute("id") if entrada.get_attribute("id") != "" else entrada.get_attribute("name"))
       lista_forms["form"] = {
          "inputs":lista_inputs,
+         "inputs_nombres":lista_inputs_nombre,
          "selects":self.selects,
          "nombre":self.nombre,
          "metodo":self.metodo,
@@ -236,7 +231,7 @@ class Form():
    def enviar_peticion(self):
       self.peticion = ""
       for valor in self.form_completo["form"]["inputs"]:
-         self.peticion += valor.get_attribute("id")+":"+valor.get_attribute("value")+" "
+         self.peticion += "Input:"+valor.get_attribute("id")+" Valor:"+valor.get_attribute("value")+" "
       try:
          self.form.submit()
          return False
@@ -252,6 +247,9 @@ class Form():
    def get_lista_inputs(self):
       return self.form_completo["form"]["inputs"]
    
+   def get_form_completo(self):
+      return self.form_completo
+
    def get_peticion(self):
       return self.peticion
 
@@ -262,40 +260,52 @@ def actualizar_profundidad_iframes(driver, iframe_profundidad, iframe_posicion):
          driver.switch_to.frame(driver.find_elements_by_tag_name("iframe")[iframe_posicion])
    return True
 
-def actualizar_formulario(driver,formulario_iteracion, url, iframe_posicion = -1, iframe_profundidad = 0):
+def actualizar_formulario(driver,formulario_iteracion, url, iframe_posicion = -1, iframe_profundidad = 0, error = 0):
    try:
       driver.get(url)
-
       actualizar_profundidad_iframes(driver, iframe_profundidad, iframe_posicion)
-   
       formulario = Form(driver.find_elements_by_xpath(".//form")[formulario_iteracion])
       inputs = formulario.get_lista_inputs()
       return formulario, inputs
-   except (UnexpectedAlertPresentException,TimeoutException):
-      return actualizar_formulario(driver,formulario_iteracion,url)
+   except UnexpectedAlertPresentException:
+      return actualizar_formulario(driver,formulario_iteracion,url,iframe_posicion, iframe_profundidad, error)
+   except TimeoutException:
+      if error < 5:
+         error += 1
+         return actualizar_formulario(driver,formulario_iteracion,url, iframe_posicion, iframe_profundidad, error)
+      else:
+         return False, False
 
-def enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, cookie=[], iframe_posicion = -1, iframe_profundidad = 0):
+def enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, json_forms, cookie=[], iframe_posicion = -1, iframe_profundidad = 0, error = 0):
+
    if iframe_posicion == -1:
+      # Falla en Tiempo de ejecucion
       try:
          driver.get(url)   
       except TimeoutException:
-         enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, cookie, iframe_posicion, iframe_profundidad)
+         if error < 5:
+            error += 1
+            enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, json_forms, cookie, iframe_posicion, iframe_profundidad, error)
+         else:
+            return False
+
       if len(cookie) > 0:
          for cookie_individual in cookie:
             driver.add_cookie(cookie_individual)
+   # Encuentros de iFrame embebidos
    try:
       actualizar_profundidad_iframes(driver, iframe_profundidad, iframe_posicion)
-         
       iframes = len(driver.find_elements_by_tag_name("iframe"))
       if iframes != 0:
          for iframe in range(iframes):
             iframe_profundidad += 1
-
-            enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, cookie, iframe, iframe_profundidad)
+            
+            enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, json_forms, cookie, iframe, iframe_profundidad, error)
             driver.get(url)
             time.sleep(0.5)
             iframe_profundidad -= 1
             actualizar_profundidad_iframes(driver, iframe_profundidad, iframe_posicion)
+
    except NoSuchElementException:
       iframe_posicion = -1
 
@@ -304,12 +314,14 @@ def enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, cookie=[], i
    for formulario_iteracion in range(len(cantidad_formularios)):
       for valor in diccionario:
          formulario, inputs = actualizar_formulario(driver,formulario_iteracion, url, iframe_posicion, iframe_profundidad)
+         if formulario == False:
+            return False
          for input_individual in range(len(inputs)):
             formulario.set_input(input_individual,valor)
          form_nombre = formulario.get_nombre()
          form_id = formulario.get_id()
          form_utilizar = ""
-         vulnerabilidad_tiempo = formulario.enviar_peticion()
+
          if form_id == "":
             if form_nombre == "":
                form_utilizar = "form {0}-{1}".format(iframe_profundidad,iframe_posicion)
@@ -318,109 +330,100 @@ def enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, cookie=[], i
          else:
             form_utilizar = form_id
 
+         form_completo = formulario.get_form_completo()
+         
+         if json_forms["forms"].get(form_utilizar) is None:
+            json_forms["forms"].update({form_utilizar:{}})
+            json_forms["forms"][form_utilizar]["metodo"] = form_completo["form"]["metodo"]
+            json_forms["forms"][form_utilizar]["accion"] = form_completo["form"]["accion"]
+            json_forms["forms"][form_utilizar]["inputs"] = form_completo["form"]["inputs_nombres"]
+
+         vulnerabilidad_tiempo = formulario.enviar_peticion()
+
          if json_fuzzing["forms"].get(form_utilizar) is None:
             json_fuzzing["forms"].update({form_utilizar:[]})
          json_fuzzing["forms"][form_utilizar].append({"inputs":[],"tipo":tipo,"xss":False,"sqli":False,"lfi":False})
-         json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["inputs"] = formulario.get_peticion()
+         i = len(json_fuzzing["forms"][form_utilizar])-1
+         json_fuzzing["forms"][form_utilizar][i]["inputs"] = formulario.get_peticion()
+
          if vulnerabilidad_tiempo:
             if tipo == "xss":
-               json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["xss"] = True
-               #lista_posibles_vulnerabilidades["xss"].append("XSS DETECTADO En el form {0} -> \"{1}\"".format(form_utilizar,formulario.get_peticion()))
+               json_fuzzing["forms"][form_utilizar][i]["xss"] = True
             elif tipo == "sqli":
-               json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["sqli"] = True
-               #lista_posibles_vulnerabilidades["sqli"].append("SQLi DETECTADO En el form {0} -> \"{1}\"".format(form_utilizar,formulario.get_peticion()))
+               json_fuzzing["forms"][form_utilizar][i]["sqli"] = True
             elif tipo == "lfi":
-               json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["lfi"] = True
-               #lista_posibles_vulnerabilidades["lfi"].append("LFI DETECTADO En el form {0} -> \"{1}\"".format(form_utilizar,formulario.get_peticion()))
+               json_fuzzing["forms"][form_utilizar][i]["lfi"] = True
             continue
+
          time.sleep(0.1)
-   
-         validarXSS(driver,json_fuzzing,form_utilizar)
-         validarSQLi(driver,json_fuzzing,form_utilizar)
-         validarLFI(driver,json_fuzzing,form_utilizar)
+         json_fuzzing["forms"][form_utilizar][i]["xss"] = validarXSS(driver)
+         json_fuzzing["forms"][form_utilizar][i]["sqli"] = validarSQLi(driver)
+         json_fuzzing["forms"][form_utilizar][i]["lfi"] = validarLFI(driver)
          del formulario
    return True
 
-def validarXSS(driver, json_fuzzing, form_utilizar):
+def validarXSS(driver):
    try:
       alerta = driver.switch_to.alert
       if alerta.text is not None:
          alerta.accept()
-         json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["xss"] = True
+         return True
    except NoAlertPresentException:
-      json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["xss"] = False
+      return False
 
-def validarSQLi(driver, json_fuzzing, form_utilizar):
+def validarSQLi(driver):
    diccionario = Singleton_Diccionarios_validacion()
    for cadena in diccionario.get_validar_sqli():
-      existe = re.search(re.compile(cadena), driver.page_source)
+      existe = re.search(re.compile(re.escape(cadena)), driver.page_source)
       if existe is not None:
-         json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["sqli"] = True
          return True
-      json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["sqli"] = False
    del diccionario
+   return False
 
-def validarLFI(driver, json_fuzzing, form_utilizar):
+def validarLFI(driver):
    diccionario = Singleton_Diccionarios_validacion()
    for cadena in diccionario.get_validar_lfi():
-      existe = re.search(re.compile(cadena), driver.page_source)
+      existe = re.search(re.compile(re.escape(cadena)), driver.page_source)
       if existe is not None:
-         json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["lfi"] = True
          return True
-      json_fuzzing["forms"][form_utilizar][len(json_fuzzing["forms"][form_utilizar])-1]["lfi"] = False
    del diccionario
+   return False
    
-def obtener_divisor_diccionario_dividido(diccionario, hilos):
-   if hilos < len(diccionario):
-      lotes_palabras = (len(diccionario) / hilos)
-      lotes_palabras = math.floor(lotes_palabras)
-      residuo_lotes_palabras = len(diccionario) % hilos
-   else:
-      lotes_palabras = (hilos / len(diccionario))
-      lotes_palabras = math.floor(lotes_palabras)
-      residuo_lotes_palabras = hilos % len(diccionario)
-   return lotes_palabras,residuo_lotes_palabras
-
-def crear_hijos_fuzzing(url, hilos, cookie=[]):
+def crear_hijos_fuzzing(url, cookie=[]):
    diccionarios = Singleton_Diccionarios_ataque()
    json_fuzzing = {"forms": {}}
-   for diccionario in diccionarios.get_diccionarios():
-      lotes_palabras, residuo_lotes_palabras = obtener_divisor_diccionario_dividido(diccionarios.get_diccionario(diccionario), hilos)
-      hijos = [] 
-      for hilo in range(hilos):
-         lotes_palabras_inicio = lotes_palabras * hilo
-         lotes_palabras_fin = lotes_palabras * (hilo + 1)
-         if hilo == hilos - 1:
-            if residuo_lotes_palabras != 0:
-               lotes_palabras_fin += residuo_lotes_palabras
-         subdiccionario = diccionarios.get_diccionario(diccionario)[lotes_palabras_inicio:lotes_palabras_fin]
-         hijos.append(Lanzar_fuzzing(hilo, "Thread-{0}".format(hilo), subdiccionario, url, diccionario, cookie))
-      
-      for hilo in range(hilos):
-         hijos[hilo].start()
 
-      for hilo in range(hilos):
-         hijos[hilo].join()
+   hijos = []
+   hilo = 0
+   hilos = 3
 
-      for hilo in range(hilos):
-         forms = hijos[hilo].get_json_fuzzing_forms()
-         for form in forms["forms"]:
-            if form in json_fuzzing["forms"]:
-               json_fuzzing["forms"][form].extend(forms["forms"][form])
-            else:
-               json_fuzzing["forms"][form] = forms["forms"][form]
+   subdiccionarios = diccionarios.get_diccionarios()
+   for diccionario in subdiccionarios:
+      hijos.append(Lanzar_fuzzing(hilo, "Fuzzing-{0}".format(diccionario), subdiccionarios[diccionario], url, diccionario, cookie))
+      hilo += 1
+
+   for hilo in range(hilos):
+      hijos[hilo].start()
+   for hilo in range(hilos):
+      hijos[hilo].join()
+   for hilo in range(hilos):
+      forms = hijos[hilo].get_json_fuzzing_forms()
+      for form in forms["forms"]:
+         if form in json_fuzzing["forms"]:
+            json_fuzzing["forms"][form].extend(forms["forms"][form])
+         else:
+            json_fuzzing["forms"][form] = forms["forms"][form]
 
    del diccionarios
    return json_fuzzing
    
 def obtener_valores_iniciales(parametros):
    url = parametros["url"]
-   hilos = parametros["hilos"]
    cookie = parametros["cookie"]
-   diccionarios_ataque = Singleton_Diccionarios_ataque(strings.DICCIONARIO_ATAQUE_XSS,strings.DICCIONARIO_ATAQUE_SQLI,strings.DICCIONARIO_ATAQUE_LFI)
-   diccionarios_validacion = Singleton_Diccionarios_validacion(strings.DICCIONARIO_VALIDACION_SQLI,strings.DICCIONARIO_VALIDACION_LFI)
+   Singleton_Diccionarios_ataque(strings.DICCIONARIO_ATAQUE_XSS,strings.DICCIONARIO_ATAQUE_SQLI,strings.DICCIONARIO_ATAQUE_LFI)
+   Singleton_Diccionarios_validacion(strings.DICCIONARIO_VALIDACION_SQLI,strings.DICCIONARIO_VALIDACION_LFI)
    cookie = convertir_cookie(cookie)
-   return url, hilos, cookie
+   return url, cookie
 
 def convertir_cookie(cookie):
    cookies_individuales = []
@@ -436,21 +439,99 @@ def convertir_cookie(cookie):
       cookies_individuales.append({"name":cookie_individual_temporal[0],"value":cookie_individual_temporal[1]})
    return cookies_individuales
 
+def pre_enviar_peticiones(forms, diccionario, tipo, json_fuzzing, cookie=[]):
+   sesion = requests.session()
+   headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0"}
+   cookies = {}
+   if len(cookie) != 0:
+      for subcookie in cookie:
+         cookies[subcookie["name"]] = subcookie["value"]
+
+   for form in forms["forms"]:
+      url = forms["forms"][form]["accion"]
+      metodo = forms["forms"][form]["metodo"]
+      i = 0
+      if metodo.lower() == "get":
+         for valor in diccionario:
+            payload = "?"
+            for input_individual in forms["forms"][form]["inputs"]:
+               payload += input_individual+"="+valor
+            peticion = sesion.get(url+payload, headers=headers, cookies=cookies)
+
+            if peticion.elapsed.seconds > 5:
+               if tipo == "xss":
+                  json_fuzzing["forms"][form][i]["xss"] = True
+               elif tipo == "sqli":
+                  json_fuzzing["forms"][form][i]["sqli"] = True
+               elif tipo == "lfi":
+                  json_fuzzing["forms"][form][i]["lfi"] = True
+               continue
+            
+            if tipo == "xss":
+               payload_xss = urllib.parse.unquote(valor)
+               if json_fuzzing["forms"][form][i]["xss"] == False:
+                  json_fuzzing["forms"][form][i]["xss"] = validarPreXSS(peticion, payload_xss)
+            if json_fuzzing["forms"][form][i]["sqli"] == False:
+               json_fuzzing["forms"][form][i]["sqli"] = validarPreSQLi(peticion)
+            if json_fuzzing["forms"][form][i]["lfi"] == False:
+               json_fuzzing["forms"][form][i]["lfi"] = validarPreLFI(peticion)
+            i += 1
+            
+      if metodo.lower() == "post":
+         for valor in diccionario:
+            for input_individual in forms["forms"][form]["inputs"]:
+               payload[input_individual] = valor
+            peticion = sesion.post(url, headers=headers, cookies=cookies, data=json.dumps(payload))
+
+            if peticion.elapsed.seconds > 5:
+               if tipo == "xss":
+                  json_fuzzing["forms"][form][i]["xss"] = True
+               elif tipo == "sqli":
+                  json_fuzzing["forms"][form][i]["sqli"] = True
+               elif tipo == "lfi":
+                  json_fuzzing["forms"][form][i]["lfi"] = True
+               continue
+            
+            if tipo == "xss":
+               payload_xss = urllib.parse.unquote(valor)
+               if json_fuzzing["forms"][form][i]["xss"] == False:
+                  json_fuzzing["forms"][form][i]["xss"] = validarPreXSS(peticion, payload_xss)
+            if json_fuzzing["forms"][form][i]["sqli"] == False:
+               json_fuzzing["forms"][form][i]["sqli"] = validarPreSQLi(peticion)
+            if json_fuzzing["forms"][form][i]["lfi"] == False:
+               json_fuzzing["forms"][form][i]["lfi"] = validarPreLFI(peticion)
+            i += 1
+ 
+def validarPreXSS(peticion, payload):
+   existe = re.search(re.compile(re.escape(payload)), peticion.content.decode())
+
+   if existe is not None:
+      return True
+   return False
+
+def validarPreSQLi(peticion):
+   diccionario = Singleton_Diccionarios_validacion()
+   for cadena in diccionario.get_validar_sqli():
+      existe = re.search(re.compile(re.escape(cadena)), peticion.content.decode())
+      if existe is not None:
+         return True
+   del diccionario
+   return False
+
+def validarPreLFI(peticion):
+   diccionario = Singleton_Diccionarios_validacion()
+   for cadena in diccionario.get_validar_lfi():
+      existe = re.search(re.compile(re.escape(cadena)), peticion.content.decode())
+      if existe is not None:
+         return True
+   del diccionario
+   return False
+   
 def execute(parametros):
-   url, hilos, cookie = obtener_valores_iniciales(parametros)
-   json_fuzzing = crear_hijos_fuzzing(url,hilos,cookie)
-   print(json_fuzzing)
+   url, cookie = obtener_valores_iniciales(parametros)
+   json_fuzzing = crear_hijos_fuzzing(url,cookie)
    return json_fuzzing
 
 '''
-Exception in thread Thread-4:
-Traceback (most recent call last):
-  File "/usr/lib/python3.9/threading.py", line 954, in _bootstrap_inner
-    self.run()
-  File "/home/kali/proyectos/proyecto_final_pbsi/modules/fuzzing/fuzzing.py", line 171, in run
-    enviar_peticiones(self.driver, self.url, self.diccionario, self.tipo, self.json_fuzzing_forms, self.cookie, -1)
-  File "/home/kali/proyectos/proyecto_final_pbsi/modules/fuzzing/fuzzing.py", line 305, in enviar_peticiones
-    formulario.set_input(input_individual,valor)
-  File "/home/kali/proyectos/proyecto_final_pbsi/modules/fuzzing/fuzzing.py", line 247, in set_input
 
 '''

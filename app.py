@@ -12,6 +12,7 @@ from os import path
 from datetime import datetime
 import plotly.graph_objects as go
 import json
+from time import sleep
 
 ## Modulos
 from modules.obtencion_informacion import obtener_informacion
@@ -67,12 +68,10 @@ def iniciar_analisis(peticion):
         }
 
         numero_grafica = 0
-        ############################################################# OBTENER INFORMACION #############################################################
 
         # respuesta_obtener_informacion = obtener_informacion.execute(peticion)
         # peticion_proceso["informacion"] = respuesta_obtener_informacion
         # numero_grafica = reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica)
-        ############################################################# ANALISIS #############################################################
 
         # respuesta_analisis = analisis.execute(peticion_proceso["sitio"])
         # peticion_proceso["analisis"] = respuesta_analisis
@@ -80,37 +79,38 @@ def iniciar_analisis(peticion):
 
         peticion_proceso["paginas"] =[
                 # {
-                #     "sitio":"http://www.altoromutual.com:8080/login.jsp",
+                #     "sitio":"http://www.fca.unam.mx",
                 # },
                 # {
                 #     "sitio":"http://www.altoromutual.com:8080/search.jsp",
-                # }
+                # },
+                # {
+                #     "sitio":"http://www.altoromutual.com:8080/login.jsp"
+                # },
                 {
-                    "sitio":"https://proyectos.filos.unam.mx/guia/admin/login"
-                }
+                    "sitio":"https://xss-game.appspot.com/level1",
+                },
             ]
 
         print("Iniciando Fuzzing")
-
         enviar_fuzzing(peticion_proceso)
+        print(peticion_proceso)
         alertas_fuzzing(peticion_proceso, peticion_alerta)
         numero_grafica = reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica)
-        ############################################################# EXPLOTACION #############################################################
-
-        #datos_explotacion, datos_identificados = obtener_datos_consulta_exploits(peticion_proceso)
 
         print("Iniciando Explotacion")
+        # datos_explotacion, datos_identificados = obtener_datos_consulta_exploits(peticion_proceso)
         # enviar_explotacion(con, datos_identificados, datos_explotacion, peticion_proceso)
         # alertas_explotacion(peticion_proceso, peticion_alerta)
         # numero_grafica = reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica)
-        ############################################################# ALERTAS #############################################################
         
-        print("Creando el reporte")
-        reportes.execute(peticion_reporte)
-        print("Enviando alertas")
-        enviar_alertas(peticion_alerta)
-        con.guardar_analisis(peticion_proceso)
-        ############################################################# CONSULTA #############################################################
+        # print("Creando el reporte")
+        # reportes.execute(peticion_reporte)
+
+        # print("Enviando alertas")
+        # enviar_alertas(peticion_alerta)
+        # con.guardar_analisis(peticion_proceso)
+
         return "Reporte generado"
 
 def guardar_exploit(peticion):
@@ -685,6 +685,15 @@ def exploits():
         return respuesta
     if request.method == "GET":
         return "GET no"
+
+@app.route("/prueba", methods=["GET","POST"])
+def prueba():
+    if request.method == "POST":
+        sleep(15)
+        return "respuesta"
+    if request.method == "GET":
+        return "GET no"
+
 
 # Ejecucion de Flask
 '''
