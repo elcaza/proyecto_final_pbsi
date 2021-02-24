@@ -608,6 +608,8 @@ class Obtencion_informacion():
 		self.sitio = sys.argv[1]
 		self.tmp_diccionario = {}
 		self.json_informacion = {}
+		self.paginas = []
+		self.paginas.append(self.sitio)
 		self.menu()
 
 	def url_without_file(self):
@@ -692,15 +694,69 @@ class Obtencion_informacion():
 		return self.tmp_diccionario
 
 
+	def web(self,url):
+		code = requests.get(url,verify=False)
+		plain = code.text
+		s = BeautifulSoup(plain, "html.parser")
+		for link in s.findAll('a'):
+			tet_2 = link.get('href')
+			if tet_2 != None:
+				if not(tet_2.startswith("#")):
+					if tet_2.startswith(url):
+						if not(tet_2 in self.paginas):
+							self.paginas.append(tet_2)
+						elif not(tet_2.startswith("http")) and not(tet_2.startswith("https")):
+							link_2 = self.valida_link(tet_2,url)
+							contador = 0
+							esta = 0
+							for page in self.paginas:
+								contador += 1 
+								if (contador >= len(self.paginas)) and not(esta > 0):
+									self.paginas.append(link_2)
+									contador = 0
+									esta = 0
+								elif tet_2 in page:
+									esta += 1
+		return self.paginas
+
+	def valida_link(self,linea,url):
+		link = ""
+		try:
+			linea = linea.split()[1]
+		except:
+			linea = linea
+		if url.endswith("/") and linea.startswith("/"):
+			link = url + linea[1:]
+		elif url.endswith("/") and not(linea.startswith("/")):
+			link = url + linea
+		elif not(url.endswith("/")) and linea.startswith("/"):
+			link = url + linea
+		return link
 
 	def get_robots(self):
 		self.robot_parser = RobotFileParser()
 		try:
 			self.robot_parser.set_url(f'{self.sitio}robots.txt')
 			self.robot_parser.read()
-		except(URLError):
+		except:
 			self.robot_parser = None
+		return self.robot_parser
+
+	def get_paginas(self):
+		link = ""
+		self.get_robots()
 		print(self.robot_parser)
+		if self.robot_parser:
+			for linea in str(self.robot_parser).split("\n"):
+				if not("%2A" in linea) and not("User" in linea):
+					link = self.valida_link(linea,self.sitio)
+					if not(link in self.paginas):
+						self.paginas.append(link)
+		for pagina in self.paginas:
+			self.web(pagina)
+			self.tmp_diccionario["paginas"] = self.paginas
+		return self.tmp_diccionario
+
 
 	def get_directorios(self):
 		lista_directorios = []
@@ -760,10 +816,6 @@ class Obtencion_informacion():
 		tmp_libreria = {}
 		tmp_total = []
 		resultado  = self.get_peticion_w()
-		#print(resultado)
-		print("------------------------------------------------")
-		print(self.tmp_diccionario["librerias"])
-		print("------------------------------------------------")
 		for libreria in self.librerias_configuracion:
 			libreria = libreria.rstrip('\n')
 			for llave, valor in resultado.items():
@@ -794,6 +846,7 @@ class Obtencion_informacion():
 		self.get_cifrados()
 		self.get_lenguajes()
 		self.get_frameworks()
+		self.get_paginas()
 		detected_cms = None
 		detect_root = None
 		detect_list = ["Drupal","Moodle","Joomla","Wordpress"]
