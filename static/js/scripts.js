@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let body = document.querySelector("body");
     let button_nav__nuevo = document.querySelector(".nav__nuevo");
     let button_nav__consultas = document.querySelector(".nav__consultas");
-    let button_nav__configuraciones = document.querySelector(".nav__configuraciones");
+    let button_nav__proximosEscaneos = document.querySelector(".nav__proximosEscaneos");
     let button_scan__options__url = document.querySelector(".scan__options__url");
     let button_scan__options__file = document.querySelector(".scan__options__file");
 
@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function() {
         body.classList.replace("vista_configuraciones", "vista_consultas");
     });
     
-    button_nav__configuraciones.addEventListener("click", function(){
+    button_nav__proximosEscaneos.addEventListener("click", function(){
         body.classList.replace("vista_nuevo", "vista_configuraciones");
         body.classList.replace("vista_consultas", "vista_configuraciones");
     });
@@ -29,6 +29,10 @@ document.addEventListener("DOMContentLoaded", function() {
     button_scan__options__file.addEventListener("click", function(){
         body.classList.replace("url", "file");
     });
-    
+
+    function set_maxdate() {
+        document.querySelector("#next_scan").min = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
+    }
+    set_maxdate();
 });
 

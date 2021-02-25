@@ -135,16 +135,16 @@ class Wordpress():
 		tmp_cms = {}
 		tmp_cms["nombre"] = "wordpress"
 		tmp_cms["version"] = self.obtener_version_wordpress()
-		tmp_diccionario["CMS"] = tmp_cms
+		tmp_diccionario["cms"] = tmp_cms
 		informacion_expuesta = self.obtener_informacion_sensible(info)
-		tmp_diccionario["Plugins"] = informacion_expuesta.pop("plugins")
-		tmp_diccionario["Librerias"] = []
-		tmp_diccionario["Archivos"] = informacion_expuesta.pop("exposed_files")
-		tmp_diccionario["Temas"] = informacion_expuesta.pop("themes")
+		tmp_diccionario["plugins"] = informacion_expuesta.pop("plugins")
+		tmp_diccionario["librerias"] = []
+		tmp_diccionario["archivos"] = informacion_expuesta.pop("exposed_files")
+		tmp_diccionario["temas"] = informacion_expuesta.pop("themes")
 		if(tmp_cms["version"] != ""):
-			tmp_diccionario["Vulnerabilidades"] = self.obtener_vulnerabilidades(tmp_cms["version"])
+			tmp_diccionario["vulnerabilidades"] = self.obtener_vulnerabilidades(tmp_cms["version"])
 		else:
-			tmp_diccionario["Vulnerabilidades"] = []
+			tmp_diccionario["vulnerabilidades"] = []
 
 
 	def obtener_informacion_sensible(self,wordpress_info):
@@ -273,11 +273,11 @@ class Moodle():
 		tmp_cms = {}
 		tmp_cms["nombre"] = "moodle"
 		tmp_cms["version"] = self.detect_version(info["version_file"])
-		tmp_diccionario["CMS"] = tmp_cms
-		tmp_diccionario["Plugins"] = self.get_plugins_moodle(info["plugs"])
-		tmp_diccionario["Librerias"] = self.get_librerias_moodle(info["libs"])
-		tmp_diccionario["Archivos"] = self.get_archivos_moodle(info["dir_files"])
-		tmp_diccionario["Vulnerabilidades"] = self.detect_vulnerabilidades(tmp_cms["version"])
+		tmp_diccionario["cms"] = tmp_cms
+		tmp_diccionario["plugins"] = self.get_plugins_moodle(info["plugs"])
+		tmp_diccionario["librerias"] = self.get_librerias_moodle(info["libs"])
+		tmp_diccionario["archivos"] = self.get_archivos_moodle(info["dir_files"])
+		tmp_diccionario["vulnerabilidades"] = self.detect_vulnerabilidades(tmp_cms["version"])
 
 	def get_plugins_moodle(self,location_of_plugins):
 		plugins_for_verify = []
@@ -299,6 +299,8 @@ class Moodle():
 			return list_plugins
 
 	def get_librerias_moodle(self,librerias):
+		tmp_libreria = {}
+		tmp_version = []
 		if self.url[-1] == "/":
 			tmp_url = self.url + librerias
 		else:
@@ -316,7 +318,12 @@ class Moodle():
 				if type(version_libreria) == type(None):
 					version_libreria = ""
 				lib_ver[libreria] = version_libreria
-				lista_librerias.append(libreria + " v " + version_libreria)
+				tmp_libreria = {}
+				tmp_version = []
+				tmp_version.append(version_libreria)
+				tmp_libreria["nombre"] = libreria
+				tmp_libreria["version"] = tmp_version
+				lista_librerias.append(tmp_libreria)
 			return lista_librerias
 		else:
 			return []
@@ -408,11 +415,11 @@ class Drupal():
 		archivos = config['directorios'][0]['expuestos']
 		tmp_cms["nombre"] = "drupal"
 		tmp_cms["version"] = version
-		tmp_diccionario["CMS"] = tmp_cms
-		tmp_diccionario["Plugins"] = self.realiza_peticiones(modulos,"modulos",300)
-		tmp_diccionario["Librerias"] = []
-		tmp_diccionario["Archivos"] = self.realiza_peticiones(archivos,"archivos visibles")
-		tmp_diccionario["Vulnerabilidades"] = self.detect_vulnerabilidades(version)
+		tmp_diccionario["cms"] = tmp_cms
+		tmp_diccionario["plugins"] = self.realiza_peticiones(modulos,"modulos",300)
+		tmp_diccionario["librerias"] = []
+		tmp_diccionario["archivos"] = self.realiza_peticiones(archivos,"archivos visibles")
+		tmp_diccionario["vulnerabilidades"] = self.detect_vulnerabilidades(version)
 
 	def detect_version(self,config):
 		version = None
@@ -454,11 +461,7 @@ class Drupal():
 			cuerpo = config_drupal['cuerpo']
 			busca = config_drupal['directorios'][0]['root']
 			if self.busca_respuesta(cabeceras,respuesta_head) or self.busca_respuesta(cuerpo, respuesta_get) or self.detectar_meta():
-				#root = get_root(busca)
 				return "drupal"
-				# if root:
-				# 	#return "drupal",root
-				# 	return "drupal"
 		return None
 
 	def carga_configuracion(self):
@@ -504,7 +507,6 @@ class Drupal():
 				lista_vulnes = list()
 				for vul in vulnerabilidades:
 					lista_vulnes.append(vul.get("cve"))
-					#lista_vulnes.append(vul.get("description"))
 				return lista_vulnes
 			return []
 		else:
@@ -519,11 +521,11 @@ class Joomla():
 		tmp_cms = {}
 		tmp_cms["nombre"] = "joomla"
 		tmp_cms["version"] = self.obtener_version_joomla()
-		tmp_diccionario["CMS"] = tmp_cms
-		tmp_diccionario["Plugins"] = []
-		tmp_diccionario["Librerias"] = []
-		tmp_diccionario["Archivos"] = self.obtener_archivos_joomla(self.util.generar_urls(self.sitio,self.cargar_configuracion()))
-		tmp_diccionario["Vulnerabilidad"] = self.obtener_vulnerabilidades(tmp_cms["version"])
+		tmp_diccionario["cms"] = tmp_cms
+		tmp_diccionario["plugins"] = []
+		tmp_diccionario["librerias"] = []
+		tmp_diccionario["archivos"] = self.obtener_archivos_joomla(self.util.generar_urls(self.sitio,self.cargar_configuracion()))
+		tmp_diccionario["vulnerabilidades"] = self.obtener_vulnerabilidades(tmp_cms["version"])
 
 	def obtener_version_joomla(self):
 		soup = self.util.obtener_contenido_html(self.sitio+"README.txt")
@@ -603,6 +605,8 @@ class Obtencion_informacion():
 		self.sitio = sitio
 		self.tmp_diccionario = {}
 		self.json_informacion = {}
+		self.paginas = []
+		self.paginas.append(self.sitio)
 		self.menu()
 
 	def url_without_file(self):
@@ -620,7 +624,7 @@ class Obtencion_informacion():
 		datos = json.load(f)
 		self.leguajes_configuracion = datos["lenguajes"]
 		self.frameworks_configuracion = datos["frameworks"]
-		self.librerias_configuacion = datos["librerias"]
+		self.librerias_configuracion = datos["librerias"]
 
 	def get_version_server(self):
 		f = Utilerias()
@@ -635,8 +639,8 @@ class Obtencion_informacion():
 					try:
 						tmp_dic["version"] = valor["versions"][0]
 					except:
-						tmp_dic["version"] = []
-		self.tmp_diccionario['Servidor'] = tmp_dic
+						tmp_dic["version"] = ""
+		self.tmp_diccionario['servidor'] = tmp_dic
 		return self.tmp_diccionario
 
 	def get_headers(self):
@@ -656,7 +660,7 @@ class Obtencion_informacion():
 		for llave, valor in self.headers_dic.items():
 			header = llave + " - " + valor
 			self.headers.append(header)
-		self.tmp_diccionario["Headers"] = self.headers
+		self.tmp_diccionario["headers"] = self.headers
 		return self.tmp_diccionario
 
 	def get_cifrados(self):
@@ -685,21 +689,75 @@ class Obtencion_informacion():
 											cifrados[tmp_cifrado[0] + tmp_cifrado[1] + " - " + tmp_cifrado[-1]] = interprete
 										else:
 											cifrados[tmp_cifrado[0] + " - " + tmp_cifrado[-1]] = interprete
-				self.tmp_diccionario["Cifrados"] = cifrados
+				self.tmp_diccionario["cifrados"] = cifrados
 			except:
-				self.tmp_diccionario["Cifrados"] = {}
+				self.tmp_diccionario["cifrados"] = {}
 		return self.tmp_diccionario
 
 
+	def web(self,url):
+		code = requests.get(url,verify=False)
+		plain = code.text
+		s = BeautifulSoup(plain, "html.parser")
+		for link in s.findAll('a'):
+			tet_2 = link.get('href')
+			if tet_2 != None:
+				if not(tet_2.startswith("#")):
+					if tet_2.startswith(url):
+						if not(tet_2 in self.paginas):
+							self.paginas.append(tet_2)
+						elif not(tet_2.startswith("http")) and not(tet_2.startswith("https")):
+							link_2 = self.valida_link(tet_2,url)
+							contador = 0
+							esta = 0
+							for page in self.paginas:
+								contador += 1 
+								if (contador >= len(self.paginas)) and not(esta > 0):
+									self.paginas.append(link_2)
+									contador = 0
+									esta = 0
+								elif tet_2 in page:
+									esta += 1
+		return self.paginas
+
+	def valida_link(self,linea,url):
+		link = ""
+		try:
+			linea = linea.split()[1]
+		except:
+			linea = linea
+		if url.endswith("/") and linea.startswith("/"):
+			link = url + linea[1:]
+		elif url.endswith("/") and not(linea.startswith("/")):
+			link = url + linea
+		elif not(url.endswith("/")) and linea.startswith("/"):
+			link = url + linea
+		return link
 
 	def get_robots(self):
 		self.robot_parser = RobotFileParser()
 		try:
 			self.robot_parser.set_url(f'{self.sitio}robots.txt')
 			self.robot_parser.read()
-		except(URLError):
+		except:
 			self.robot_parser = None
+		return self.robot_parser
+
+	def get_paginas(self):
+		link = ""
+		self.get_robots()
 		print(self.robot_parser)
+		if self.robot_parser:
+			for linea in str(self.robot_parser).split("\n"):
+				if not("%2A" in linea) and not("User" in linea):
+					link = self.valida_link(linea,self.sitio)
+					if not(link in self.paginas):
+						self.paginas.append(link)
+		for pagina in self.paginas:
+			self.web(pagina)
+			self.tmp_diccionario["paginas"] = self.paginas
+		return self.tmp_diccionario
+
 
 	def get_directorios(self):
 		lista_directorios = []
@@ -711,19 +769,18 @@ class Obtencion_informacion():
 			if "DIRECTORY" in linea:
 				tmp_url = linea.split()[-1]
 				lista_directorios.append(tmp_url)
-		self.tmp_diccionario["Directorios"] = lista_directorios
+		self.tmp_diccionario["directorios"] = lista_directorios
 		return self.tmp_diccionario
 
 	def get_lenguajes(self):
 		lenguajes = []
 		tmp_leng = {}
-		wappalyzer = Wappalyzer.latest()
-		webpage = WebPage.new_from_url(self.sitio,verify=False)
-		resultado = wappalyzer.analyze_with_versions_and_categories(webpage)
+		resultado = self.get_peticion_w()
 		for lenguaje in self.leguajes_configuracion:
 			lenguaje = lenguaje.rstrip('\n')
 			for llave,valor in resultado.items():
 				if lenguaje.lower() in llave.lower():
+					tmp_leng = {}
 					tmp_leng["nombre"] = llave
 					for llave2, valor2 in valor.items():
 						if llave2 == "versions":
@@ -732,19 +789,18 @@ class Obtencion_informacion():
 							except:
 								tmp_leng["version"] = []
 					lenguajes.append(tmp_leng)
-		self.tmp_diccionario["Lenguajes"] = lenguajes
+		self.tmp_diccionario["lenguajes"] = lenguajes
 		return self.tmp_diccionario
 
 	def get_frameworks(self):
 		frameworks = []
 		tmp_frame = {}
-		wappalyzer = Wappalyzer.latest()
-		webpage = WebPage.new_from_url(self.sitio,verify=False)
-		resultado = wappalyzer.analyze_with_versions_and_categories(webpage)
+		resultado = self.get_peticion_w()
 		for frame in self.frameworks_configuracion:
 			frame = frame.rstrip('\n')
 			for llave,valor in resultado.items():
 				if frame.lower() in llave.lower():
+					tmp_frame = {}
 					tmp_frame["nombre"] = llave
 					for llave2, valor2 in valor.items():
 						if llave2 == "versions":
@@ -753,10 +809,35 @@ class Obtencion_informacion():
 							except:
 								tmp_frame["version"] = []
 					frameworks.append(tmp_frame)
-		self.tmp_diccionario["Frameworks"] = frameworks
+		self.tmp_diccionario["frameworks"] = frameworks
 		return self.tmp_diccionario
 
+	def get_librerias(self):
+		librerias = []
+		tmp_libreria = {}
+		tmp_total = []
+		resultado  = self.get_peticion_w()
+		for libreria in self.librerias_configuracion:
+			libreria = libreria.rstrip('\n')
+			for llave, valor in resultado.items():
+				if libreria.lower() in llave.lower():
+					tmp_libreria = {}
+					tmp_libreria["nombre"] = llave
+					for llave2, valor2 in valor.items():
+						if llave2 == "versions":
+							try:
+								tmp_libreria["version"] = valor2
+							except:
+								tmp_libreria["version"] = []
+					librerias.append(tmp_libreria)
+		tmp_total = self.tmp_diccionario["librerias"] + librerias
+		self.tmp_diccionario["librerias"] = tmp_total
+		return self.tmp_diccionario
 
+	def get_peticion_w(self):
+		wappalyzer = Wappalyzer.latest()
+		webpage = WebPage.new_from_url(self.sitio,verify=False)
+		return wappalyzer.analyze_with_versions_and_categories(webpage)
 
 	def menu(self):
 		#self.get_directorios()
@@ -766,6 +847,7 @@ class Obtencion_informacion():
 		self.get_cifrados()
 		self.get_lenguajes()
 		self.get_frameworks()
+		self.get_paginas()
 		detected_cms = None
 		detect_root = None
 		detect_list = ["Drupal","Moodle","Joomla","Wordpress"]

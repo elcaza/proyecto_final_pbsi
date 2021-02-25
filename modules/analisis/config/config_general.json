@@ -33,7 +33,8 @@
 		"vue.js",
 		"webix",
 		"polymer",
-		"animate.css"
+		"animate.css",
+		"requirejs"
 	],
 	"librerias":[
 		"algolia places",
@@ -60,8 +61,11 @@
 		"mootools",
 		"hammer.js",
 		"modernizr",
-		"isotope"
-
+		"isotope",
+		"axios",
+		"moment.js",
+		"datatables",
+		"yui"
 	],
 	"cifrados":{
 		"TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256":"recomendado",

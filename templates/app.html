@@ -14,7 +14,7 @@
 		<ul>
 			<li class="nav__nuevo">Nuevo Análisis</li>
 			<li class="nav__consultas">Consultas</li>
-			<li class="nav__configuraciones">Configuraciones</li>
+			<li class="nav__proximosEscaneos">Próximos escaneos</li>
 		</ul>
 	</nav>
 
@@ -34,23 +34,6 @@
 
 	<section class="modulos">
 		<h1 class="modulos__titulo">Módulos</h1>
-	
-		<div class="modulos__seleccionar-perfil">Seleccionar perfil</div>
-		<select class="modulos__select">
-			<option value="0">Select car:</option>
-			<option value="1">Audi</option>
-			<option value="2">BMW</option>
-			<option value="3">Citroen</option>
-			<option value="4">Ford</option>
-			<option value="5">Honda</option>
-			<option value="6">Jaguar</option>
-			<option value="7">Land Rover</option>
-			<option value="8">Mercedes</option>
-			<option value="9">Mini</option>
-			<option value="10">Nissan</option>
-		</select>
-
-
 
 		<div class="modulos__modulo">
 			<label class="modulos__switch">
@@ -108,7 +91,7 @@
 		<h1 class="programar__titulo">
 			Programar escaneo
 		</h1>
-		<span style="font-size: 5em; margin:20px auto; width: 100%;">`¯\_(ツ)_/¯`</span>
+		<input type="date" id="next_scan" name="trip-start" max="2050-12-31">
 	</section>
 </section>
 
@@ -148,6 +131,19 @@
 			<button class="consultas__opciones__actuales">
 				Actuales
 			</button>
+			<select class="modulos__select">
+				<option value="0">Select car:</option>
+				<option value="1">Audi</option>
+				<option value="2">BMW</option>
+				<option value="3">Citroen</option>
+				<option value="4">Ford</option>
+				<option value="5">Honda</option>
+				<option value="6">Jaguar</option>
+				<option value="7">Land Rover</option>
+				<option value="8">Mercedes</option>
+				<option value="9">Mini</option>
+				<option value="10">Nissan</option>
+			</select>
 			<button class="consultas__opciones__proximo">
 				Próximos escaneos
 			</button>
@@ -250,9 +246,9 @@
 			
 	</section>
 </section>
-<!--Configuraciones-->
-<section class="main__configuraciones">
-	<h1 class="modulos__titulo">Configuraciones</h1>
+<!--Próximos escaneos-->
+<section class="main__proximosEscaneos">
+	<h1 class="modulos__titulo">Próximos escaneos</h1>
 	
 </section>
 <!--Footer-->
