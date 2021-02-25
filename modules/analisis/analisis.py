@@ -8,7 +8,7 @@ from urllib.robotparser import RobotFileParser
 from fake_useragent import UserAgent
 import pathlib
 from bs4 import BeautifulSoup as bs
-from urllib.request import urlopen, URLError
+from urllib.request import urlopen
 import re
 import sys
 from os import path
@@ -192,12 +192,12 @@ class Wordpress():
 			else:
 				respuesta = self.util.get_peticion(path.join(self.sitio,"readme.html"))
 				if(match != None):
-					version = self.expresion_regular("[0-9][0-9|.]*",match)
+					version = expresion_regular("[0-9][0-9|.]*",match)
 				else:
-					dominio = self.obtener_dominio(self.sitio)
-					for enlace in self.obtener_enlaces(self.sitio,dominio):
+					dominio = obtener_dominio(self.sitio)
+					for enlace in sel.obtener_enlaces(self.sitio,dominio):
 						if self.expresion_regular("\.[png|jpg].*",enlace) == None:
-							version = self.busqueda_tag_meta(enlace)
+							version = busqueda_tag_meta(enlace)
 							if (version != "Desconocida"):
 								break
 		return version
@@ -235,9 +235,9 @@ class Wordpress():
 			respuesta = self.util.get_peticion(path.join(self.sitio,"readme.html"))
 			if(respuesta.ok and re.search("[w|W]ord[p|P]ress",respuesta.text) != None):
 				resultado = True
-			elif self.util.directorio_existente(path.join(self.sitio,"wp-includes")):
+			elif directorio_existente(path.join(self.sitio,"wp-includes")):
 				resultado = True
-			elif self.util.directorio_existente(path.join(self.sitio, "wp-content")):
+			elif directorio_existente(path.join(self.sitio, "wp-content")):
 				resultado = True
 
 		if resultado:
@@ -262,6 +262,7 @@ class Wordpress():
 				lista_vulnerabilidades.append(element.get("cve"))
 				#lista_vulnerabilidades.append(element.get("description"))
 		return lista_vulnerabilidades
+
 
 class Moodle():
 	def __init__(self,sitio):
@@ -400,6 +401,7 @@ class Moodle():
 				lista_vulnerabilidades.append(element.get("cve"))
 				#lista_vulnerabilidades.append(element.get("description"))
 		return lista_vulnerabilidades
+
 
 class Drupal():
 	def __init__(self,sitio):
@@ -599,14 +601,16 @@ class Joomla():
 				#lista_vulnerabilidades.append(element.get("description"))
 			return lista_vulnerabilidades
 
+
 class Obtencion_informacion():
 
-	def __init__(self, sitio):
-		self.sitio = sitio
+	def __init__(self):
+		self.sitio = sys.argv[1]
 		self.tmp_diccionario = {}
 		self.json_informacion = {}
 		self.paginas = []
 		self.paginas.append(self.sitio)
+		self.util = Utilerias()
 		self.menu()
 
 	def url_without_file(self):
@@ -618,9 +622,7 @@ class Obtencion_informacion():
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path
 
 	def carga_configuracion(self):
-		ruta = path.abspath(path.dirname(__file__))
-		ruta += "/config/config_general.json"
-		f = open(ruta,"r")
+		f = open("./config/config_general.json","r")
 		datos = json.load(f)
 		self.leguajes_configuracion = datos["lenguajes"]
 		self.frameworks_configuracion = datos["frameworks"]
@@ -646,8 +648,7 @@ class Obtencion_informacion():
 	def get_headers(self):
 		json_headers = {}
 		self.headers = []
-		ruta = path.abspath(path.dirname(__file__)) + "/shcheck.py"
-		comando = "python3 " + ruta + " -d -j " + self.sitio
+		comando = "python3 shcheck.py -d -j " + self.sitio
 		args = shlex.split(comando)
 		tmp_headers_json = json.loads(subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout)
 		try:
@@ -667,8 +668,7 @@ class Obtencion_informacion():
 		cifrados = {}
 		tmp_cifrado = []
 		if self.sitio.startswith("https"):
-			ruta = path.abspath(path.dirname(__file__)) + "/config/config_general.json"
-			with open(ruta,"r") as cg:
+			with open("./config/config_general.json","r") as cg:
 				configuracion = json.load(cg)
 
 			comando = "testssl -E --parallel --sneaky --jsonfile salida_ssl.json " + self.sitio
@@ -696,9 +696,7 @@ class Obtencion_informacion():
 
 
 	def web(self,url):
-		code = requests.get(url,verify=False)
-		plain = code.text
-		s = BeautifulSoup(plain, "html.parser")
+		s = self.util.obtener_contenido_html(self.sitio)
 		for link in s.findAll('a'):
 			tet_2 = link.get('href')
 			if tet_2 != None:
@@ -746,7 +744,6 @@ class Obtencion_informacion():
 	def get_paginas(self):
 		link = ""
 		self.get_robots()
-		print(self.robot_parser)
 		if self.robot_parser:
 			for linea in str(self.robot_parser).split("\n"):
 				if not("%2A" in linea) and not("User" in linea):
@@ -759,18 +756,18 @@ class Obtencion_informacion():
 		return self.tmp_diccionario
 
 
-	def get_directorios(self):
-		lista_directorios = []
-		comando = "dirb " + self.sitio
-		args = shlex.split(comando)
-		directorios = subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout
-		tmp_url = ""
-		for linea in directorios.split("\n"):
-			if "DIRECTORY" in linea:
-				tmp_url = linea.split()[-1]
-				lista_directorios.append(tmp_url)
-		self.tmp_diccionario["directorios"] = lista_directorios
-		return self.tmp_diccionario
+	# def get_directorios(self):
+	# 	lista_directorios = []
+	# 	comando = "dirb " + self.sitio
+	# 	args = shlex.split(comando)
+	# 	directorios = subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout
+	# 	tmp_url = ""
+	# 	for linea in directorios.split("\n"):
+	# 		if "DIRECTORY" in linea:
+	# 			tmp_url = linea.split()[-1]
+	# 			lista_directorios.append(tmp_url)
+	# 	self.tmp_diccionario["directorios"] = lista_directorios
+	# 	return self.tmp_diccionario
 
 	def get_lenguajes(self):
 		lenguajes = []
@@ -877,10 +874,9 @@ class Obtencion_informacion():
 			elif deteccion_cms == 'wordpress':
 				r_objeto = Wordpress(self.sitio)
 				r_objeto.inicio_wordpress(deteccion_cms,self.tmp_diccionario)
-		self.json_informacion = self.tmp_diccionario
-		
-	def get_json_informacion(self):
-		return self.json_informacion
+		self.get_librerias()
+		self.json_informacion[self.sitio] = self.tmp_diccionario
+		print(self.json_informacion)
 		#print(self.json_informacion)
 		#except KeyError as e:
 		#	print("No esta soportado para la version")
@@ -900,8 +896,4 @@ class Obtencion_informacion():
 def main():
 	Obtencion_informacion()
 
-#main()
-
-def execute(sitio):
-	analisis = Obtencion_informacion(sitio)
-	return analisis.get_json_informacion()
+main()
