@@ -607,7 +607,6 @@ class Obtencion_informacion():
 		self.json_informacion = {}
 		self.paginas = []
 		self.paginas.append(self.sitio)
-		self.util = Utilerias()
 		self.menu()
 
 	def url_without_file(self):
@@ -697,7 +696,9 @@ class Obtencion_informacion():
 
 
 	def web(self,url):
-		s = self.util.obtener_contenido_html(self.sitio)
+		code = requests.get(url,verify=False)
+		plain = code.text
+		s = BeautifulSoup(plain, "html.parser")
 		for link in s.findAll('a'):
 			tet_2 = link.get('href')
 			if tet_2 != None:
@@ -745,6 +746,7 @@ class Obtencion_informacion():
 	def get_paginas(self):
 		link = ""
 		self.get_robots()
+		#print(self.robot_parser)
 		if self.robot_parser:
 			for linea in str(self.robot_parser).split("\n"):
 				if not("%2A" in linea) and not("User" in linea):
@@ -763,18 +765,18 @@ class Obtencion_informacion():
 		return self.tmp_diccionario
 
 
-	# def get_directorios(self):
-	# 	lista_directorios = []
-	# 	comando = "dirb " + self.sitio
-	# 	args = shlex.split(comando)
-	# 	directorios = subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout
-	# 	tmp_url = ""
-	# 	for linea in directorios.split("\n"):
-	# 		if "DIRECTORY" in linea:
-	# 			tmp_url = linea.split()[-1]
-	# 			lista_directorios.append(tmp_url)
-	# 	self.tmp_diccionario["directorios"] = lista_directorios
-	# 	return self.tmp_diccionario
+	def get_directorios(self):
+		lista_directorios = []
+		comando = "dirb " + self.sitio
+		args = shlex.split(comando)
+		directorios = subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout
+		tmp_url = ""
+		for linea in directorios.split("\n"):
+			if "DIRECTORY" in linea:
+				tmp_url = linea.split()[-1]
+				lista_directorios.append(tmp_url)
+		self.tmp_diccionario["directorios"] = lista_directorios
+		return self.tmp_diccionario
 
 	def get_lenguajes(self):
 		lenguajes = []
@@ -881,9 +883,8 @@ class Obtencion_informacion():
 			elif deteccion_cms == 'wordpress':
 				r_objeto = Wordpress(self.sitio)
 				r_objeto.inicio_wordpress(deteccion_cms,self.tmp_diccionario)
-		self.get_librerias()
 		self.json_informacion = self.tmp_diccionario
-	
+		
 	def get_json_informacion(self):
 		return self.json_informacion
 		#print(self.json_informacion)
@@ -904,6 +905,7 @@ class Obtencion_informacion():
 
 def main():
 	Obtencion_informacion()
+
 #main()
 
 def execute(sitio):
