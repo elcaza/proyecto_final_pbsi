@@ -10,7 +10,7 @@ from modules import strings
 class Correo():
     def __init__(self, parametros):
         self.set_subject(parametros)
-        self.set_sitios(parametros)
+        self.set_paginas(parametros)
         self.set_fecha(parametros)
         self.correo_contrasena = strings.CORREO_CONTRASENA
         self.correo_remitente = strings.CORREO_REMITENTE
@@ -25,11 +25,11 @@ class Correo():
         else:
             self.subject = "Alerta"
 
-    def set_sitios(self, parametros):
-        self.sitios = []
-        if "sitios" in parametros:
-            for sitio in parametros["sitios"]:
-                self.sitios.append(sitio)
+    def set_paginas(self, parametros):
+        self.paginas = []
+        if "paginas" in parametros:
+            for pagina in parametros["sitios"]:
+                self.paginas.append(pagina)
 
     def set_fecha(self, parametros):
         if "fecha" in parametros:
@@ -40,20 +40,20 @@ class Correo():
     def get_subject(self):
         return self.subject
 
-    def get_sitios(self):
-        return self.sitios
+    def get_paginas(self):
+        return self.paginas
 
     def get_fecha(self):
         return self.fecha
 
-    def crear_mensaje_sitio(self):
+    def crear_mensaje_pagina(self):
         self.correo_mensaje_texto = self.get_html()+self.get_head()+self.get_body_inicio()
-        for sitio in self.sitios:
-            sitio_vulnerable = self.get_body_sitio(sitio["sitio"])
-            motivo = self.get_body_motivo(sitio["motivo"])
-            estado = self.get_body_estado(sitio["estado"])
+        for pagina in self.paginas:
+            pagina_vulnerable = self.get_body_pagina(pagina["pagina"])
+            motivo = self.get_body_motivo(pagina["motivo"])
+            estado = self.get_body_estado(pagina["estado"])
             salto = self.get_body_salto()
-            self.correo_mensaje_texto += sitio_vulnerable+motivo+estado+salto
+            self.correo_mensaje_texto += pagina_vulnerable+motivo+estado+salto
         self.correo_mensaje_texto += self.get_body_fin()
 
     def get_html(self):
@@ -123,18 +123,18 @@ class Correo():
         """
         return body_fin
 
-    def get_body_sitio(self, sitio):
-        sitio_vulnerable = """
+    def get_body_pagina(self, pagina):
+        pagina_vulnerable = """
                             <tr>    
                                 <td style="padding: 0; margin: 0; padding-left: 10px; padding-top: 20px;">
-                                    Sitio
+                                    pagina
                                 </td>
                                 <td style="padding: 0; margin: 0;  padding-left: 10px; padding-top: 20px;">
                                     {0}
                                 </td>
                             </tr>
-            """.format(sitio)
-        return sitio_vulnerable
+            """.format(pagina)
+        return pagina_vulnerable
 
     def get_body_motivo(self, motivo):
         motivos = """
@@ -194,7 +194,7 @@ class Correo():
 
 def execute(paremetros):
     correo = Correo(paremetros)
-    correo.crear_mensaje_sitio()
+    correo.crear_mensaje_pagina()
     correo.crear_cabecera()
     correo.enviar_correo()
     print("Mensaje enviado")

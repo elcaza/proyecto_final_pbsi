@@ -264,11 +264,11 @@ class Reporte():
                 for posicion_dato in range(len(dato)):
                     if posicion_dato == 0:
                         tabla_grafica += '''<th class="tabla-descripcion-renglon-grafica" scope="row">{0}</th>'''.format(dato[posicion_dato])
-                    elif dato[posicion_dato] in "Exitoso":
+                    elif str(dato[posicion_dato]) in "Exitoso":
                         tabla_grafica += '''<td class="exito tabla-descripcion-renglon-grafica">{0}</td>'''.format(dato[posicion_dato])
-                    elif dato[posicion_dato] in "Fracaso":
+                    elif str(dato[posicion_dato]) in "Fracaso":
                         tabla_grafica += '''<td class="fracaso tabla-descripcion-renglon-grafica">{0}</td>'''.format(dato[posicion_dato])
-                    elif dato[posicion_dato] in "Inconcluso":
+                    elif str(dato[posicion_dato]) in "Inconcluso":
                         tabla_grafica += '''<td class="inconcluso tabla-descripcion-renglon-grafica">{0}</td>'''.format(dato[posicion_dato])
                     else:
                         tabla_grafica += '''<td class="tabla-descripcion-renglon-grafica">{0}</td>'''.format(dato[posicion_dato])

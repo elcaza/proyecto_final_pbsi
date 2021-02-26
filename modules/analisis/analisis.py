@@ -431,7 +431,7 @@ class Drupal():
 		if version == "7.x":
 			archivos = config['directorios'][0]["7"][0]['files']
 			for archivo in archivos:
-				print(self.url + archivo)
+				#print(self.url + archivo)
 				respuesta = self.util.get_peticion(self.url + archivo)
 				code = str(respuesta.status_code)[0]
 				if code != '4' and code != '3':
@@ -584,7 +584,7 @@ class Joomla():
 				routes = datos["routes"]
 				return routes
 		except IOError:
-			print("Entra aqui")
+			#print("Entra aqui")
 			exit()
 
 	def obtener_vulnerabilidades(self,version):
@@ -746,7 +746,7 @@ class Obtencion_informacion():
 	def get_paginas(self):
 		link = ""
 		self.get_robots()
-		print(self.robot_parser)
+		#print(self.robot_parser)
 		if self.robot_parser:
 			for linea in str(self.robot_parser).split("\n"):
 				if not("%2A" in linea) and not("User" in linea):
@@ -756,6 +756,12 @@ class Obtencion_informacion():
 		for pagina in self.paginas:
 			self.web(pagina)
 			self.tmp_diccionario["paginas"] = self.paginas
+		
+		if "paginas" in self.tmp_diccionario:
+			paginas = self.tmp_diccionario["paginas"]
+			self.tmp_diccionario["paginas"] = []
+			for pagina in paginas:
+				self.tmp_diccionario["paginas"].append({"pagina":pagina})
 		return self.tmp_diccionario
 
 

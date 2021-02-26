@@ -153,6 +153,7 @@ class Lanzar_fuzzing(threading.Thread):
       self.json_forms = {"forms":{}}
 
    def run(self):
+      print("Pagina - " + self.url)
       print ("[+1] Hilo Selenium - " + self.nombre)
       enviar_peticiones(self.driver, self.url, self.diccionario, self.tipo, self.json_fuzzing_forms, self.json_forms, self.cookie)
       self.driver.quit()
@@ -479,6 +480,7 @@ def pre_enviar_peticiones(forms, diccionario, tipo, json_fuzzing, cookie=[]):
             
       if metodo.lower() == "post":
          for valor in diccionario:
+            payload = {}
             for input_individual in forms["forms"][form]["inputs"]:
                payload[input_individual] = valor
             peticion = sesion.post(url, headers=headers, cookies=cookies, data=json.dumps(payload))

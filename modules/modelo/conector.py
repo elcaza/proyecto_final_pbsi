@@ -59,6 +59,7 @@ class Conector():
 ########################################################## IDENTIFICACION EXPLOITS ##########################################################
 
     def exploit_buscar_software(self, json_software, profundidad):
+        print(json_software)
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
                 softwares_iterados = {"exploits":[]}

@@ -10,7 +10,7 @@ headers = {
 }
 
 peticion = {
-    "sitio":"https://proyectos.filos.unam.mx/guia/admin/login",
+    "sitio":"http://localhost/drupal7/",
     #sistemas.acatlan.unam.mx
     "ejecucion":"",
     "puertos" : { 
