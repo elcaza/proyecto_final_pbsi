@@ -8,13 +8,14 @@ from urllib.robotparser import RobotFileParser
 from fake_useragent import UserAgent
 import pathlib
 from bs4 import BeautifulSoup as bs
-from urllib.request import urlopen, URLError
+from urllib.request import urlopen
 import re
 import sys
 from os import path
 from jsmin import jsmin
 from xml.etree.ElementTree import fromstring, ElementTree
 from Wappalyzer import Wappalyzer, WebPage
+import ssl
 
 class Utilerias():
 	def __init__(self):
@@ -171,7 +172,7 @@ class Wordpress():
 					if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):
 						archivos_expuestos.append(archivo)
 					else:
-						respuesta = requests.post(path.join(self.sitio,archivo),headers=self.util.get_fake_user_agent())
+						respuesta = requests.post(path.join(self.sitio,archivo),headers=self.util.get_fake_user_agent(),verify=False)
 						if len(respuesta.history) > 0:
 							status_code_redirect = respuesta.history[0].status_code
 						if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):
@@ -192,12 +193,12 @@ class Wordpress():
 			else:
 				respuesta = self.util.get_peticion(path.join(self.sitio,"readme.html"))
 				if(match != None):
-					version = self.expresion_regular("[0-9][0-9|.]*",match)
+					version = expresion_regular("[0-9][0-9|.]*",match)
 				else:
-					dominio = self.obtener_dominio(self.sitio)
-					for enlace in self.obtener_enlaces(self.sitio,dominio):
+					dominio = obtener_dominio(self.sitio)
+					for enlace in sel.obtener_enlaces(self.sitio,dominio):
 						if self.expresion_regular("\.[png|jpg].*",enlace) == None:
-							version = self.busqueda_tag_meta(enlace)
+							version = busqueda_tag_meta(enlace)
 							if (version != "Desconocida"):
 								break
 		return version
@@ -235,9 +236,9 @@ class Wordpress():
 			respuesta = self.util.get_peticion(path.join(self.sitio,"readme.html"))
 			if(respuesta.ok and re.search("[w|W]ord[p|P]ress",respuesta.text) != None):
 				resultado = True
-			elif self.util.directorio_existente(path.join(self.sitio,"wp-includes")):
+			elif directorio_existente(path.join(self.sitio,"wp-includes")):
 				resultado = True
-			elif self.util.directorio_existente(path.join(self.sitio, "wp-content")):
+			elif directorio_existente(path.join(self.sitio, "wp-content")):
 				resultado = True
 
 		if resultado:
@@ -262,6 +263,7 @@ class Wordpress():
 				lista_vulnerabilidades.append(element.get("cve"))
 				#lista_vulnerabilidades.append(element.get("description"))
 		return lista_vulnerabilidades
+
 
 class Moodle():
 	def __init__(self,sitio):
@@ -401,6 +403,7 @@ class Moodle():
 				#lista_vulnerabilidades.append(element.get("description"))
 		return lista_vulnerabilidades
 
+
 class Drupal():
 	def __init__(self,sitio):
 		self.url = sitio
@@ -431,7 +434,7 @@ class Drupal():
 		if version == "7.x":
 			archivos = config['directorios'][0]["7"][0]['files']
 			for archivo in archivos:
-				#print(self.url + archivo)
+				print(self.url + archivo)
 				respuesta = self.util.get_peticion(self.url + archivo)
 				code = str(respuesta.status_code)[0]
 				if code != '4' and code != '3':
@@ -480,7 +483,8 @@ class Drupal():
 		return True if cont > 0 else False
 
 	def detectar_meta(self):
-		html = urlopen(self.url)
+		gcontext = ssl.SSLContext()
+		html = urlopen(self.url,context=gcontext)
 		bs_object = bs(html,features="html.parser")
 		exp_regular = r'Drupal [7-9].*'
 		for tag in bs_object.findAll("meta",{"content":re.compile(exp_regular)}):
@@ -584,7 +588,7 @@ class Joomla():
 				routes = datos["routes"]
 				return routes
 		except IOError:
-			#print("Entra aqui")
+			print("Entra aqui")
 			exit()
 
 	def obtener_vulnerabilidades(self,version):
@@ -599,10 +603,11 @@ class Joomla():
 				#lista_vulnerabilidades.append(element.get("description"))
 			return lista_vulnerabilidades
 
+
 class Obtencion_informacion():
 
-	def __init__(self, sitio):
-		self.sitio = sitio
+	def __init__(self):
+		self.sitio = sys.argv[1]
 		self.tmp_diccionario = {}
 		self.json_informacion = {}
 		self.paginas = []
@@ -619,9 +624,7 @@ class Obtencion_informacion():
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path
 
 	def carga_configuracion(self):
-		ruta = path.abspath(path.dirname(__file__))
-		ruta += "/config/config_general.json"
-		f = open(ruta,"r")
+		f = open("./config/config_general.json","r")
 		datos = json.load(f)
 		self.leguajes_configuracion = datos["lenguajes"]
 		self.frameworks_configuracion = datos["frameworks"]
@@ -647,8 +650,7 @@ class Obtencion_informacion():
 	def get_headers(self):
 		json_headers = {}
 		self.headers = []
-		ruta = path.abspath(path.dirname(__file__)) + "/shcheck.py"
-		comando = "python3 " + ruta + " -d -j " + self.sitio
+		comando = "python3 shcheck.py -d -j " + self.sitio
 		args = shlex.split(comando)
 		tmp_headers_json = json.loads(subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout)
 		try:
@@ -668,8 +670,7 @@ class Obtencion_informacion():
 		cifrados = {}
 		tmp_cifrado = []
 		if self.sitio.startswith("https"):
-			ruta = path.abspath(path.dirname(__file__)) + "/config/config_general.json"
-			with open(ruta,"r") as cg:
+			with open("./config/config_general.json","r") as cg:
 				configuracion = json.load(cg)
 
 			comando = "testssl -E --parallel --sneaky --jsonfile salida_ssl.json " + self.sitio
@@ -754,12 +755,6 @@ class Obtencion_informacion():
 		for pagina in self.paginas:
 			self.web(pagina)
 			self.tmp_diccionario["paginas"] = self.paginas
-		
-		if "paginas" in self.tmp_diccionario:
-			paginas = self.tmp_diccionario["paginas"]
-			self.tmp_diccionario["paginas"] = []
-			for pagina in paginas:
-				self.tmp_diccionario["paginas"].append({"pagina":pagina})
 		return self.tmp_diccionario
 
 
@@ -882,10 +877,8 @@ class Obtencion_informacion():
 				r_objeto = Wordpress(self.sitio)
 				r_objeto.inicio_wordpress(deteccion_cms,self.tmp_diccionario)
 		self.get_librerias()
-		self.json_informacion = self.tmp_diccionario
-	
-	def get_json_informacion(self):
-		return self.json_informacion
+		self.json_informacion[self.sitio] = self.tmp_diccionario
+		print(self.json_informacion)
 		#print(self.json_informacion)
 		#except KeyError as e:
 		#	print("No esta soportado para la version")
@@ -904,8 +897,5 @@ class Obtencion_informacion():
 
 def main():
 	Obtencion_informacion()
-#main()
 
-def execute(sitio):
-	analisis = Obtencion_informacion(sitio)
-	return analisis.get_json_informacion()
+main()
