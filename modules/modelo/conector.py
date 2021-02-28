@@ -59,18 +59,19 @@ class Conector():
 ########################################################## IDENTIFICACION EXPLOITS ##########################################################
 
     def exploit_buscar_software(self, json_software, profundidad):
+        print(json_software)
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
                 softwares_iterados = {"exploits":[]}
                 coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
                 if profundidad == 1:
                     softwares = coleccion_exploits.find({
-                                                        "software_nombre":json_software["software_nombre"],
+                                                        "software_nombre":{"$regex":json_software["software_nombre"],"$options":"i"},
                                                         "software_version":json_software["software_version"]})
                 elif profundidad == 2:
                     softwares = coleccion_exploits.find({
-                                                    "software_nombre":json_software["software_nombre"],
-                                                    "software_version":{"$regex":json_software["software_version"],"$options":"i"}})
+                                                    "software_nombre":{"$regex":json_software["software_nombre"],"$options":"i"},
+                                                    "software_version":{"$regex":json_software["software_version"]+".*","$options":"i"}})
                 else: 
                     softwares = coleccion_exploits.find({
                                                     "software_nombre":{"$regex":json_software["software_nombre"],"$options":"i"},
@@ -92,20 +93,20 @@ class Conector():
                 coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
                 if profundidad == 1:
                     cmss = coleccion_exploits.find({
-                                                        "cms_nombre":json_cms["cms_nombre"],
-                                                        "cms_categoria":json_cms["cms_categoria"],
+                                                        "cms_nombre":{"$regex":json_cms["cms_nombre"],"$options":"i"},
+                                                        "cms_categoria":{"$regex":json_cms["cms_categoria"],"$options":"i"},
                                                         "cms_extension_nombre":{"$regex":json_cms["cms_extension_nombre"],"$options":"i"},
                                                         "cms_extension_version":{"$regex":json_cms["cms_extension_version"],"$options":"i"}})
                 elif profundidad == 2:
                     cmss = coleccion_exploits.find({
-                                                    "cms_nombre":json_cms["cms_nombre"],
-                                                    "cms_categoria":json_cms["cms_categoria"],
+                                                    "cms_nombre":{"$regex":json_cms["cms_nombre"],"$options":"i"},
+                                                    "cms_categoria":{"$regex":json_cms["cms_categoria"],"$options":"i"},
                                                     "cms_extension_nombre":{"$regex":json_cms["cms_extension_nombre"],"$options":"i"},
                                                     "cms_extension_version":{"$regex":".*"}})
                 else:
                     cmss = coleccion_exploits.find({
-                                                    "cms_nombre":json_cms["cms_nombre"],
-                                                    "cms_categoria":json_cms["cms_categoria"],
+                                                    "cms_nombre":{"$regex":json_cms["cms_nombre"],"$options":"i"},
+                                                    "cms_categoria":{"$regex":json_cms["cms_categoria"],"$options":"i"},
                                                     "cms_extension_nombre":{"$regex":".*"},
                                                     "cms_extension_version":{"$regex":".*"}})
                 for cms in cmss:
@@ -162,6 +163,8 @@ class Conector():
             return "python3 "
         elif extension == "sh":
             return ""
+        elif extension == "rb":
+            return "ruby "
         else:
             return "error"
 
@@ -235,5 +238,3 @@ class Conector():
         sitio = coleccion_analisis.find_one({"sitio":sitio})
         explotacion = sitio["explotaciones"]
         return explotacion
-
-#db.analisis.aggregate( {"$match":{"sitio":"http://altoromutual.com:8080","estado" : { "fecha" : "15/02/2021 21:38:11" }}}, {"$group":{"_id":"$informacion.Puertos.filtrados"}})

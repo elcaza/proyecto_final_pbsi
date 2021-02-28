@@ -3,11 +3,12 @@
 #from modules.explotacion import explotacion
 #from datetime import datetime
 #from modules.alertas import alertas
-#from modules.fuzzing import fuzzing
+from fuzzing import fuzzing
 #from modules.ejecucion import ejecucion
 #from modules.reportes import reportes
 #from modules.obtencion_informacion import obtener_informacion
-from obtencion_informacion import obtener_informacion
+#from obtencion_informacion import obtener_informacion
+#from analisis import analisis
 ################################################## CONEXION MONGODB ##################################################
 '''
     Checar estado de la conexion
@@ -145,11 +146,12 @@ from obtencion_informacion import obtener_informacion
 
 ################################################## FUZZING ##################################################
 
-# json_fuzzing = {
-#     "url":"https://xss-game.appspot.com/level1",
-#     "hilos":4,
-#     "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
-# }
+json_fuzzing = {
+    "url":"https://proyectos.filos.unam.mx/guia/admin/login",
+    "hilos":1,
+    "cookie":""
+}
+forms = fuzzing.execute(json_fuzzing)
 
 # res = fuzzing.execute(json_fuzzing)
 # print(res)
@@ -195,32 +197,34 @@ from obtencion_informacion import obtener_informacion
 # #reportes.execute(json_reporte)
 
 ################################################## OBTENER INFORMACION ##################################################
-json_obtener_informacion = {
-	"sitio":"http://altoromutual.com",
-	"dnsdumpster" : {
-		"revision":True,
-		"dns" : True,
-		"txt" : True,
-		"host" : True,
-		"mx" : True
+# json_obtener_informacion = {
+# 	"sitio":"http://altoromutual.com",
+# 	"dnsdumpster" : {
+# 		"revision":True,
+# 		"dns" : True,
+# 		"txt" : True,
+# 		"host" : True,
+# 		"mx" : True
 
-	},
-	"robtex" : {
-		"revision":True,
-		"informacion":True,
-		"dns_forward":True,
-		"mx_forward":True,
-		"host_forward":True,
-		"host_reverse":True
-	},
-	"puertos" : { 
-		"revision" : True,
-		"opcion" : "rango",
-		"rango" : {
-			"inicio" : 0,
-			"final" : 100
-		}
-	}
-}
+# 	},
+# 	"robtex" : {
+# 		"revision":True,
+# 		"informacion":True,
+# 		"dns_forward":True,
+# 		"mx_forward":True,
+# 		"host_forward":True,
+# 		"host_reverse":True
+# 	},
+# 	"puertos" : { 
+# 		"revision" : True,
+# 		"opcion" : "rango",
+# 		"rango" : {
+# 			"inicio" : 0,
+# 			"final" : 100
+# 		}
+# 	}
+# }
 
-resultado = obtener_informacion.execute(json_obtener_informacion)
+# resultado = obtener_informacion.execute(json_obtener_informacion)
+
+################################################## ANALISIS ##################################################

@@ -10,14 +10,15 @@ headers = {
 }
 
 peticion = {
-    "sitio":"http://altoromutual.com:8080",
+    "sitio":"http://localhost/drupal7/",
+    #sistemas.acatlan.unam.mx
     "ejecucion":"",
     "puertos" : { 
-		"inicio" : 8070,
-		"final" : 8090
+		"inicio" : 0,
+		"final" : 500
     },
     "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
-    "hilos":4,
+    "hilos":1,
     "profundidad":2
 }
 
