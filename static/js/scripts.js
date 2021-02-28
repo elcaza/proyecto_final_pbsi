@@ -98,10 +98,14 @@ function load_modules(json){
 			"opciones":[
 				{
 					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum",
-					"type":"select_box",
-					"value":["a","b","c"]
-				}
+					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+					"type":"number"
+				},
+				{
+					"opcion_nombre":"Nombre de opción",
+					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+					"type":"boolean"
+				}	
 
 			]
 		},
@@ -111,17 +115,38 @@ function load_modules(json){
 				{
 					"opcion_nombre":"Nombre de opción",
 					"descripcion":"Lorem ipsum",
-					"type":"select_box",
-					"value":["a","b","c"]
-				}
+					"type":"boolean"
+				}				
+
+			]
+		},
+		{
+			"nombre":"Modulo 3",
+			"opciones":[
+				{
+					"opcion_nombre":"Nombre de opción",
+					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+					"type":"number"
+				},
+				{
+					"opcion_nombre":"Nombre de opción",
+					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+					"type":"boolean"
+				},
+				{
+					"opcion_nombre":"Nombre de opción",
+					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+					"type":"number"
+				}	
 
 			]
 		}
-	]
+	];
 
 	json.forEach(element => {
 		console.log(element.nombre)
 		let nombre = element.nombre;
+		let opcion_nombre = element.opciones;
 
 		/*
 		<div class="modulos__modulo">
@@ -141,9 +166,10 @@ function load_modules(json){
 			</div>
 		</div>
 		*/
+
+		// Creación de elmentos
 		let modulos__modulo = document.createElement('div');
 		modulos__modulo.classList.add("modulos__modulo");
-
 
 		let modulos__switch = document.createElement('label');
 		modulos__switch.classList.add("modulos__switch");
@@ -160,36 +186,75 @@ function load_modules(json){
 		modulos__nombre.classList.add("modulos__nombre");
 		modulos__nombre.innerHTML = nombre;
 
-		let modulos__config = document.createElement('div');
-		modulos__config.classList.add("modulos__config");
-
-		let modulos__opcion__nombre = document.createElement('div');
-		modulos__opcion__nombre.classList.add("modulos__opcion__nombre");
-		modulos__opcion__nombre.innerHTML = "1111";
-
-		let modulos__opcion__descripcion = document.createElement('div');
-		modulos__opcion__descripcion.classList.add("modulos__opcion__descripcion");
-		modulos__opcion__descripcion.innerHTML = "2222";
-
-		let modulos__opcion__valor = document.createElement('div');
-		modulos__opcion__valor.classList.add("modulos__opcion__valor");
-		modulos__opcion__valor.innerHTML = "3333";
-		
-
 		// Carga de elementos
 		target_modulos.appendChild(modulos__modulo);
-		
+
 		modulos__modulo.appendChild(modulos__switch);
 		modulos__switch.appendChild(modulos__checkbox);
 		modulos__switch.appendChild(modulos__slider);
 		
 		modulos__modulo.appendChild(modulos__nombre);
+
+		// Configs
+
+		opcion_nombre.forEach(options => {
+			console.log(options);
+			let nombre = options.opcion_nombre;
+			let descripcion = options.descripcion;
+			let type = options.type;
+
+			let modulos__config = document.createElement('div');
+			modulos__config.classList.add("modulos__config");
+
+			let modulos__opcion__nombre = document.createElement('div');
+			modulos__opcion__nombre.classList.add("modulos__opcion__nombre");
+			modulos__opcion__nombre.innerHTML = nombre;
+
+			let modulos__opcion__descripcion = document.createElement('div');
+			modulos__opcion__descripcion.classList.add("modulos__opcion__descripcion");
+			modulos__opcion__descripcion.innerHTML = descripcion;
+			
+			let modulos__opcion__valor = document.createElement('div');
+			modulos__opcion__valor.classList.add("modulos__opcion__valor");
+			if (type === "number"){
+				modulos__opcion__valor.innerHTML = "<input type='number'></input>";
+
+			}else if (type === "boolean"){
+				modulos__opcion__valor.innerHTML = '<label class="modulos__switch">\
+				<input type="checkbox" class="modulos__checkbox">\
+				<span class="modulos__slider modulos__round"></span>\
+			</label>';
+			}
+
+			modulos__modulo.appendChild(modulos__config);
+			modulos__config.appendChild(modulos__opcion__nombre);
+			modulos__config.appendChild(modulos__opcion__nombre);
+			modulos__config.appendChild(modulos__opcion__descripcion);
+			modulos__config.appendChild(modulos__opcion__valor);
+		});
+
+		// let modulos__config = document.createElement('div');
+		// modulos__config.classList.add("modulos__config");
+
+		// let modulos__opcion__nombre = document.createElement('div');
+		// modulos__opcion__nombre.classList.add("modulos__opcion__nombre");
+		// modulos__opcion__nombre.innerHTML = "1111";
+
+		// let modulos__opcion__descripcion = document.createElement('div');
+		// modulos__opcion__descripcion.classList.add("modulos__opcion__descripcion");
+		// modulos__opcion__descripcion.innerHTML = "2222";
+
+		// let modulos__opcion__valor = document.createElement('div');
+		// modulos__opcion__valor.classList.add("modulos__opcion__valor");
+		// modulos__opcion__valor.innerHTML = "3333";
+
 		
-		modulos__modulo.appendChild(modulos__config);
-		modulos__config.appendChild(modulos__opcion__nombre);
-		modulos__config.appendChild(modulos__opcion__nombre);
-		modulos__config.appendChild(modulos__opcion__descripcion);
-		modulos__config.appendChild(modulos__opcion__valor);
+
+		// modulos__modulo.appendChild(modulos__config);
+		// modulos__config.appendChild(modulos__opcion__nombre);
+		// modulos__config.appendChild(modulos__opcion__nombre);
+		// modulos__config.appendChild(modulos__opcion__descripcion);
+		// modulos__config.appendChild(modulos__opcion__valor);
 
 	});
 
