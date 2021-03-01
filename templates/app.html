@@ -6,7 +6,7 @@
 	<title>Site Scanner</title>
 	<link rel="stylesheet" href="../static/css/style.css">
 </head>
-<body class="url vista_nuevo">
+<body class="url vista_nuevo in_software">
 <div class="main__container">
 <!--Navegación-->
 	<nav class="nav">
@@ -34,58 +34,72 @@
 
 	<section class="modulos">
 		<h1 class="modulos__titulo">Módulos</h1>
-		<!--
-		<div class="modulos__modulo">
-			<label class="modulos__switch">
-				<input type="checkbox" class="modulos__checkbox">
-				<span class="modulos__slider modulos__round"></span>
-			</label>
-			<span class="modulos__nombre">Nombre</span>
-			<div class="modulos__config">
-				<div class="modulos__opcion__nombre">Nombre de la opción</div>
-				<div class="modulos__opcion__descripcion">
-					Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut dictum lorem ut sem sagittis vulputate. Sed aliquet, neque placerat varius mollis, leo arcu fringilla magna, sit amet sollicitudin eros sapien a purus. Ut consequat mollis arcu, a feugiat nulla efficitur eget. Donec id ante sed sem egestas euismod. 
-				</div>
-				<div class="modulos__opcion__valor">
-					Valor
-				</div>
-			</div>
-		</div>
+	</section>
 
-		<div class="modulos__modulo">
-			<label class="modulos__switch">
-				<input type="checkbox" class="modulos__checkbox">
-				<span class="modulos__slider modulos__round"></span>
-			</label>
-			<span class="modulos__nombre">Nombre</span>
-			<div class="modulos__config">
-				<div class="modulos__opcion__nombre">Nombre de la opción</div>
-				<div class="modulos__opcion__descripcion">
-					Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut dictum lorem ut sem sagittis vulputate. Sed aliquet, neque placerat varius mollis, leo arcu fringilla magna, sit amet sollicitudin eros sapien a purus. Ut consequat mollis arcu, a feugiat nulla efficitur eget. Donec id ante sed sem egestas euismod. 
-				</div>
-				<div class="modulos__opcion__valor">
-					Valor
-				</div>
+	<section class="exploits">
+		<h1 class="modulos__titulo">Exploits</h1>
+		<button class="exploits__add">Agregar</button>
+		<div class="exploits__modulo">
+			<span class="exploits__nombre">Configuraciones generales</span>
+			<div class="exploits__config">
+				<div class="exploits__opcion__nombre">Nombre</div>
+				<div class="exploits__opcion__descripcion">Nombre para el exploit</div>
+				<div class="exploits__opcion__valor"><input type="number"></div>
 			</div>
-		</div>
+			<div class="exploits__config">
+				<div class="exploits__opcion__nombre">Contenido</div>
+				<div class="exploits__opcion__descripcion">Ingrese el exploit</div>
+				<div class="exploits__opcion__valor"><textarea name="" id="" cols="30" rows="10"></textarea></div>
+			</div>
+			<div class="exploits__config">
+				<div class="exploits__opcion__nombre">Tecnología</div>
+				<div class="exploits__opcion__descripcion">python2|python3|shell|ruby</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+			<div class="exploits__config">
+				<div class="exploits__opcion__nombre">CVE</div>
+				<div class="exploits__opcion__descripcion">En caso de tener un CVE asociado</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
 
-		<div class="modulos__modulo">
-			<label class="modulos__switch">
-				<input type="checkbox" class="modulos__checkbox">
-				<span class="modulos__slider modulos__round"></span>
-			</label>
-			<span class="modulos__nombre">Nombre</span>
-			<div class="modulos__config">
-				<div class="modulos__opcion__nombre">Nombre de la opción</div>
-				<div class="modulos__opcion__descripcion">
-					Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut dictum lorem ut sem sagittis vulputate. Sed aliquet, neque placerat varius mollis, leo arcu fringilla magna, sit amet sollicitudin eros sapien a purus. Ut consequat mollis arcu, a feugiat nulla efficitur eget. Donec id ante sed sem egestas euismod. 
-				</div>
-				<div class="modulos__opcion__valor">
-					Valor
-				</div>
+			<div class="exploits__options-container">
+				<div class="exploits__options__software">Software</div><!--
+				--><div class="exploits__options__cms">CMS</div>
 			</div>
+			
+			<div class="exploits__config option__software">
+				<div class="exploits__opcion__nombre">Nombre del Software</div>
+				<div class="exploits__opcion__descripcion">Especifique el software</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+			<div class="exploits__config option__software">
+				<div class="exploits__opcion__nombre">Versión</div>
+				<div class="exploits__opcion__descripcion">Especifique la versión</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+
+			<div class="exploits__config option__cms">
+				<div class="exploits__opcion__nombre">Nombre del CMS</div>
+				<div class="exploits__opcion__descripcion">Especifique el CMS</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+			<div class="exploits__config option__cms">
+				<div class="exploits__opcion__nombre">Categoría</div>
+				<div class="exploits__opcion__descripcion">Especifique la categoría</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+			<div class="exploits__config option__cms">
+				<div class="exploits__opcion__nombre">Extensión</div>
+				<div class="exploits__opcion__descripcion">Especifique la extensión</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+			<div class="exploits__config option__cms">
+				<div class="exploits__opcion__nombre">Versión</div>
+				<div class="exploits__opcion__descripcion">Especifique la versión</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+			
 		</div>
-		-->
 	</section>
 
 	<section class="programar">
@@ -251,6 +265,12 @@
 <section class="main__proximosEscaneos">
 	<h1 class="modulos__titulo">Próximos escaneos</h1>
 	<div class="main__proximosEscaneos__contenedor">
+		<div class="main__proximosEscaneos__fecha">
+			Fecha
+		</div>
+		<div class="main__proximosEscaneos__sitio">
+			Sitio
+		</div>
 		<span class="main__proximosEscaneos__fecha">
 			22/03/2021
 		</span>

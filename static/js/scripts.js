@@ -7,6 +7,10 @@ document.addEventListener("DOMContentLoaded", function() {
 	let button_nav__proximosEscaneos = document.querySelector(".nav__proximosEscaneos");
 	let button_scan__options__url = document.querySelector(".scan__options__url");
 	let button_scan__options__file = document.querySelector(".scan__options__file");
+	let scan__start = document.querySelector(".scan__start");
+	let button_exploits__options__software = document.querySelector(".exploits__options__software");
+	let button_exploits__options__cms = document.querySelector(".exploits__options__cms");
+	
 
 	// Event listeners
 	button_nav__nuevo.addEventListener("click", function(){
@@ -30,6 +34,18 @@ document.addEventListener("DOMContentLoaded", function() {
 
 	button_scan__options__file.addEventListener("click", function(){
 		body.classList.replace("url", "file");
+	});
+
+	button_exploits__options__software.addEventListener("click", function(){
+		body.classList.replace("in_cms", "in_software");
+	});
+
+	button_exploits__options__cms.addEventListener("click", function(){
+		body.classList.replace("in_software", "in_cms");
+	});
+
+	scan__start.addEventListener("click", function(){
+		alert("iniciando scan");
 	});
 
 	// Loading info
@@ -94,21 +110,27 @@ function load_modules(json){
 
 	json = [
 		{
-			"nombre":"Modulo 1",
+			"nombre":"Configuraciones generales",
 			"opciones":[
 				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+					"opcion_nombre":"Puertos a escanear",
+					"descripcion":"Selecciona los --top-ports a escanear",
 					"type":"number"
 				},
 				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-					"type":"boolean"
-				}	
-
+					"opcion_nombre":"Cookie",
+					"descripcion":"Seleccione una cookie. (Opcional)",
+					"type":"number"
+				},
+				{
+					"opcion_nombre":"Profundidad",
+					"descripcion":"Probar exploits que coincidan completamente (1-4).\
+					1) a\
+					2) b",
+					"type":"number"
+				}
 			]
-		},
+		}/*,
 		{
 			"nombre":"Modulo 2",
 			"opciones":[
@@ -140,7 +162,28 @@ function load_modules(json){
 				}	
 
 			]
-		}
+		},
+		{
+			"nombre":"Modulo 4",
+			"opciones":[
+				{
+					"opcion_nombre":"Nombre de opción",
+					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+					"type":"number"
+				},
+				{
+					"opcion_nombre":"Nombre de opción",
+					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+					"type":"boolean"
+				},
+				{
+					"opcion_nombre":"Nombre de opción",
+					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+					"type":"number"
+				}	
+
+			]
+		}*/
 	];
 
 	json.forEach(element => {

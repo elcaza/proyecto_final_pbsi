@@ -89,6 +89,29 @@ body.file .scan__file {
     display: block;
 }
 
+body.in_software .exploits__options__software{
+    background-color: #064766;
+    color: #fefefe;
+}
+
+body.in_cms .exploits__options__cms{
+    background-color: #064766;
+    color: #fefefe;
+}
+
+body.in_software .option__software {
+    display: block;
+}
+
+body.in_cms .option__cms {
+    display: block;
+}
+
+.option__cms,
+.option__software {
+    display: none;
+}
+
 /**
 ===========================================
 Sections Paddigs
@@ -257,6 +280,7 @@ button:hover {
 
 }
 
+
 .modulos__titulo {
 
 }
@@ -373,6 +397,85 @@ input:checked + .modulos__slider:before {
     display: inline-block;
     width: 39%;
     vertical-align: top;
+}
+
+
+.exploits {
+
+}
+
+.exploits__add {
+
+}
+
+.exploits__modulo {
+    box-sizing: border-box;
+    border: 1px solid;
+    margin: 10px 0 10px 0;
+    padding: 10px;
+}
+
+.exploits__nombre {
+    display: inline-block;
+    position: relative;
+    top: 12px;
+    left: 5px;
+    font-size: 1.5em;
+}
+
+
+.modulos__modulo__config {
+
+}
+
+.exploits__config {
+    padding: 20px 10px;
+    box-sizing: border-box;
+}
+
+.exploits__opcion__nombre {
+    display: inline-block;
+    width: 20%;
+    vertical-align: top;
+    box-sizing: border-box;
+}
+
+.exploits__opcion__descripcion {
+    display: inline-block;
+    width: 40%;
+    vertical-align: top;
+}
+
+.exploits__opcion__valor {
+    display: inline-block;
+    width: 39%;
+    vertical-align: top;
+}
+
+
+.exploits__options-container {
+    display: block;
+    margin: 0px auto;
+    min-height: 50px;
+    width: 100%;
+    text-align: center;
+}
+
+.exploits__options__software,
+.exploits__options__cms {
+    width: 50%;
+    display: inline-block;
+    text-align: center;
+    background-color: gray;
+    min-height: 30px;
+    box-sizing: border-box;
+    padding: 10px;
+}
+
+.exploits__options__software:hover,
+.exploits__options__cms:hover {
+    background-color: rgb(29, 165, 255);
+    transition: .5s;
 }
 
 .programar {
