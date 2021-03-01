@@ -11,8 +11,8 @@ headers = {
 
 peticion = {
     #"sitio":"https://xss-game.appspot.com/level1",
-    "sitio":"http://localhost/joomla/",
-    # "sitio":"http://localhost/drupal7/",
+    #"sitio":"http://localhost/joomla/",
+    "sitio":"http://localhost/drupal7/",
     #sistemas.acatlan.unam.mx
     "ejecucion":"",
     "puertos" : { 

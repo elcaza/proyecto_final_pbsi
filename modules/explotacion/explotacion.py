@@ -145,6 +145,7 @@ def crear_hilos_exploit(parametros, lista_exploits):
                 hijos[hilo].start()
             except IndexError:
                 break
+            
         for hilo in range(hilos):
             try:
                 hijos[hilo].join(600)

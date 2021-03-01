@@ -75,14 +75,11 @@ def iniciar_analisis(peticion):
         # numero_grafica = reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica)
 
         print("Iniciando Análisis")
-        respuesta_analisis = analisis.execute(peticion_proceso["sitio"])
-        peticion_proceso["analisis"] = respuesta_analisis
-        reporte_analisis(peticion_proceso, peticion_reporte)
+        execute_analisis(peticion_proceso, peticion_reporte)
         ############################################################# FUZZING #############################################################
 
         print("Iniciando Fuzzing")
-        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"http://localhost/drupal7/INSTALL.pgsql.txt","forms":{}},
-        #                                {"pagina":"http://localhost/drupal7/cron.php","forms":{}}]
+        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"http://localhost/drupal7/INSTALL.pgsql.txt","forms":{}}]
         numero_grafica = execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
 
         print("Iniciando Explotacion")
@@ -142,6 +139,11 @@ def consulta_reporte(peticion):
 """
     Modulos
 """
+
+def execute_analisis(peticion_proceso, peticion_reporte):
+    respuesta_analisis = analisis.execute(peticion_proceso["sitio"])
+    peticion_proceso["analisis"] = respuesta_analisis
+    reporte_analisis(peticion_proceso, peticion_reporte)
 
 # Puede que truene en fuzzing_enviar_pagina
 def execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica):
@@ -218,52 +220,58 @@ def reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica):
     datos_host["cabecera"] = peticion_proceso["informacion"]["Dnsdumpster"]["host"][0]["cabecera"]
     informacion_estadisticas = informacion_obtener_estadisticas(peticion_proceso)
 
-    numero_grafica = crear_reportes_informacion(informacion_estadisticas, peticion_reporte, datos_host, numero_grafica)
+    numero_grafica = reportes_informacion_crear(informacion_estadisticas, peticion_reporte, datos_host, numero_grafica)
     return numero_grafica
 
 def reporte_analisis(peticion_proceso, peticion_reporte):
     analisis = {}
     analisis["servidor"] = analisis_obtener_servidor(peticion_proceso["analisis"]["servidor"], "Servidor") # Nombre y versión
     analisis["cms"] = analisis_obtener_servidor(peticion_proceso["analisis"]["cms"], "CMS") # Nombre y versión
-    analisis["plugins"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["plugins"],"Plugins") # Nombre y versión
-    analisis["librerias"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["librerias"],"Librerias") #  Nombre y versión
-    analisis["frameworks"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["frameworks"],"Frameworks") # Nombre y versión
-    analisis["lenguajes"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["lenguajes"],"Lenguajes") # Nombre y versión
+    analisis["librerias"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["librerias"],"Libreria") #  Nombre y versión
+    analisis["frameworks"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["frameworks"],"Framework") # Nombre y versión
+    analisis["lenguajes"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["lenguajes"],"Lenguaje") # Nombre y versión
 
-    analisis["archivos"] = analisis_obtener_datos(peticion_proceso["analisis"]["archivos"]) # Listado
-    analisis["vulnerabilidades"] = analisis_obtener_datos(peticion_proceso["analisis"]["vulnerabilidades"]) # Listado
-    analisis["headers"] = analisis_obtener_datos(peticion_proceso["analisis"]["headers"]) # Listado
+    analisis["plugins"] = analisis_obtener_datos(peticion_proceso["analisis"]["plugins"],"Plugins") # Listado
+    analisis["archivos"] = analisis_obtener_datos(peticion_proceso["analisis"]["archivos"], "Archivos") # Listado
+    analisis["vulnerabilidades"] = analisis_obtener_datos(peticion_proceso["analisis"]["vulnerabilidades"], "Vulnerabilidades conocidas") # Listado
+    analisis["headers"] = analisis_obtener_datos(peticion_proceso["analisis"]["headers"],"Headers") # Listado
 
     analisis["paginas"] = analisis_obtener_paginas(peticion_proceso["analisis"]["paginas"]) # Total
 
-    crear_reportes_analisis(analisis, peticion_reporte)
+    reportes_analisis_crear(analisis, peticion_reporte)
 
 #########
 def analisis_obtener_servidor(datos, tipo):
-    nombre = ""
-    version = ""
+    nombre = "No se encontró {0}".format(tipo)
+    version = "NA"
     if "nombre" in datos:
-        nombre = datos["nombre"]
+        if datos["nombre"] != "":
+            nombre = datos["nombre"]
     if "version" in datos:
-        version = datos["version"]
+        if datos["version"] != "":
+            version = datos["version"]
     return [[tipo, nombre.capitalize(), version]]
 
 def analisis_obtener_cms_datos(datos, tipo):
-    nombre = ""
-    version = "NA"
-    dato = []
-
-    for lenguaje in datos:
-        if "nombre" in lenguaje:
-            nombre = lenguaje["nombre"]
-            if "version" in lenguaje:
-                for numero_version in lenguaje["version"]:
-                    version += numero_version + ", "
-        dato.append([tipo, nombre.capitalize(), version])
+    resultados = []
+    for dato in datos:
+        nombre = "No se encontró {0}".format(tipo)
         version = "NA"
-    return dato
+        if "nombre" in dato:
+            if dato["nombre"] != "":
+                nombre = dato["nombre"]
+                if "version" in dato:
+                    if dato["version"] != "":
+                        for numero_version in dato["version"]:
+                            if numero_version != "":
+                                version += numero_version + ", "
+        resultados.append([tipo, nombre.capitalize(), version])
+    return resultados
 
-def analisis_obtener_datos(datos): return [[dato] for dato in datos]
+def analisis_obtener_datos(datos, tipo): 
+    if len(datos) != 0:
+        return [[dato] for dato in datos]
+    return [["No se encontraron {0}".format(tipo)]]
 
 def analisis_obtener_paginas(datos): return [[len(datos)]]
 
@@ -293,7 +301,7 @@ def reportes_fuzzing(peticion_proceso, peticion_reporte, numero_grafica):
 # No truena
 def reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica):
     explotacion_estadisticas = estadisticas_explotacion(peticion_proceso)
-    numero_grafica = reportes_explotacion_crear(explotacion_estadisticas,peticion_reporte, numero_grafica)
+    numero_grafica = reportes_explotacion_crear(explotacion_estadisticas, peticion_reporte, numero_grafica)
     return numero_grafica
 
 """
@@ -332,28 +340,29 @@ def reportes_fuzzing_crear_general_grafica(fuzzing_estadisticas,reporte):
 # Explotacion
 
 # No truena
-def reportes_explotacion_crear_grafica_general(explotacion_estadisticas,reporte):
+def reportes_explotacion_crear_general_grafica(explotacion_estadisticas,reporte):
     exito = 0
     fracaso = 0
     inconcluso = 0
     ataques = ["Exito","Fracaso","Inconcluso"]
-    for explotacion in explotacion_estadisticas:
-        if "sitio" == explotacion:
-            continue
-        exito += explotacion_estadisticas[explotacion]["exitoso"]
-        fracaso += explotacion_estadisticas[explotacion]["fracaso"]
-        inconcluso += explotacion_estadisticas[explotacion]["inconcluso"]
+    if explotacion_estadisticas != 0:
+        for explotacion in explotacion_estadisticas:
+            if explotacion[1] == "Exitoso":
+                exito += 1
+            if explotacion[1] == "Fracaso":
+                fracaso += 1
+            if explotacion[1] == "Inconcluso":
+                inconcluso += 1
     ataques_resultado = [exito, fracaso, inconcluso]
     fuzzing_diagrama = go.Figure(data=[go.Pie(labels=ataques, values=ataques_resultado)])
     
     fuzzing_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
-    return ataques, ataques_resultado
 
 """
     Crear reportes
 """
 # Informacion
-def crear_reportes_informacion_individual_dns(registros, registros_etiqueta, reporte, sitio):
+def reportes_informacion_crear_individual_dns(registros, registros_etiqueta, reporte, sitio):
     analisis = {
                 "categoria":"Informacion",
                 "titulo":"DNS",
@@ -366,7 +375,7 @@ def crear_reportes_informacion_individual_dns(registros, registros_etiqueta, rep
     }
     return analisis
 
-def crear_reportes_informacion_individual_puertos(puertos, puertos_estado, reporte, sitio):
+def reportes_informacion_crear_individual_puertos(puertos, puertos_estado, reporte, sitio):
     analisis = {
                 "categoria":"Informacion",
                 "titulo":"Puertos",
@@ -378,7 +387,7 @@ def crear_reportes_informacion_individual_puertos(puertos, puertos_estado, repor
     }
     return analisis
 
-def crear_reportes_informacion_general(datos_host):
+def reportes_informacion_crear_general(datos_host):
     analisis = {
                 "categoria":"Informacion",
                 "titulo":"Resultados generales",
@@ -393,33 +402,34 @@ def crear_reportes_informacion_general(datos_host):
     }
     return analisis
 
-def crear_reportes_informacion(informacion_estadisticas, peticion_reporte, datos_host, numero_grafica):
+def reportes_informacion_crear(informacion_estadisticas, peticion_reporte, datos_host, numero_grafica):
     reporte = root+"/modules/reportes/ifram_grafica_info"
     
-    analisis = crear_reportes_informacion_general(datos_host)
+    analisis = reportes_informacion_crear_general(datos_host)
     peticion_reporte["analisis"].append(analisis)
 
     puertos, puertos_estado = informacion_datos_individuales_puertos(informacion_estadisticas,reporte+"{0}.html".format(numero_grafica))
-    analisis = crear_reportes_informacion_individual_puertos(puertos, puertos_estado,reporte+"{0}.html".format(numero_grafica),peticion_reporte["sitio"])
+    analisis = reportes_informacion_crear_individual_puertos(puertos, puertos_estado,reporte+"{0}.html".format(numero_grafica),peticion_reporte["sitio"])
     peticion_reporte["analisis"].append(analisis)
     numero_grafica += 1
     
     puertos, puertos_estado = informacion_datos_individuales_dns(informacion_estadisticas,reporte+"{0}.html".format(numero_grafica))
-    analisis = crear_reportes_informacion_individual_dns(puertos, puertos_estado,reporte+"{0}.html".format(numero_grafica),peticion_reporte["sitio"])
+    analisis = reportes_informacion_crear_individual_dns(puertos, puertos_estado,reporte+"{0}.html".format(numero_grafica),peticion_reporte["sitio"])
     peticion_reporte["analisis"].append(analisis)
     numero_grafica += 1
     return numero_grafica
 
 # Analisis
-def crear_reportes_analisis_general(datos_analisis):
+def reportes_analisis_crear_general(datos_analisis):
     analisis = []
     datos = {}
     datos["servidor"] = datos_analisis["servidor"] + datos_analisis["cms"]
-    datos["cms"] = datos_analisis["plugins"] + datos_analisis["librerias"] + datos_analisis["frameworks"] + datos_analisis["lenguajes"]
+    datos["cms"] = datos_analisis["librerias"] + datos_analisis["frameworks"] + datos_analisis["lenguajes"]
+    datos["plugins"] = datos_analisis["plugins"]
     datos["archivos"] = datos_analisis["archivos"] 
     datos["vulnerabilidades"] = datos_analisis["vulnerabilidades"]
     datos["headers"] = datos_analisis["headers"]
-    datos["paginas"] = datos_analisis["paginas"]
+    titulo_bandera = 0
 
     for dato in datos:
         if dato == "servidor":
@@ -433,34 +443,31 @@ def crear_reportes_analisis_general(datos_analisis):
         elif dato == "cms":
             analisis_individual = {
                         "categoria":"",
-                        "titulo":"Plugins, Librerías, Frameworks, Lenguajes",
+                        "titulo":"Librerías, Frameworks, Lenguajes",
                         "grafica":"",
                         "cabecera":["Tipo","Nombre","Versión"],
                         "datos":datos[dato]
             }
-        elif dato == "archivos" or dato == "vulnerabilidades" or dato == "headers":
+        else:
+            if titulo_bandera == 0:
+                titulo_nombre = "Interés"
+                titulo_bandera = 1
+            else: 
+                titulo_nombre = ""
             analisis_individual = {
                         "categoria":"",
-                        "titulo":"Interés",
+                        "titulo":titulo_nombre,
                         "grafica":"",
                         "cabecera":[dato.capitalize()],
                         "datos":datos[dato]
-            }
-        else:
-            analisis_individual = {
-                            "categoria":"",
-                            "titulo":"Páginas",
-                            "grafica":"",
-                            "cabecera":[""],
-                            "datos":datos[dato]
             }
         analisis.append(analisis_individual)
 
 
     return analisis
 
-def crear_reportes_analisis(datos_analisis, peticion_reporte):
-    analisis = crear_reportes_analisis_general(datos_analisis)
+def reportes_analisis_crear(datos_analisis, peticion_reporte):
+    analisis = reportes_analisis_crear_general(datos_analisis)
     for valor in analisis:
         peticion_reporte["analisis"].append(valor)
 
@@ -477,7 +484,7 @@ def reportes_fuzzing_crear_general(fuzzing_estadistica_general, reporte):
 
 def reportes_fuzzing_crear_individual(fuzzing_estadistica_individual):
     analisis = {
-                "categoria":"Fuzzing",
+                "categoria":"",
                 "titulo":"Resultados individuales",
                 "grafica":"",
                 "cabecera":["Página","XSS","SQLi","LFI"],
@@ -502,27 +509,24 @@ def reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_indi
 # Explotacion
 
 # No truena
-def crear_reporte_explotacion_general(ataques, ataques_resultado, reporte, sitio):
+def reportes_explotacion_crear_general(explotacion_estadisticas, reporte):
     analisis = {
                 "categoria":"Explotacion",
                 "titulo":"Resultados generales",
                 "grafica":reporte,
-                "cabecera":["Sitio","Motivo","Estado"],
-                "datos":[
-                    [sitio,"Exploits exitosos: {0}".format(ataques_resultado[0]),ataques[0]],
-                    [sitio,"Exploits no exitosos: {0}".format(ataques_resultado[1]),ataques[1]],
-                    [sitio,"Exploits inconclusas: {0}".format(ataques_resultado[2]),ataques[2]]]
+                "cabecera":["Exploit","Resultado"],
+                "datos":explotacion_estadisticas
     }
     return analisis
 
 # No truena
 def reportes_explotacion_crear(explotacion_estadisticas, peticion_reporte, numero_grafica):
-    reporte = root+"/modules/reportes/ifram_grafica_explotacion"
+    reporte = root + "/modules/reportes/ifram_grafica_explotacion"
     reporte_grafica = reporte + "{0}.html".format(numero_grafica)
     numero_grafica += 1
 
-    ataques, ataques_resultado = reportes_explotacion_crear_grafica_general(explotacion_estadisticas,reporte_grafica)
-    analisis = crear_reporte_explotacion_general(ataques,ataques_resultado,reporte_grafica,peticion_reporte["sitio"])
+    reportes_explotacion_crear_general_grafica(explotacion_estadisticas,reporte_grafica)
+    analisis = reportes_explotacion_crear_general(explotacion_estadisticas, reporte_grafica)
     peticion_reporte["analisis"].append(analisis)
     
     return numero_grafica
@@ -533,7 +537,6 @@ def reportes_explotacion_crear(explotacion_estadisticas, peticion_reporte, numer
 """
 
 # Puede que truene
-# Arreglar puertos
 def obtener_datos_consulta_exploits(peticion_proceso):
     datos_identificados = {"software":[],"cms":[], "cve":[], "profundidad": 2}
     
@@ -557,9 +560,15 @@ def obtener_datos_consulta_exploits(peticion_proceso):
 
     datos_identificados["profundidad"] = peticion_proceso["profundidad"]
 
-    datos_explotacion = {"sitio":peticion_proceso["sitio"],"puertos":["80"]}
-    # for puerto in peticion_proceso["informacion"]["Puertos"]["abiertos"]:
-    #     datos_explotacion["puertos"].append(puerto["puerto"])
+    if peticion_proceso["sitio"].startswith("https"):
+        datos_explotacion = {"sitio":peticion_proceso["sitio"],"puertos":["443"]}
+    else:
+        datos_explotacion = {"sitio":peticion_proceso["sitio"],"puertos":["80"]}
+
+    if "informacion" in peticion_proceso:
+        for puerto in peticion_proceso["informacion"]["Puertos"]["abiertos"]:
+            if puerto != "80" or puerto != "443":
+                datos_explotacion["puertos"].append(puerto["puerto"])
 
     return datos_explotacion, datos_identificados
 
@@ -727,26 +736,22 @@ def explotacion_obtener_alertas(explotaciones):
     return explotacion_alertas
 
 def estadisticas_explotacion(explotaciones):
-    explotacion = {}
+    explotacion = []
     for exploit in explotaciones["explotaciones"]:
-        explotacion[exploit] = {
-            "exitoso":0,
-            "fracaso":0,
-            "inconcluso":0}
+        explotacion_temporal = ["",""]
+        explotacion_temporal[0] = exploit
         for puerto in explotaciones["explotaciones"][exploit]:
             if explotaciones["explotaciones"][exploit][puerto] == 1:
-                explotacion[exploit]["exitoso"] += 1
+                explotacion_temporal[1] = "Exitoso"
+                break
             if explotaciones["explotaciones"][exploit][puerto] == 0:
-                explotacion[exploit]["inconcluso"] += 1
+                explotacion_temporal[1] = "Inconcluso"
             if explotaciones["explotaciones"][exploit][puerto] == -1:
-                explotacion[exploit]["fracaso"] += 1
+                explotacion_temporal[1] = "Fracaso"
+        explotacion.append(explotacion_temporal.copy())
     return explotacion
 
-@app.route("/")
-def index():
-    return render_template("app.html")
-
-@app.route("/ejecucion",methods=["GET","POST"])
+@app.route("/ejecucion", methods=["GET","POST"])
 def ejecucion():
     if request.method == "POST":
         peticion_json = request.json
