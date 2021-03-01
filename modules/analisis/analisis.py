@@ -411,9 +411,15 @@ class Drupal():
 	def inicio_drupal(self,deteccion_cms,tmp_diccionario):
 		tmp_cms = {}
 		config = self.carga_configuracion()
-		version = self.detect_version(config)
-		ver = version.strip().split('.')[0]
+		version = self.get_version_wappalyzer()
+		if version == None:
+			version = self.detect_version(config)
+		try:
+			ver = version.strip().split('.')[0]
+		except:
+			ver = version
 		modulos = config['directorios'][0][ver][0]['modules']
+		#print(modulos)
 		archivos = config['directorios'][0]['expuestos']
 		tmp_cms["nombre"] = "drupal"
 		tmp_cms["version"] = version
@@ -433,7 +439,7 @@ class Drupal():
 		if version == "7.x":
 			archivos = config['directorios'][0]["7"][0]['files']
 			for archivo in archivos:
-				print(self.url + archivo)
+				#print(self.url + archivo)
 				respuesta = self.util.get_peticion(self.url + archivo)
 				code = str(respuesta.status_code)[0]
 				if code != '4' and code != '3':
@@ -442,6 +448,20 @@ class Drupal():
 		if version:
 			return version
 		return ""
+
+	def get_version_wappalyzer(self):
+		version = None
+		wappalyzer = Wappalyzer.latest()
+		webpage = WebPage.new_from_url(self.url,verify=False)
+		tmp = wappalyzer.analyze_with_versions_and_categories(webpage)
+		for llave,valor in tmp.items():
+			if "drupal" in  llave.lower():
+				for llave2,valor2 in valor.items():
+					if llave2 == "versions":
+						if len(valor2):
+							version = valor2[0]
+		return version
+
 
 	def calcula_codigos(self,url,archivos):
 		peticiones = 0
@@ -607,6 +627,7 @@ class Obtencion_informacion():
 
 	def __init__(self):
 		self.sitio = sys.argv[1]
+		self.url_without_file()
 		self.tmp_diccionario = {}
 		self.json_informacion = {}
 		self.paginas = []
@@ -621,6 +642,7 @@ class Obtencion_informacion():
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path[:parsed.path.rfind("/")+1]
 		else:
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path
+		print(self.sitio)
 
 	def carga_configuracion(self):
 		f = open("./config/config_general.json","r")
@@ -651,7 +673,11 @@ class Obtencion_informacion():
 		self.headers = []
 		comando = "python3 shcheck.py -d -j " + self.sitio
 		args = shlex.split(comando)
-		tmp_headers_json = json.loads(subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout)
+		try:
+			tmp_headers_json = json.loads(subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout)
+		except:
+			self.tmp_diccionario["headers"] = []
+			return self.tmp_diccionario
 		try:
 			tmp_headers = tmp_headers_json[self.sitio]
 		except:
@@ -705,18 +731,18 @@ class Obtencion_informacion():
 					if tet_2.startswith(url):
 						if not(tet_2 in self.paginas):
 							self.paginas.append(tet_2)
-						elif not(tet_2.startswith("http")) and not(tet_2.startswith("https")):
-							link_2 = self.valida_link(tet_2,url)
-							contador = 0
-							esta = 0
-							for page in self.paginas:
-								contador += 1 
-								if (contador >= len(self.paginas)) and not(esta > 0):
-									self.paginas.append(link_2)
-									contador = 0
-									esta = 0
-								elif tet_2 in page:
-									esta += 1
+					elif not(tet_2.startswith("http")) and not(tet_2.startswith("https")):
+						link_2 = self.valida_link(tet_2,url)
+						contador = 0
+						esta = 0
+						for page in self.paginas:
+							contador += 1 
+							if (contador >= len(self.paginas)) and not(esta > 0):
+								self.paginas.append(link_2)
+								contador = 0
+								esta = 0
+							elif tet_2 in page:
+								esta += 1
 		return self.paginas
 
 	def valida_link(self,linea,url):
