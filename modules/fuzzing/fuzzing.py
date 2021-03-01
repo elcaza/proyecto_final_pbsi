@@ -1,5 +1,5 @@
 from selenium import webdriver
-from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, ElementNotInteractableException
+from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, ElementNotInteractableException, WebDriverException
 import time
 import threading
 import re
@@ -140,7 +140,12 @@ class Lanzar_fuzzing(threading.Thread):
       self.sin_navegador.add_argument('headless')      
       self.sin_navegador.add_argument('--no-sandbox')
       self.sin_navegador.add_argument('--disable-dev-shm-usage')
-      self.driver = webdriver.Chrome("/usr/bin/chromedriver",options=self.sin_navegador)
+      #WebDriverException
+      try: 
+         self.driver = webdriver.Chrome("/usr/bin/chromedriver",options=self.sin_navegador)
+         self.error = 0
+      except WebDriverException:
+         self.error = 1
       #self.driver = webdriver.Chrome("/usr/bin/chromedriver")
       self.driver.set_page_load_timeout(5)
       self.threadID = threadID
@@ -153,14 +158,15 @@ class Lanzar_fuzzing(threading.Thread):
       self.json_forms = {"forms":{}}
 
    def run(self):
-      print("Pagina - " + self.url)
-      print ("[+1] Hilo Selenium - " + self.nombre)
-      enviar_peticiones(self.driver, self.url, self.diccionario, self.tipo, self.json_fuzzing_forms, self.json_forms, self.cookie)
-      self.driver.quit()
-      print ("[+2] Hilo Request - " + self.nombre)
-      pre_enviar_peticiones(self.json_forms, self.diccionario, self.tipo, self.json_fuzzing_forms, self.cookie)
-      print ("[-] Hilo - " + self.nombre)
-
+      if self.error == 0:
+         print("Pagina - " + self.url)
+         print ("[+1] Hilo Selenium - " + self.nombre)
+         enviar_peticiones(self.driver, self.url, self.diccionario, self.tipo, self.json_fuzzing_forms, self.json_forms, self.cookie)
+         self.driver.quit()
+         print ("[+2] Hilo Request - " + self.nombre)
+         pre_enviar_peticiones(self.json_forms, self.diccionario, self.tipo, self.json_fuzzing_forms, self.cookie)
+         print ("[-] Hilo - " + self.nombre)
+      
    def reiniciar_driver(self):
       self.sin_navegador = webdriver.ChromeOptions()
       self.sin_navegador.add_argument('headless')
@@ -265,6 +271,7 @@ def actualizar_formulario(driver,formulario_iteracion, url, iframe_posicion = -1
    try:
       driver.get(url)
       actualizar_profundidad_iframes(driver, iframe_profundidad, iframe_posicion)
+      #Index Out
       formulario = Form(driver.find_elements_by_xpath(".//form")[formulario_iteracion])
       inputs = formulario.get_lista_inputs()
       return formulario, inputs
@@ -409,11 +416,12 @@ def crear_hijos_fuzzing(url, cookie=[]):
       hijos[hilo].join()
    for hilo in range(hilos):
       forms = hijos[hilo].get_json_fuzzing_forms()
-      for form in forms["forms"]:
-         if form in json_fuzzing["forms"]:
-            json_fuzzing["forms"][form].extend(forms["forms"][form])
-         else:
-            json_fuzzing["forms"][form] = forms["forms"][form]
+      if len(forms["forms"]) != 0:
+         for form in forms["forms"]:
+            if form in json_fuzzing["forms"]:
+               json_fuzzing["forms"][form].extend(forms["forms"][form])
+            else:
+               json_fuzzing["forms"][form] = forms["forms"][form]
 
    del diccionarios
    return json_fuzzing

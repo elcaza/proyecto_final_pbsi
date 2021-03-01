@@ -83,22 +83,19 @@ def iniciar_analisis(peticion):
         print("Iniciando Fuzzing")
         #peticion_proceso["analisis"]["paginas"] = [{"pagina":"http://localhost/drupal7/INSTALL.pgsql.txt","forms":{}},
         #                                {"pagina":"http://localhost/drupal7/cron.php","forms":{}}]
-        enviar_fuzzing(peticion_proceso)
-        alertas_fuzzing(peticion_proceso, peticion_alerta)
-        numero_grafica = reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica)
+        numero_grafica = execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
 
         print("Iniciando Explotacion")
-        datos_explotacion, datos_identificados = obtener_datos_consulta_exploits(peticion_proceso)
-        enviar_explotacion(con, datos_identificados, datos_explotacion, peticion_proceso)
-        alertas_explotacion(peticion_proceso, peticion_alerta)
-        numero_grafica = reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica)
-        
-        print("Creando el reporte")
-        reportes.execute(peticion_reporte)
+        numero_grafica = execute_explotacion(con, peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
 
-        # print("Enviando alertas")
-        # enviar_alertas(peticion_alerta)
-        # con.guardar_analisis(peticion_proceso)
+        print("Iniciando Reporte")
+        execute_reporte(peticion_reporte)
+
+        print("Enviando alertas")
+        execute_alerta(peticion_alerta)
+        
+        print("Guardando analisis")
+        con.guardar_analisis(peticion_proceso)
 
         return "Reporte generado"
 
@@ -139,13 +136,38 @@ def consulta_reporte(peticion):
         "analisis":[],
     }
     numero_grafica = reporte_informacion(analisis, peticion_reporte, numero_grafica)
-    numero_grafica = reporte_fuzzing(analisis, peticion_reporte, numero_grafica)
+    numero_grafica = reportes_fuzzing(analisis, peticion_reporte, numero_grafica)
     numero_grafica = reporte_explotacion(analisis, peticion_reporte, numero_grafica)
     return "Consulta de reporte creado"
 """
     Modulos
 """
-def enviar_fuzzing(peticion_proceso):
+
+# Puede que truene en fuzzing_enviar_pagina
+def execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica):
+    fuzzing_enviar_pagina(peticion_proceso)
+    alertas_fuzzing(peticion_proceso, peticion_alerta)
+    numero_grafica = reportes_fuzzing(peticion_proceso, peticion_reporte, numero_grafica)
+    return numero_grafica
+
+# Puede que truene en explotacion_enviar_exploit
+def execute_explotacion(con, peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica):
+    datos_explotacion, datos_identificados = obtener_datos_consulta_exploits(peticion_proceso)
+    explotacion_enviar_exploit(con, datos_identificados, datos_explotacion, peticion_proceso)
+    alertas_explotacion(peticion_proceso, peticion_alerta)
+    numero_grafica = reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica)
+    return numero_grafica
+
+# No truena
+def execute_alerta(peticion_alerta):
+    resultado = enviar_alertas(peticion_alerta)
+    return resultado
+
+# No truena
+def execute_reporte(peticion_reporte):
+    reportes.execute(peticion_reporte)
+    
+def fuzzing_enviar_pagina(peticion_proceso):
     for posicion_pagina in range(len(peticion_proceso["analisis"]["paginas"])):
         json_fuzzing = {
             "url":peticion_proceso["analisis"]["paginas"][posicion_pagina]["pagina"],
@@ -153,9 +175,11 @@ def enviar_fuzzing(peticion_proceso):
             "cookie":peticion_proceso["cookie"]
         }
         forms = fuzzing.execute(json_fuzzing)
-        peticion_proceso["analisis"]["paginas"][posicion_pagina].update(forms)
+        if forms != False:
+            peticion_proceso["analisis"]["paginas"][posicion_pagina].update(forms)
 
-def enviar_explotacion(con, datos_identificados, datos_explotacion, peticion_proceso):
+# No truena
+def explotacion_enviar_exploit(con, datos_identificados, datos_explotacion, peticion_proceso):
     exploits = buscar_exploits(datos_identificados, con)
     if len(exploits) != 0:
         exploits = list({(e["ruta"],e["lenguaje"]):e for e in exploits}.values())
@@ -166,14 +190,17 @@ def enviar_explotacion(con, datos_identificados, datos_explotacion, peticion_pro
 """
     Alertas
 """
+# No truena
 def enviar_alertas(peticion_alerta):
     alertas.execute(peticion_alerta)
 
+# No truena
 def alertas_fuzzing(peticion_proceso, peticion_alerta):
     for posicion_pagina in range(len(peticion_proceso["analisis"]["paginas"])):
         fuzzing_alertas = fuzzing_obtener_alertas(peticion_proceso["analisis"]["paginas"][posicion_pagina])
         peticion_alerta["sitios"].append(fuzzing_alertas)        
 
+# No truena
 def alertas_explotacion(peticion_proceso, peticion_alerta):
     explotacion_alertas = explotacion_obtener_alertas(peticion_proceso)
     peticion_alerta["sitios"].append(explotacion_alertas)
@@ -196,75 +223,59 @@ def reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica):
 
 def reporte_analisis(peticion_proceso, peticion_reporte):
     analisis = {}
-    analisis["servidor"] = analisis_obtener_servidor(peticion_proceso["analisis"]["servidor"]) # Nombre y versión
-    analisis["cms"] = analisis_obtener_cms(peticion_proceso["analisis"]["cms"]) # Nombre y versión
-    analisis["plugins"] = analisis_obtener_plugins(peticion_proceso["analisis"]["plugins"]) # Listado
-    analisis["librerias"] = analisis_obtener_librerias(peticion_proceso["analisis"]["librerias"]) #  Listado
-    analisis["archivos"] = analisis_obtener_archivos(peticion_proceso["analisis"]["archivos"]) # Listado
-    analisis["vulnerabilidades"] = analisis_obtener_vulnerabilidades(peticion_proceso["analisis"]["vulnerabilidades"]) # Listado
+    analisis["servidor"] = analisis_obtener_servidor(peticion_proceso["analisis"]["servidor"], "Servidor") # Nombre y versión
+    analisis["cms"] = analisis_obtener_servidor(peticion_proceso["analisis"]["cms"], "CMS") # Nombre y versión
+    analisis["plugins"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["plugins"],"Plugins") # Nombre y versión
+    analisis["librerias"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["librerias"],"Librerias") #  Nombre y versión
+    analisis["frameworks"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["frameworks"],"Frameworks") # Nombre y versión
+    analisis["lenguajes"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["lenguajes"],"Lenguajes") # Nombre y versión
+
+    analisis["archivos"] = analisis_obtener_datos(peticion_proceso["analisis"]["archivos"]) # Listado
+    analisis["vulnerabilidades"] = analisis_obtener_datos(peticion_proceso["analisis"]["vulnerabilidades"]) # Listado
+    analisis["headers"] = analisis_obtener_datos(peticion_proceso["analisis"]["headers"]) # Listado
+
     analisis["paginas"] = analisis_obtener_paginas(peticion_proceso["analisis"]["paginas"]) # Total
-    analisis["frameworks"] = analisis_obtener_frameworks(peticion_proceso["analisis"]["frameworks"]) # Listado
-    analisis["lenguajes"] = analisis_obtener_lenguajes(peticion_proceso["analisis"]["lenguajes"]) # Listado -> Nombre y versiones -> NNN VVV1,VVV2
-    analisis["headers"] = analisis_obtener_headers(peticion_proceso["analisis"]["headers"]) # Listado
 
     crear_reportes_analisis(analisis, peticion_reporte)
 
 #########
-def analisis_obtener_cms(datos_cms):
+def analisis_obtener_servidor(datos, tipo):
     nombre = ""
     version = ""
-    if "nombre" in datos_cms:
-        nombre = datos_cms["nombre"]
-    if "version" in datos_cms:
-        version = datos_cms["version"]
-    return [["{0}: {1}".format(nombre.capitalize(), version)]]
+    if "nombre" in datos:
+        nombre = datos["nombre"]
+    if "version" in datos:
+        version = datos["version"]
+    return [[tipo, nombre.capitalize(), version]]
 
-def analisis_obtener_plugins(datos_plugins): return [[plugin] for plugin in datos_plugins]
-
-def analisis_obtener_librerias(datos_librerias): return [[libreria] for libreria in datos_librerias]
-
-def analisis_obtener_archivos(datos_archivos): return [[archivo] for archivo in datos_archivos]
-
-def analisis_obtener_vulnerabilidades(datos_vulnerabilidades): return [[vulnerabilidad] for vulnerabilidad in datos_vulnerabilidades]
-
-def analisis_obtener_paginas(datos_paginas): return [[len(datos_paginas)]]
-
-def analisis_obtener_frameworks(datos_frameworks): return [[framework] for framework in datos_frameworks]
-
-def analisis_obtener_lenguajes(datos_lenguajes):
+def analisis_obtener_cms_datos(datos, tipo):
     nombre = ""
-    version = "S/N"
-    lenguajes = []
+    version = "NA"
+    dato = []
 
-    for lenguaje in datos_lenguajes:
+    for lenguaje in datos:
         if "nombre" in lenguaje:
             nombre = lenguaje["nombre"]
             if "version" in lenguaje:
                 for numero_version in lenguaje["version"]:
                     version += numero_version + ", "
-        lenguajes.append(["{0}: {1}".format(nombre.upper(), version)])
-        version = "S/N"
-    return lenguajes
+        dato.append([tipo, nombre.capitalize(), version])
+        version = "NA"
+    return dato
 
-def analisis_obtener_headers(datos_headers): return [[header] for header in datos_headers]
+def analisis_obtener_datos(datos): return [[dato] for dato in datos]
 
-def analisis_obtener_servidor(datos_servidor):
-    nombre = ""
-    version = ""
-    if "nombre" in datos_servidor:
-        nombre = datos_servidor["nombre"]
-    if "version" in datos_servidor:
-        version = datos_servidor["version"]
-    return [["{0}: {1}".format(nombre.capitalize(), version)]]
+def analisis_obtener_paginas(datos): return [[len(datos)]]
 
 ########
 
-def reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica):
+# Puede que truene en peticion_proceso[analisis][paginas]
+def reportes_fuzzing(peticion_proceso, peticion_reporte, numero_grafica):
     fuzzing_estadistica_general = []
     fuzzing_estadistica_individual = []
     paginas = len(peticion_proceso["analisis"]["paginas"])
     for posicion_pagina in range(paginas):
-        fuzzing_estadistica_individual.append(fuzzing_obtener_estaditisticas(peticion_proceso["analisis"]["paginas"][posicion_pagina]))
+        fuzzing_estadistica_individual.append(estaditisticas_fuzzing(peticion_proceso["analisis"]["paginas"][posicion_pagina]))
     
     for individual in fuzzing_estadistica_individual:
         xss =+ individual[1]
@@ -275,13 +286,14 @@ def reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica):
     fuzzing_estadistica_general.append(xss)
     fuzzing_estadistica_general.append(sqli)
     fuzzing_estadistica_general.append(lfi)
-    numero_grafica = crear_reportes_fuzzing(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte, numero_grafica)
+    numero_grafica = reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte, numero_grafica)
         
     return numero_grafica
 
+# No truena
 def reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica):
-    explotacion_estadisticas = explotacion_obtener_estadisticas(peticion_proceso)
-    numero_grafica = crear_reportes_explotacion(explotacion_estadisticas,peticion_reporte, numero_grafica)
+    explotacion_estadisticas = estadisticas_explotacion(peticion_proceso)
+    numero_grafica = reportes_explotacion_crear(explotacion_estadisticas,peticion_reporte, numero_grafica)
     return numero_grafica
 
 """
@@ -308,7 +320,7 @@ def informacion_datos_individuales_puertos(informacion_estadisticas, reporte):
     return puertos, puertos_estado
 
 # Fuzzing
-def fuzzing_datos_generales(fuzzing_estadisticas,reporte):
+def reportes_fuzzing_crear_general_grafica(fuzzing_estadisticas,reporte):
     xss = fuzzing_estadisticas[0][1]
     sqli = fuzzing_estadisticas[0][2]
     lfi = fuzzing_estadisticas[0][3]
@@ -318,7 +330,9 @@ def fuzzing_datos_generales(fuzzing_estadisticas,reporte):
     fuzzing_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
 
 # Explotacion
-def explotacion_datos_generales(explotacion_estadisticas,reporte):
+
+# No truena
+def reportes_explotacion_crear_grafica_general(explotacion_estadisticas,reporte):
     exito = 0
     fracaso = 0
     inconcluso = 0
@@ -399,16 +413,50 @@ def crear_reportes_informacion(informacion_estadisticas, peticion_reporte, datos
 # Analisis
 def crear_reportes_analisis_general(datos_analisis):
     analisis = []
-    for categoria in datos_analisis:
-        datos = datos_analisis[categoria]
-        analisis_individual = {
-                    "categoria":"Analisis",
-                    "titulo":categoria.capitalize(),
-                    "grafica":"",
-                    "cabecera":["Nombre"],
-                    "datos":datos
-        }
+    datos = {}
+    datos["servidor"] = datos_analisis["servidor"] + datos_analisis["cms"]
+    datos["cms"] = datos_analisis["plugins"] + datos_analisis["librerias"] + datos_analisis["frameworks"] + datos_analisis["lenguajes"]
+    datos["archivos"] = datos_analisis["archivos"] 
+    datos["vulnerabilidades"] = datos_analisis["vulnerabilidades"]
+    datos["headers"] = datos_analisis["headers"]
+    datos["paginas"] = datos_analisis["paginas"]
+
+    for dato in datos:
+        if dato == "servidor":
+            analisis_individual = {
+                        "categoria":"Analisis",
+                        "titulo":"Datos generales",
+                        "grafica":"",
+                        "cabecera":["Tipo","Nombre","Versión"],
+                        "datos":datos[dato]
+            }
+        elif dato == "cms":
+            analisis_individual = {
+                        "categoria":"",
+                        "titulo":"Plugins, Librerías, Frameworks, Lenguajes",
+                        "grafica":"",
+                        "cabecera":["Tipo","Nombre","Versión"],
+                        "datos":datos[dato]
+            }
+        elif dato == "archivos" or dato == "vulnerabilidades" or dato == "headers":
+            analisis_individual = {
+                        "categoria":"",
+                        "titulo":"Interés",
+                        "grafica":"",
+                        "cabecera":[dato.capitalize()],
+                        "datos":datos[dato]
+            }
+        else:
+            analisis_individual = {
+                            "categoria":"",
+                            "titulo":"Páginas",
+                            "grafica":"",
+                            "cabecera":[""],
+                            "datos":datos[dato]
+            }
         analisis.append(analisis_individual)
+
+
     return analisis
 
 def crear_reportes_analisis(datos_analisis, peticion_reporte):
@@ -417,7 +465,7 @@ def crear_reportes_analisis(datos_analisis, peticion_reporte):
         peticion_reporte["analisis"].append(valor)
 
 # Fuzzing
-def crear_reporte_fuzzing_general(fuzzing_estadistica_general, reporte):
+def reportes_fuzzing_crear_general(fuzzing_estadistica_general, reporte):
     analisis = {
                 "categoria":"Fuzzing",
                 "titulo":"Resultados generales",
@@ -427,7 +475,7 @@ def crear_reporte_fuzzing_general(fuzzing_estadistica_general, reporte):
     }
     return analisis
 
-def crear_reporte_fuzzing_individual(fuzzing_estadistica_individual):
+def reportes_fuzzing_crear_individual(fuzzing_estadistica_individual):
     analisis = {
                 "categoria":"Fuzzing",
                 "titulo":"Resultados individuales",
@@ -437,21 +485,23 @@ def crear_reporte_fuzzing_individual(fuzzing_estadistica_individual):
     }
     return analisis
 
-def crear_reportes_fuzzing(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte, numero_grafica):
-    reporte = root+"/modules/reportes/ifram_grafica"
-
-    fuzzing_datos_generales(fuzzing_estadistica_general,reporte+"{0}.html".format(numero_grafica))
-    analisis = crear_reporte_fuzzing_general(fuzzing_estadistica_general, reporte+"{0}.html".format(numero_grafica))
-    peticion_reporte["analisis"].append(analisis)
+def reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte, numero_grafica):
+    reporte = root + "/modules/reportes/ifram_grafica"
+    reporte_grafica = reporte + "{0}.html".format(numero_grafica)
     numero_grafica += 1
+
+    reportes_fuzzing_crear_general_grafica(fuzzing_estadistica_general, reporte_grafica )
+    analisis = reportes_fuzzing_crear_general(fuzzing_estadistica_general, reporte_grafica )
+    peticion_reporte["analisis"].append(analisis)
     
-    analisis = crear_reporte_fuzzing_individual(fuzzing_estadistica_individual)
+    analisis = reportes_fuzzing_crear_individual(fuzzing_estadistica_individual)
     peticion_reporte["analisis"].append(analisis)
 
-    numero_grafica += 1
     return numero_grafica
 
 # Explotacion
+
+# No truena
 def crear_reporte_explotacion_general(ataques, ataques_resultado, reporte, sitio):
     analisis = {
                 "categoria":"Explotacion",
@@ -465,18 +515,25 @@ def crear_reporte_explotacion_general(ataques, ataques_resultado, reporte, sitio
     }
     return analisis
 
-def crear_reportes_explotacion(explotacion_estadisticas, peticion_reporte, numero_grafica):
+# No truena
+def reportes_explotacion_crear(explotacion_estadisticas, peticion_reporte, numero_grafica):
     reporte = root+"/modules/reportes/ifram_grafica_explotacion"
-    ataques, ataques_resultado = explotacion_datos_generales(explotacion_estadisticas,reporte+"{0}.html".format(numero_grafica))
-    analisis = crear_reporte_explotacion_general(ataques,ataques_resultado,reporte+"{0}.html".format(numero_grafica),peticion_reporte["sitio"])
-    peticion_reporte["analisis"].append(analisis)
+    reporte_grafica = reporte + "{0}.html".format(numero_grafica)
     numero_grafica += 1
+
+    ataques, ataques_resultado = reportes_explotacion_crear_grafica_general(explotacion_estadisticas,reporte_grafica)
+    analisis = crear_reporte_explotacion_general(ataques,ataques_resultado,reporte_grafica,peticion_reporte["sitio"])
+    peticion_reporte["analisis"].append(analisis)
+    
     return numero_grafica
 
 """
     Utilidades
         Falta obtener los datos para consultar los exploits, estos se recuperan del analisis y obtener informacion
 """
+
+# Puede que truene
+# Arreglar puertos
 def obtener_datos_consulta_exploits(peticion_proceso):
     datos_identificados = {"software":[],"cms":[], "cve":[], "profundidad": 2}
     
@@ -492,7 +549,7 @@ def obtener_datos_consulta_exploits(peticion_proceso):
     datos_identificados["software"].extend(obtener_sofware_versiones(peticion_proceso["analisis"], "lenguajes"))
     datos_identificados["software"].extend(obtener_sofware_versiones(peticion_proceso["analisis"], "frameworks"))
     datos_identificados["software"].extend(obtener_sofware_versiones(peticion_proceso["analisis"], "librerias"))
-    datos_identificados["cms"].extend(obtener_cms_version_unica(peticion_proceso["analisis"], "plugins", cms_nombre))
+    datos_identificados["cms"].extend(obtener_cms_version_unica(peticion_proceso["analisis"], "dato", cms_nombre))
     
     if "vulnerabilidades" in peticion_proceso["analisis"]:
         for cve in peticion_proceso["analisis"]["vulnerabilidades"]:
@@ -547,6 +604,7 @@ def obtener_cms_version_unica(peticion_proceso, caracteristica, cms):
         datos_identificados.append({"cms_nombre":cms,"cms_categoria":caracteristica, "cms_extension_nombre":nombre,"cms_extension_version":version})
     return datos_identificados
 
+# No truena
 def buscar_exploits(datos_identificados, con):
     exploits = []
     for software in datos_identificados["software"]:
@@ -573,7 +631,6 @@ def buscar_exploits(datos_identificados, con):
         exploit_cve = con.exploit_buscar_cve(cve.strip())
         for exploit in exploit_cve["exploits"]:
             exploits.append(exploit)
-    print(exploits)
     return exploits
 
 """
@@ -614,7 +671,7 @@ def informacion_obtener_estadisticas(informacion):
 
     return datos
 
-def fuzzing_obtener_estaditisticas(forms):
+def estaditisticas_fuzzing(forms):
     forms_estadisticas = ["",0,0,0]
     forms_estadisticas[0] = (forms["pagina"])
     for form in forms["forms"]:
@@ -631,6 +688,7 @@ def fuzzing_obtener_estaditisticas(forms):
                     
     return forms_estadisticas
 
+# No truena
 def fuzzing_obtener_alertas(forms):
     forms_alertas = {}
     forms_alertas["pagina"] = forms["pagina"]
@@ -639,12 +697,12 @@ def fuzzing_obtener_alertas(forms):
         xss = 0
         sqli = 0
         lfi = 0
-        for index in forms["forms"][form]:
-            if index["xss"] == True:
+        for pagina in forms["forms"][form]:
+            if pagina["xss"] == True:
                 xss += 1
-            if index["sqli"] == True:
+            if pagina["sqli"] == True:
                 sqli += 1
-            if index["lfi"] == True:
+            if pagina["lfi"] == True:
                 lfi += 1
         motivo += '''
         Form: {0}
@@ -668,7 +726,7 @@ def explotacion_obtener_alertas(explotaciones):
     explotacion_alertas["estado"] = "Vulnerable"
     return explotacion_alertas
 
-def explotacion_obtener_estadisticas(explotaciones):
+def estadisticas_explotacion(explotaciones):
     explotacion = {}
     for exploit in explotaciones["explotaciones"]:
         explotacion[exploit] = {
