@@ -141,7 +141,6 @@ class Wordpress():
 		tmp_diccionario["plugins"] = informacion_expuesta.pop("plugins")
 		tmp_diccionario["librerias"] = []
 		tmp_diccionario["archivos"] = informacion_expuesta.pop("exposed_files")
-		tmp_diccionario["temas"] = informacion_expuesta.pop("themes")
 		if(tmp_cms["version"] != ""):
 			tmp_diccionario["vulnerabilidades"] = self.obtener_vulnerabilidades(tmp_cms["version"])
 		else:
@@ -236,9 +235,9 @@ class Wordpress():
 			respuesta = self.util.get_peticion(path.join(self.sitio,"readme.html"))
 			if(respuesta.ok and re.search("[w|W]ord[p|P]ress",respuesta.text) != None):
 				resultado = True
-			elif directorio_existente(path.join(self.sitio,"wp-includes")):
+			elif self.util.directorio_existente(path.join(self.sitio,"wp-includes")):
 				resultado = True
-			elif directorio_existente(path.join(self.sitio, "wp-content")):
+			elif self.util.directorio_existente(path.join(self.sitio, "wp-content")):
 				resultado = True
 
 		if resultado:
@@ -412,9 +411,15 @@ class Drupal():
 	def inicio_drupal(self,deteccion_cms,tmp_diccionario):
 		tmp_cms = {}
 		config = self.carga_configuracion()
-		version = self.detect_version(config)
-		ver = version.strip().split('.')[0]
+		version = self.get_version_wappalyzer()
+		if version == None:
+			version = self.detect_version(config)
+		try:
+			ver = version.strip().split('.')[0]
+		except:
+			ver = version
 		modulos = config['directorios'][0][ver][0]['modules']
+		#print(modulos)
 		archivos = config['directorios'][0]['expuestos']
 		tmp_cms["nombre"] = "drupal"
 		tmp_cms["version"] = version
@@ -434,7 +439,7 @@ class Drupal():
 		if version == "7.x":
 			archivos = config['directorios'][0]["7"][0]['files']
 			for archivo in archivos:
-				print(self.url + archivo)
+				#print(self.url + archivo)
 				respuesta = self.util.get_peticion(self.url + archivo)
 				code = str(respuesta.status_code)[0]
 				if code != '4' and code != '3':
@@ -443,6 +448,20 @@ class Drupal():
 		if version:
 			return version
 		return ""
+
+	def get_version_wappalyzer(self):
+		version = None
+		wappalyzer = Wappalyzer.latest()
+		webpage = WebPage.new_from_url(self.url,verify=False)
+		tmp = wappalyzer.analyze_with_versions_and_categories(webpage)
+		for llave,valor in tmp.items():
+			if "drupal" in  llave.lower():
+				for llave2,valor2 in valor.items():
+					if llave2 == "versions":
+						if len(valor2):
+							version = valor2[0]
+		return version
+
 
 	def calcula_codigos(self,url,archivos):
 		peticiones = 0
@@ -608,6 +627,7 @@ class Obtencion_informacion():
 
 	def __init__(self):
 		self.sitio = sys.argv[1]
+		self.url_without_file()
 		self.tmp_diccionario = {}
 		self.json_informacion = {}
 		self.paginas = []
@@ -622,6 +642,7 @@ class Obtencion_informacion():
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path[:parsed.path.rfind("/")+1]
 		else:
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path
+		print(self.sitio)
 
 	def carga_configuracion(self):
 		f = open("./config/config_general.json","r")
@@ -652,7 +673,11 @@ class Obtencion_informacion():
 		self.headers = []
 		comando = "python3 shcheck.py -d -j " + self.sitio
 		args = shlex.split(comando)
-		tmp_headers_json = json.loads(subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout)
+		try:
+			tmp_headers_json = json.loads(subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout)
+		except:
+			self.tmp_diccionario["headers"] = []
+			return self.tmp_diccionario
 		try:
 			tmp_headers = tmp_headers_json[self.sitio]
 		except:
@@ -706,18 +731,18 @@ class Obtencion_informacion():
 					if tet_2.startswith(url):
 						if not(tet_2 in self.paginas):
 							self.paginas.append(tet_2)
-						elif not(tet_2.startswith("http")) and not(tet_2.startswith("https")):
-							link_2 = self.valida_link(tet_2,url)
-							contador = 0
-							esta = 0
-							for page in self.paginas:
-								contador += 1 
-								if (contador >= len(self.paginas)) and not(esta > 0):
-									self.paginas.append(link_2)
-									contador = 0
-									esta = 0
-								elif tet_2 in page:
-									esta += 1
+					elif not(tet_2.startswith("http")) and not(tet_2.startswith("https")):
+						link_2 = self.valida_link(tet_2,url)
+						contador = 0
+						esta = 0
+						for page in self.paginas:
+							contador += 1 
+							if (contador >= len(self.paginas)) and not(esta > 0):
+								self.paginas.append(link_2)
+								contador = 0
+								esta = 0
+							elif tet_2 in page:
+								esta += 1
 		return self.paginas
 
 	def valida_link(self,linea,url):
@@ -757,19 +782,6 @@ class Obtencion_informacion():
 			self.tmp_diccionario["paginas"] = self.paginas
 		return self.tmp_diccionario
 
-
-	# def get_directorios(self):
-	# 	lista_directorios = []
-	# 	comando = "dirb " + self.sitio
-	# 	args = shlex.split(comando)
-	# 	directorios = subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout
-	# 	tmp_url = ""
-	# 	for linea in directorios.split("\n"):
-	# 		if "DIRECTORY" in linea:
-	# 			tmp_url = linea.split()[-1]
-	# 			lista_directorios.append(tmp_url)
-	# 	self.tmp_diccionario["directorios"] = lista_directorios
-	# 	return self.tmp_diccionario
 
 	def get_lenguajes(self):
 		lenguajes = []
@@ -829,8 +841,11 @@ class Obtencion_informacion():
 							except:
 								tmp_libreria["version"] = []
 					librerias.append(tmp_libreria)
-		tmp_total = self.tmp_diccionario["librerias"] + librerias
-		self.tmp_diccionario["librerias"] = tmp_total
+		try:
+			tmp_total = self.tmp_diccionario["librerias"] + librerias
+			self.tmp_diccionario["librerias"] = tmp_total
+		except:
+			self.tmp_diccionario["librerias"] = librerias
 		return self.tmp_diccionario
 
 	def get_peticion_w(self):
@@ -865,35 +880,21 @@ class Obtencion_informacion():
 				break
 		if deteccion_cms:
 			if deteccion_cms == 'drupal':
-				r_objeto = Drupal(self.sitio)
 				r_objeto.inicio_drupal(deteccion_cms,self.tmp_diccionario)
 			elif deteccion_cms == 'joomla':
-				r_objeto = Joomla(self.sitio)
 				r_objeto.inicio_joomla(deteccion_cms,self.tmp_diccionario)
 			elif deteccion_cms == 'moodle':
-				r_objeto = Moodle(self.sitio)
 				r_objeto.inicio_moodle(deteccion_cms,self.tmp_diccionario)
 			elif deteccion_cms == 'wordpress':
-				r_objeto = Wordpress(self.sitio)
 				r_objeto.inicio_wordpress(deteccion_cms,self.tmp_diccionario)
+		else:
+			self.tmp_diccionario["cms"] = {}
+			self.tmp_diccionario["plugins"] = []
+			self.tmp_diccionario["archivos"] = []
+			self.tmp_diccionario["vulnerabilidades"] = []
 		self.get_librerias()
 		self.json_informacion[self.sitio] = self.tmp_diccionario
 		print(self.json_informacion)
-		#print(self.json_informacion)
-		#except KeyError as e:
-		#	print("No esta soportado para la version")
-		#except:
-		#	print("No se encontro el cms")
-
-
-	# def listFD(self):
-	# 	page = self.get_peticion().text
-	# 	soup = BeautifulSoup(page, 'html.parser')
-	# 	return [self.sitio + '/' + node.get('href') for node in soup.find_all('a') if node.get('href')]
-
-	# def list_directory(self):
-	# 	for file in self.listFD():
-	# 		print(file)
 
 def main():
 	Obtencion_informacion()
