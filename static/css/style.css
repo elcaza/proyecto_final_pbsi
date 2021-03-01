@@ -352,7 +352,7 @@ input:checked + .modulos__slider:before {
 }
 
 .modulos__config {
-    padding: 10px;
+    padding: 20px 10px;
     box-sizing: border-box;
 }
 
@@ -360,7 +360,6 @@ input:checked + .modulos__slider:before {
     display: inline-block;
     width: 20%;
     vertical-align: top;
-    padding: 30px 0 0 0;
     box-sizing: border-box;
 }
 
