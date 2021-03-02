@@ -1,5 +1,5 @@
 {
-	"sitio":"http://seguridad.unam.mx",
+	"sitio":"https://seguridad.unam.mx/",
 	"dnsdumpster" : {
 		"revision":true,
 		"dns" : true,
@@ -23,5 +23,15 @@
 			"inicio" : 20,
 			"final" : 100
 		}
-	}
+	},
+	"dorks_google":[
+		"intitle:index.of",
+		"filetype:xml | filetype:conf | filetype:cnf | filetype:reg | filetype:inf | filetype:rdp | filetype:cfg | filetype:txt | filetype:ora | filetype:ini | filetype:log",
+		"filetype:sql | filetype:dbf | filetype:mdb",
+		"inurl:login | inurl:signin | intitle:Login | intitle:signin | inurl:auth",
+		"filetype:login intitle:phpinfo \"published by the PHP Group\"",
+		"inurl:shell | inurl:backdoor | inurl:wso | inurl:cmd | shadow | passwd | boot.ini",
+		"inurl:readme | inurl:license | inurl:install | inurl:setup | inurl:config",
+		"\"robots.txt\" \"disallow:\" filetype:txt"
+	]
 }
