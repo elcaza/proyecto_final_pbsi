@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	let scan__start = document.querySelector(".scan__start");
 	let button_exploits__options__software = document.querySelector(".exploits__options__software");
 	let button_exploits__options__cms = document.querySelector(".exploits__options__cms");
+	let button_add__exploits = document.querySelector(".exploits__add");
 	
 
 	// Event listeners
@@ -48,9 +49,14 @@ document.addEventListener("DOMContentLoaded", function() {
 		alert("iniciando scan");
 	});
 
+	button_add__exploits.addEventListener("click", function(){
+		body.classList.toggle("add__exploit");
+	});
+
 	// Loading info
 	set_maxdate();
-	json_modulos = send_info("load_modules");
+	// Función async
+	json_modulos = prepara_envio("load_modules");
 });
 
 /**
@@ -58,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function() {
  */
 
 // Función para enviar los datos en un json
-const server_url = "https://webhook.site/c6b104c7-9414-4821-8c63-5435b75f277b";
+const server_url = "https://webhook.site/7ad7e3f3-ed67-454e-8147-c853bed2fd63";
 
 
 /**
@@ -69,10 +75,10 @@ function set_maxdate() {
 	document.querySelector("#next_scan").min = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
 }
 
-async function send_info(action) {
+async function prepara_envio(action) {
 	switch (action) {
 		case "load_modules":
-			let modulos = send_json2(server_url+"/hola", {"lala":"love"});
+			let modulos = send_json_fetch(server_url+"/hola", {"lala":"love"});
 			break;
 		
 		case "load_modules2":
@@ -86,11 +92,9 @@ async function send_info(action) {
 async function dummy_response(action) {
 	switch (action) {
 		case "load_modules":
-			alert(1)
 			break;
 		
 		case "load_modules2":
-			alert(2)
 			break;
 	
 		default:
@@ -98,10 +102,51 @@ async function dummy_response(action) {
 	}
 }
 
-function send_json2(){
-	fetch('https://jsonplaceholder.typicode.com/todos/1')
+/**
+ * Función que se encarga de hacer las peticiones
+ */
+function send_json_fetch(url, json){
+	/*
+	fetch(url)
 		.then(response => response.json())
 		.then(json => load_modules(json));
+
+	*/	
+
+	const data_to_send = JSON.stringify(json);
+	
+	let dataReceived = ""; 
+	fetch(url, {
+		// credentials: "same-origin",
+		// mode: "same-origin",
+		method: "post",
+		headers: { "Content-Type": "application/json" },
+		body: data_to_send
+	})
+		.then(resp => {
+			if (resp.status === 200) {
+				return resp.json()
+			} else {
+				console.log("Status: " + resp.status)
+				return Promise.reject("server")
+			}
+		})
+		.then(dataJson => {
+			console.log("evaluando");
+			try {
+				dataReceived = JSON.parse(dataJson);
+			} catch (error) {
+				console.log(error);
+			}
+		})
+		.catch(err => {
+			console.log("fallando");
+			if (err === "server") return
+			console.log(err)
+		})
+		
+		console.log(`Received: ${dataReceived}`);
+		load_modules({});	
 }
 
 function load_modules(json){
@@ -120,7 +165,7 @@ function load_modules(json){
 				{
 					"opcion_nombre":"Cookie",
 					"descripcion":"Seleccione una cookie. (Opcional)",
-					"type":"number"
+					"type":"text"
 				},
 				{
 					"opcion_nombre":"Profundidad",
@@ -130,60 +175,7 @@ function load_modules(json){
 					"type":"number"
 				}
 			]
-		}/*,
-		{
-			"nombre":"Modulo 2",
-			"opciones":[
-				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum",
-					"type":"boolean"
-				}				
-
-			]
-		},
-		{
-			"nombre":"Modulo 3",
-			"opciones":[
-				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-					"type":"number"
-				},
-				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-					"type":"boolean"
-				},
-				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-					"type":"number"
-				}	
-
-			]
-		},
-		{
-			"nombre":"Modulo 4",
-			"opciones":[
-				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-					"type":"number"
-				},
-				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-					"type":"boolean"
-				},
-				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-					"type":"number"
-				}	
-
-			]
-		}*/
+		}
 	];
 
 	json.forEach(element => {
@@ -262,6 +254,9 @@ function load_modules(json){
 			if (type === "number"){
 				modulos__opcion__valor.innerHTML = "<input type='number'></input>";
 
+			}else if (type === "number"){
+				modulos__opcion__valor.innerHTML = "<input type='text'></input>";
+
 			}else if (type === "boolean"){
 				modulos__opcion__valor.innerHTML = '<label class="modulos__switch">\
 				<input type="checkbox" class="modulos__checkbox">\
@@ -275,30 +270,6 @@ function load_modules(json){
 			modulos__config.appendChild(modulos__opcion__descripcion);
 			modulos__config.appendChild(modulos__opcion__valor);
 		});
-
-		// let modulos__config = document.createElement('div');
-		// modulos__config.classList.add("modulos__config");
-
-		// let modulos__opcion__nombre = document.createElement('div');
-		// modulos__opcion__nombre.classList.add("modulos__opcion__nombre");
-		// modulos__opcion__nombre.innerHTML = "1111";
-
-		// let modulos__opcion__descripcion = document.createElement('div');
-		// modulos__opcion__descripcion.classList.add("modulos__opcion__descripcion");
-		// modulos__opcion__descripcion.innerHTML = "2222";
-
-		// let modulos__opcion__valor = document.createElement('div');
-		// modulos__opcion__valor.classList.add("modulos__opcion__valor");
-		// modulos__opcion__valor.innerHTML = "3333";
-
-		
-
-		// modulos__modulo.appendChild(modulos__config);
-		// modulos__config.appendChild(modulos__opcion__nombre);
-		// modulos__config.appendChild(modulos__opcion__nombre);
-		// modulos__config.appendChild(modulos__opcion__descripcion);
-		// modulos__config.appendChild(modulos__opcion__valor);
-
 	});
 
 

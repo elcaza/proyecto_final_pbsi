@@ -112,6 +112,11 @@ body.in_cms .option__cms {
     display: none;
 }
 
+
+body.add__exploit .exploits__modulo {
+    display: block;
+}
+
 /**
 ===========================================
 Sections Paddigs
@@ -272,6 +277,16 @@ button:hover {
     padding: 5px;
 }
 
+.modulos input,
+.exploits input,
+.exploits textarea {
+    margin: 10px auto;
+    width: 90%;
+    border-radius: 3px;
+    font-size: 1em;
+    box-sizing: border-box;
+    padding: 5px;
+}
 .scan__start {
 
 }
@@ -409,6 +424,7 @@ input:checked + .modulos__slider:before {
 }
 
 .exploits__modulo {
+    display: none;
     box-sizing: border-box;
     border: 1px solid;
     margin: 10px 0 10px 0;
