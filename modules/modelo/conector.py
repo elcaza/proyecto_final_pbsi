@@ -1,6 +1,9 @@
+from bson.py3compat import reraise
 from pymongo import MongoClient, errors
 from modules import strings
 from os import path
+import base64
+import json
 
 class Conector():
     def __init__(self):        
@@ -27,7 +30,7 @@ class Conector():
         except errors.DuplicateKeyError:
             print("Ya existe un exploit con el mismo nombre")
 
-    def exploit_consulta_nombres(self):
+    def exploit_volcado(self):
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
                 nombres_iterados = {"exploits":[]}
@@ -42,13 +45,24 @@ class Conector():
             with sesion.start_transaction():
                 coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
                 registro = coleccion_exploits.find_one({"exploit":json_nombre["exploit"]},{"_id":0})
+                ruta_total = registro["ruta"] + "/" + registro["exploit"]
+                with open(ruta_total,"rb") as archivo:
+                    contenido = base64.encodebytes(archivo.read())
+                registro["contenido"] = contenido
+                registro.pop("ruta")
                 return registro
 
-    def exploit_actualizar_datos(self,json_cargar_datos):
+    def exploit_actualizar_registro(self,json_cargar_datos):
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
                 coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
-                coleccion_exploits.update({"exploit",json_cargar_datos["exploit"]},json_cargar_datos)
+                coleccion_exploits.update({"exploit":json_cargar_datos["exploit"]},json_cargar_datos)
+
+    def exploit_eliminar_registro(self,json_cargar_datos):
+        with self.conexion.start_session() as sesion:
+            with sesion.start_transaction():
+                coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
+                coleccion_exploits.delete_one({"exploit":json_cargar_datos["exploit"]})
 
     def exploit_buscar_existencia(self, ruta):
         if not path.exists(ruta):
@@ -77,9 +91,11 @@ class Conector():
                                                     "software_nombre":{"$regex":json_software["software_nombre"],"$options":"i"},
                                                     "software_version":{"$regex":".*","$options":"i"}})
                 for software in softwares:
-                    lenguaje = self.definir_lenguaje(software["exploit"])
-                    if lenguaje == "error":
-                        lenguaje = "error"
+                    lenguaje = software["extension"]
+                    if lenguaje == "sh":
+                        lenguaje = ""
+                    else:
+                        lenguaje += " "
                     ruta = software["ruta"] + "/" + software["exploit"]
                     if not path.exists(ruta):
                         ruta = "error"
@@ -111,8 +127,11 @@ class Conector():
                                                     "cms_extension_version":{"$regex":".*"}})
                 for cms in cmss:
                     lenguaje = self.definir_lenguaje(cms["exploit"])
-                    if lenguaje == "error":
-                        lenguaje = "error"
+                    lenguaje = cms["extension"]
+                    if lenguaje == "sh":
+                        lenguaje = ""
+                    else:
+                        lenguaje += " "
                     ruta = cms["ruta"] + "/" + cms["exploit"]
                     if not path.exists(ruta):
                         ruta = "error"
@@ -127,9 +146,11 @@ class Conector():
                 cves = coleccion_exploits.find({"cve":{"$regex":cve,"$options":"i"}})
                 
                 for cve_exploit in cves:
-                    lenguaje = self.definir_lenguaje(cve_exploit["exploit"])
-                    if lenguaje == "error":
-                        lenguaje = "error"
+                    lenguaje = software["extension"]
+                    if lenguaje == "sh":
+                        lenguaje = ""
+                    else:
+                        lenguaje += " "
                     ruta = cve_exploit["ruta"] + "/" + cve_exploit["exploit"]
                     if not path.exists(ruta):
                         ruta = "error"
@@ -156,17 +177,6 @@ class Conector():
         return False
 
 ########################################################## MONITOREO DE CONEXION ##########################################################
-
-    def definir_lenguaje(self, exploit):
-        extension = exploit.split(".")[1]
-        if extension == "py":
-            return "python3 "
-        elif extension == "sh":
-            return ""
-        elif extension == "rb":
-            return "ruby "
-        else:
-            return "error"
 
     def exploit_eliminar_base_total(self):
         with self.conexion.start_session() as sesion:
@@ -205,6 +215,7 @@ class Conector():
         analisis = []
         for resultado in resultados:
             analisis.append("Sitio: {0}, Fecha: {1}".format(resultado["sitio"],resultado["fecha"]))
+            #analisis.append({"sitio": resultado["sitio"], "fecha":resultado["fecha"]})
         return analisis
 
     def obtener_analisis(self, peticion):

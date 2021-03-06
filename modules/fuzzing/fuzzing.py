@@ -506,6 +506,7 @@ def pre_enviar_peticiones(forms, diccionario, tipo, json_fuzzing, cookie=[]):
                payload_xss = urllib.parse.unquote(valor)
                if json_fuzzing["forms"][form][i]["xss"] == False:
                   json_fuzzing["forms"][form][i]["xss"] = validarPreXSS(peticion, payload_xss)
+            # Index out
             if json_fuzzing["forms"][form][i]["sqli"] == False:
                json_fuzzing["forms"][form][i]["sqli"] = validarPreSQLi(peticion)
             if json_fuzzing["forms"][form][i]["lfi"] == False:

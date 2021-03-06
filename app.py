@@ -1,6 +1,8 @@
 # Importaciones
 ## Flask
 from weakref import ProxyTypes
+
+from flask_cors.core import serialize_option
 from modules.strings import COLECCION_ANALISIS
 import re
 from flask import Flask, render_template, request
@@ -17,7 +19,7 @@ from time import sleep
 ## Modulos
 from modules.obtencion_informacion import obtener_informacion
 from modules.alertas import alertas
-from modules.analisis import analisis
+from modules.analisis import analisis2 as analisis
 from modules.exploits import exploits as exp
 from modules.explotacion import explotacion
 from modules.fuzzing import fuzzing
@@ -44,7 +46,7 @@ app.config['SECRET_KEY'] = 'ojalaSePudieraLlorar_grasa'
 def iniciar_analisis(peticion):
     con = Conector()
 
-    if peticion["ejecucion"] != "":
+    if peticion["fecha"] != "":
         programacion.execute(peticion)
         return "Análisis programado"
     else:
@@ -62,24 +64,21 @@ def iniciar_analisis(peticion):
         }
 
         peticion_alerta = {
-            "subject":"Alerta generada automáticamente",
-            "sitios":[],
+            "subject":"Análisis del sitio \"{0}\" finalizado".format(peticion_proceso["sitio"]),
+            "paginas":[],
             "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
         }
 
         numero_grafica = 0
 
         print("Iniciando Información")
-        # respuesta_obtener_informacion = obtener_informacion.execute(peticion)
-        # peticion_proceso["informacion"] = respuesta_obtener_informacion
-        # numero_grafica = reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica)
+        numero_grafica = execute_informacion(peticion, peticion_proceso, peticion_reporte, numero_grafica)
 
         print("Iniciando Análisis")
         execute_analisis(peticion_proceso, peticion_reporte)
-        ############################################################# FUZZING #############################################################
 
         print("Iniciando Fuzzing")
-        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"http://localhost/drupal7/INSTALL.pgsql.txt","forms":{}}]
+        peticion_proceso["analisis"]["paginas"] = [{"pagina":"http://localhost/drupal7/","forms":{}}]
         numero_grafica = execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
 
         print("Iniciando Explotacion")
@@ -102,28 +101,20 @@ def guardar_exploit(peticion):
     con.exploit_insertar_datos(exploit)
     return "True"
 
-def consulta_buscar_general():
+def consulta_peticion_volcado():
     con = Conector()
     consulta = {}
-    ultimo_analisis = con.obtener_analisis_totales()
+    analisis_totales = con.obtener_analisis_totales()
     ultima_fecha = con.obtener_ultima_fecha()
     analisis = con.obtener_analisis_generales()
 
-    consulta["ultimo_analisis"] = ultimo_analisis
+    consulta["analisis_totales"] = analisis_totales
     consulta["ultima_fecha"] = ultima_fecha
     consulta["analisis"] = analisis
     respueta_json = json.dumps(consulta)
     return respueta_json
 
-def consulta_buscar_analisis(peticion):
-    con = Conector()
-    analisis = con.obtener_analisis(peticion)
-    if analisis == None:
-        return "No hay coincidencias"
-    respueta_json = json.dumps(analisis)
-    return respueta_json
-
-def consulta_reporte(peticion):
+def consulta_peticion_reporte(peticion):
     con = Conector()
     analisis = con.obtener_analisis(peticion)
     numero_grafica = 0
@@ -132,13 +123,47 @@ def consulta_reporte(peticion):
         "fecha":analisis["fecha"],
         "analisis":[],
     }
-    numero_grafica = reporte_informacion(analisis, peticion_reporte, numero_grafica)
-    numero_grafica = reportes_fuzzing(analisis, peticion_reporte, numero_grafica)
+
+    #reporte_informacion(analisis, peticion_reporte)
+    reporte_analisis(analisis, peticion_reporte)
+    numero_grafica = reporte_fuzzing(analisis, peticion_reporte, numero_grafica)
     numero_grafica = reporte_explotacion(analisis, peticion_reporte, numero_grafica)
-    return "Consulta de reporte creado"
+    #execute_reporte(peticion_reporte)
+
+    return "Reporte creado"
+
+def exploits_peticion_volcado():
+    con = Conector()
+    volcado = con.exploit_volcado()
+    if len(volcado["exploits"]) == 0:
+        return "Sin exploits registrados"
+    return volcado
+
+def exploits_peticion_individual(peticion_json):
+    con = Conector()
+    registro = con.exploit_consulta_registro(peticion_json)
+    if registro == None:
+        return "Sin datos del registro"
+    return registro
+
+def exploits_peticion_modificar(peticion):
+    con = Conector()
+    exploit = exp.execute(peticion)
+    con.exploit_actualizar_registro(exploit)
+    return "Exploit modificado"
+
+def exploits_peticion_eliminar(peticion_json):
+    con = Conector()
+    con.exploit_eliminar_registro(peticion_json)
+    return "Exploit eliminado"
 """
     Modulos
 """
+def execute_informacion(peticion, peticion_proceso, peticion_reporte, numero_grafica):
+    respuesta_obtener_informacion = obtener_informacion.execute(peticion)
+    peticion_proceso["informacion"] = respuesta_obtener_informacion
+    numero_grafica = reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica)
+    return numero_grafica
 
 def execute_analisis(peticion_proceso, peticion_reporte):
     respuesta_analisis = analisis.execute(peticion_proceso["sitio"])
@@ -149,7 +174,7 @@ def execute_analisis(peticion_proceso, peticion_reporte):
 def execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica):
     fuzzing_enviar_pagina(peticion_proceso)
     alertas_fuzzing(peticion_proceso, peticion_alerta)
-    numero_grafica = reportes_fuzzing(peticion_proceso, peticion_reporte, numero_grafica)
+    numero_grafica = reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica)
     return numero_grafica
 
 # Puede que truene en explotacion_enviar_exploit
@@ -200,28 +225,92 @@ def enviar_alertas(peticion_alerta):
 def alertas_fuzzing(peticion_proceso, peticion_alerta):
     for posicion_pagina in range(len(peticion_proceso["analisis"]["paginas"])):
         fuzzing_alertas = fuzzing_obtener_alertas(peticion_proceso["analisis"]["paginas"][posicion_pagina])
-        peticion_alerta["sitios"].append(fuzzing_alertas)        
+        if len(fuzzing_alertas) != 0:
+            peticion_alerta["paginas"].append(fuzzing_alertas)    
+        else:
+            peticion_alerta["paginas"].append({"pagina":"","motivo":"Fuzzing","estado":"Sin posibles vulnerabilidades"})
 
 # No truena
 def alertas_explotacion(peticion_proceso, peticion_alerta):
     explotacion_alertas = explotacion_obtener_alertas(peticion_proceso)
-    peticion_alerta["sitios"].append(explotacion_alertas)
+    if len(explotacion_alertas) != 0:
+        peticion_alerta["paginas"].append(explotacion_alertas)
+    else:
+        peticion_alerta["paginas"].append({"pagina":"","motivo":"Explotación","estado":"Sin posibles vulnerabilidades"})
 """
     Reportes
 """
 def reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica):
-    datos_host = {}
-    datos_host["host"] = peticion_proceso["informacion"]["Dnsdumpster"]["host"][0]["dominio"]
-    if datos_host["host"] == "":
-        datos_host["host"] = peticion_proceso["sitio"]
-    datos_host["ip"] = peticion_proceso["informacion"]["Dnsdumpster"]["host"][0]["ip"]
-    datos_host["dns_inverso"] = peticion_proceso["informacion"]["Dnsdumpster"]["host"][0]["dns_inverso"]
-    datos_host["pais"] = peticion_proceso["informacion"]["Dnsdumpster"]["host"][0]["pais"]
-    datos_host["cabecera"] = peticion_proceso["informacion"]["Dnsdumpster"]["host"][0]["cabecera"]
-    informacion_estadisticas = informacion_obtener_estadisticas(peticion_proceso)
-
-    numero_grafica = reportes_informacion_crear(informacion_estadisticas, peticion_reporte, datos_host, numero_grafica)
+    informacion = {}
+    informacion["datos"] = informacion_obtener_datos(peticion_proceso)
+    informacion["dns_dumpster"] = informacion_obtener_dnsdumpster(peticion_proceso["informacion"]["dnsdumpster"])
+    informacion["robtex"] = informacion_obtener_robtex(peticion_proceso["informacion"]["robtex"])
+    informacion["puertos_generales"] = informacion_obtener_puertos_generales(peticion_proceso["informacion"]["puertos"])
+    informacion["puertos_individuales"] = informacion_obtener_puertos_individuales(peticion_proceso["informacion"]["puertos"])
+    numero_grafica = reporte_informacion_crear(informacion, peticion_reporte, numero_grafica)
     return numero_grafica
+
+def informacion_obtener_datos(peticion_proceso):
+    sitio = peticion_proceso["sitio"]
+    ip = peticion_proceso["informacion"]["robtex"]["informacion"]["ip"]
+    pais = peticion_proceso["informacion"]["robtex"]["informacion"]["pais"]
+    pais_secundario = peticion_proceso["informacion"]["dnsdumpster"]["host"][0]["pais"]
+    servidor = peticion_proceso["informacion"]["dnsdumpster"]["host"][0]["cabecera"]
+    
+    if pais == "NA" and pais_secundario != "":
+        pais = pais_secundario
+    if servidor == "":
+        servidor = "NA"
+    
+    return [["Sitio",sitio],["IP",ip],["Pais",pais],["Servidor",servidor]]
+
+def informacion_obtener_dnsdumpster(datos):
+    dnsdumpster = []
+    for dato in datos:
+        for tipo in datos[dato]:
+            dominio = tipo["dominio"]
+            ip = tipo["ip"]
+            dns_inverso = tipo["dns_inverso"]
+            pais = tipo["pais"]
+            cabecera = tipo["cabecera"]
+            if dato == "host" and dominio != "" and ip != "" and dns_inverso != "" and pais != "":
+                dnsdumpster.append([ dato.capitalize(), dominio, ip, dns_inverso, pais ])
+    if len(dnsdumpster) == 0:
+        dnsdumpster.append(["NA","NA","NA","NA","NA"])
+    return dnsdumpster
+
+def informacion_obtener_robtex(datos):
+    robtex = []
+    for dato in datos:
+        if dato == "informacion":
+            continue
+        for tipo in datos[dato]:
+            dominio = tipo["dominio"]
+            dns = tipo["dns"]
+            robtex.append([ dato.capitalize(), dominio, dns ])
+    if len(robtex) == 0:
+        robtex.append(["NA","NA","NA"])
+    return robtex
+
+def informacion_obtener_puertos_generales(datos):
+    puertos_generales = []
+    puertos_generales.append("Puertos")
+    puertos_generales.append(len(datos["abiertos"]))
+    puertos_generales.append(len(datos["cerrados"]))
+    puertos_generales.append(len(datos["filtrados"]))
+    return puertos_generales
+
+def informacion_obtener_puertos_individuales(datos):
+    puertos_individuales = []
+    for dato in datos:
+        for valor in datos[dato]:
+            puerto = valor["puerto"]
+            protocolo = valor["protocolo"]
+            servicio = valor["servicio"]
+            puertos_individuales.append([ dato.capitalize(), puerto, protocolo, servicio ])
+    if len(puertos_individuales) == 0:
+        puertos_individuales.append(["NA","NA","NA","NA"])
+    return puertos_individuales
 
 def reporte_analisis(peticion_proceso, peticion_reporte):
     analisis = {}
@@ -239,6 +328,31 @@ def reporte_analisis(peticion_proceso, peticion_reporte):
     analisis["paginas"] = analisis_obtener_paginas(peticion_proceso["analisis"]["paginas"]) # Total
 
     reportes_analisis_crear(analisis, peticion_reporte)
+
+def reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica):
+    fuzzing_estadistica_general = []
+    fuzzing_estadistica_individual = []
+    paginas = len(peticion_proceso["analisis"]["paginas"])
+    for posicion_pagina in range(paginas):
+        fuzzing_estadistica_individual.append(estaditisticas_fuzzing(peticion_proceso["analisis"]["paginas"][posicion_pagina]))
+    for individual in fuzzing_estadistica_individual:
+        xss =+ individual[1]
+        sqli =+ individual[2]
+        lfi =+ individual[3]
+
+    fuzzing_estadistica_general.append(peticion_proceso["sitio"])
+    fuzzing_estadistica_general.append(xss)
+    fuzzing_estadistica_general.append(sqli)
+    fuzzing_estadistica_general.append(lfi)
+    numero_grafica = reporte_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte, numero_grafica)
+        
+    return numero_grafica
+
+# No truena
+def reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica):
+    explotacion_estadisticas = estadisticas_explotacion(peticion_proceso)
+    numero_grafica = reportes_explotacion_crear(explotacion_estadisticas, peticion_reporte, numero_grafica)
+    return numero_grafica
 
 #########
 def analisis_obtener_servidor(datos, tipo):
@@ -278,57 +392,22 @@ def analisis_obtener_paginas(datos): return [[len(datos)]]
 ########
 
 # Puede que truene en peticion_proceso[analisis][paginas]
-def reportes_fuzzing(peticion_proceso, peticion_reporte, numero_grafica):
-    fuzzing_estadistica_general = []
-    fuzzing_estadistica_individual = []
-    paginas = len(peticion_proceso["analisis"]["paginas"])
-    for posicion_pagina in range(paginas):
-        fuzzing_estadistica_individual.append(estaditisticas_fuzzing(peticion_proceso["analisis"]["paginas"][posicion_pagina]))
-    
-    for individual in fuzzing_estadistica_individual:
-        xss =+ individual[1]
-        sqli =+ individual[2]
-        lfi =+ individual[3]
-
-    fuzzing_estadistica_general.append(peticion_proceso["sitio"])
-    fuzzing_estadistica_general.append(xss)
-    fuzzing_estadistica_general.append(sqli)
-    fuzzing_estadistica_general.append(lfi)
-    numero_grafica = reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte, numero_grafica)
-        
-    return numero_grafica
-
-# No truena
-def reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica):
-    explotacion_estadisticas = estadisticas_explotacion(peticion_proceso)
-    numero_grafica = reportes_explotacion_crear(explotacion_estadisticas, peticion_reporte, numero_grafica)
-    return numero_grafica
 
 """
     Generar reportes
 """
 # Informacion
-def informacion_datos_individuales_dns(informacion_estadisticas, reporte):
-    registros_etiqueta = ["MX","TXT","DNS"]
-    mx = informacion_estadisticas["mx"]
-    txt = informacion_estadisticas["txt"]
-    dns = informacion_estadisticas["dns"]
-    registros = [mx,txt,dns]
-    informacio_diagrama = go.Figure(data=[go.Pie(labels=registros_etiqueta, values=registros)])
-    informacio_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
-    return registros, registros_etiqueta
-
-def informacion_datos_individuales_puertos(informacion_estadisticas, reporte):
-    puertos_estado = ["Abiertos","Filtrados"]
-    filtrados = informacion_estadisticas["filtrados"]
-    abiertos = informacion_estadisticas["abiertos"]
-    puertos = [abiertos,filtrados]
+def reporte_informacion_crear_general_puertos_grafica(informacion, reporte):
+    abiertos = informacion[1]
+    cerrados = informacion[2]
+    filtrados = informacion[3]
+    puertos_estado = ["Abiertos","Cerrados","Filtrados"]
+    puertos = [abiertos,cerrados,filtrados]
     informacio_diagrama = go.Figure(data=[go.Pie(labels=puertos_estado, values=puertos)])
     informacio_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
-    return puertos, puertos_estado
 
 # Fuzzing
-def reportes_fuzzing_crear_general_grafica(fuzzing_estadisticas,reporte):
+def reporte_fuzzing_crear_general_grafica(fuzzing_estadisticas,reporte):
     xss = fuzzing_estadisticas[0][1]
     sqli = fuzzing_estadisticas[0][2]
     lfi = fuzzing_estadisticas[0][3]
@@ -362,61 +441,80 @@ def reportes_explotacion_crear_general_grafica(explotacion_estadisticas,reporte)
     Crear reportes
 """
 # Informacion
-def reportes_informacion_crear_individual_dns(registros, registros_etiqueta, reporte, sitio):
-    analisis = {
-                "categoria":"Informacion",
-                "titulo":"DNS",
-                "grafica":reporte,
-                "cabecera":["Sitio","Motivo"],
-                "datos":[
-                    [sitio,"Registros MX: {0}".format(registros[0])],
-                    [sitio,"Registros TXT: {0}".format(registros[1])],
-                    [sitio,"Registros DNS: {0}".format(registros[2])]],
-    }
+def reporte_informacion_crear_subgeneral(informacion):
+    analisis = []
+    datos = {}
+    datos["puertos_individuales"] = informacion["puertos_individuales"]
+    datos["dns_dumpster"] = informacion["dns_dumpster"]
+    datos["robtex"] = informacion["robtex"]
+
+    for dato in datos:
+        if dato == "puertos_individuales":
+            analisis_individual = {
+                        "categoria":"Analisis",
+                        "titulo":"Puerto individuales",
+                        "grafica":"",
+                        "cabecera":["Tipo","Puerto","Protocolo","Servicio"],
+                        "datos":datos[dato]
+            }
+        elif dato == "dns_dumpster":
+            analisis_individual = {
+                        "categoria":"",
+                        "titulo":"DNS Dumpster",
+                        "grafica":"",
+                        "cabecera":["Tipo","Dominio","IP", "DNS Inverso", "País"],
+                        "datos":datos[dato]
+            }
+        elif dato == "robtex":
+            analisis_individual = {
+                        "categoria":"",
+                        "titulo":"Robtex",
+                        "grafica":"",
+                        "cabecera":["Tipo","Dominio","IP"],
+                        "datos":datos[dato]
+            }
+        analisis.append(analisis_individual)
+
+
     return analisis
 
-def reportes_informacion_crear_individual_puertos(puertos, puertos_estado, reporte, sitio):
+
+def reporte_informacion_crear_general_puertos(informacion, reporte):
     analisis = {
                 "categoria":"Informacion",
                 "titulo":"Puertos",
                 "grafica":reporte,
-                "cabecera":["Sitio","Motivo","Estado"],
-                "datos":[
-                    [sitio,"Puertos abiertos: {0}".format(puertos[0]),puertos_estado[0]],
-                    [sitio,"Puertos filtrados: {0}".format(puertos[1]),puertos_estado[1]]],
+                "cabecera":["Tipo","Abiertos","Cerrados","Filtrados"],
+                "datos":[informacion],
     }
     return analisis
 
-def reportes_informacion_crear_general(datos_host):
+def reporte_informacion_crear_general(datos_host):
     analisis = {
                 "categoria":"Informacion",
                 "titulo":"Resultados generales",
                 "grafica":"",
                 "cabecera":["Nombre","Descripción"],
-                "datos":[
-                    ["Host",datos_host["host"]],
-                    ["IP",datos_host["ip"]],
-                    ["DNS Inverso",datos_host["dns_inverso"]],
-                    ["País",datos_host["pais"]],
-                    ["Servidor",datos_host["cabecera"]]],
+                "datos":datos_host,
     }
     return analisis
 
-def reportes_informacion_crear(informacion_estadisticas, peticion_reporte, datos_host, numero_grafica):
-    reporte = root+"/modules/reportes/ifram_grafica_info"
-    
-    analisis = reportes_informacion_crear_general(datos_host)
+def reporte_informacion_crear(informacion, peticion_reporte, numero_grafica):
+    reporte = root + "/modules/reportes/ifram_grafica_info"
+    reporte_grafica = reporte + "{0}.html".format(numero_grafica)
+
+    analisis = reporte_informacion_crear_general(informacion["datos"])
     peticion_reporte["analisis"].append(analisis)
 
-    puertos, puertos_estado = informacion_datos_individuales_puertos(informacion_estadisticas,reporte+"{0}.html".format(numero_grafica))
-    analisis = reportes_informacion_crear_individual_puertos(puertos, puertos_estado,reporte+"{0}.html".format(numero_grafica),peticion_reporte["sitio"])
+    reporte_informacion_crear_general_puertos_grafica(informacion["puertos_generales"],reporte_grafica)
+    analisis = reporte_informacion_crear_general_puertos(informacion["puertos_generales"],reporte_grafica)
     peticion_reporte["analisis"].append(analisis)
     numero_grafica += 1
     
-    puertos, puertos_estado = informacion_datos_individuales_dns(informacion_estadisticas,reporte+"{0}.html".format(numero_grafica))
-    analisis = reportes_informacion_crear_individual_dns(puertos, puertos_estado,reporte+"{0}.html".format(numero_grafica),peticion_reporte["sitio"])
-    peticion_reporte["analisis"].append(analisis)
-    numero_grafica += 1
+    analisis = reporte_informacion_crear_subgeneral(informacion)
+    for valor in analisis:
+        peticion_reporte["analisis"].append(valor)
+    
     return numero_grafica
 
 # Analisis
@@ -472,7 +570,7 @@ def reportes_analisis_crear(datos_analisis, peticion_reporte):
         peticion_reporte["analisis"].append(valor)
 
 # Fuzzing
-def reportes_fuzzing_crear_general(fuzzing_estadistica_general, reporte):
+def reporte_fuzzing_crear_general(fuzzing_estadistica_general, reporte):
     analisis = {
                 "categoria":"Fuzzing",
                 "titulo":"Resultados generales",
@@ -482,7 +580,7 @@ def reportes_fuzzing_crear_general(fuzzing_estadistica_general, reporte):
     }
     return analisis
 
-def reportes_fuzzing_crear_individual(fuzzing_estadistica_individual):
+def reporte_fuzzing_crear_individual(fuzzing_estadistica_individual):
     analisis = {
                 "categoria":"",
                 "titulo":"Resultados individuales",
@@ -492,16 +590,16 @@ def reportes_fuzzing_crear_individual(fuzzing_estadistica_individual):
     }
     return analisis
 
-def reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte, numero_grafica):
+def reporte_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte, numero_grafica):
     reporte = root + "/modules/reportes/ifram_grafica"
     reporte_grafica = reporte + "{0}.html".format(numero_grafica)
     numero_grafica += 1
 
-    reportes_fuzzing_crear_general_grafica(fuzzing_estadistica_general, reporte_grafica )
-    analisis = reportes_fuzzing_crear_general(fuzzing_estadistica_general, reporte_grafica )
+    reporte_fuzzing_crear_general_grafica(fuzzing_estadistica_general, reporte_grafica )
+    analisis = reporte_fuzzing_crear_general(fuzzing_estadistica_general, reporte_grafica )
     peticion_reporte["analisis"].append(analisis)
     
-    analisis = reportes_fuzzing_crear_individual(fuzzing_estadistica_individual)
+    analisis = reporte_fuzzing_crear_individual(fuzzing_estadistica_individual)
     peticion_reporte["analisis"].append(analisis)
 
     return numero_grafica
@@ -566,7 +664,7 @@ def obtener_datos_consulta_exploits(peticion_proceso):
         datos_explotacion = {"sitio":peticion_proceso["sitio"],"puertos":["80"]}
 
     if "informacion" in peticion_proceso:
-        for puerto in peticion_proceso["informacion"]["Puertos"]["abiertos"]:
+        for puerto in peticion_proceso["informacion"]["puertos"]["abiertos"]:
             if puerto != "80" or puerto != "443":
                 datos_explotacion["puertos"].append(puerto["puerto"])
 
@@ -669,16 +767,6 @@ def obtener_informacion_explotacion(con, sitio):
     Obtener estadísticas
         
 """
-def informacion_obtener_estadisticas(informacion):
-    datos = {}
-    datos["txt"] = len(informacion["informacion"]["Dnsdumpster"]["txt"])
-    datos["dns"] = len(informacion["informacion"]["Dnsdumpster"]["dns"])
-    datos["mx"] = len(informacion["informacion"]["Dnsdumpster"]["mx"])
-
-    datos["filtrados"] = len(informacion["informacion"]["Puertos"]["filtrados"])
-    datos["abiertos"] = len(informacion["informacion"]["Puertos"]["abiertos"])
-
-    return datos
 
 def estaditisticas_fuzzing(forms):
     forms_estadisticas = ["",0,0,0]
@@ -703,37 +791,48 @@ def fuzzing_obtener_alertas(forms):
     forms_alertas["pagina"] = forms["pagina"]
     motivo = ""
     for form in forms["forms"]:
+        vulnerable = 0
         xss = 0
         sqli = 0
         lfi = 0
         for pagina in forms["forms"][form]:
             if pagina["xss"] == True:
                 xss += 1
+                vulnerable = 1
             if pagina["sqli"] == True:
                 sqli += 1
+                vulnerable = 1
             if pagina["lfi"] == True:
                 lfi += 1
-        motivo += '''
-        Form: {0}
-        {1} XSS Detectados
-        {2} SQLi Detectados
-        {3} LFI Detectados
-        '''.format(form, xss, sqli, lfi)
-    forms_alertas["motivo"] = motivo
-    forms_alertas["estado"] = "Posiblemente vulnerable"
-    return forms_alertas
+                vulnerable = 1
+        if vulnerable == 1:
+            motivo += '''
+            Form: {0}
+            {1} XSS Vulnerables
+            {2} SQLi Posiblemente Vulnerables
+            {3} LFI Vulnerables
+            '''.format(form, xss, sqli, lfi)
+        vulnerable = 0
+    if motivo != "":
+        forms_alertas["motivo"] = motivo
+        forms_alertas["estado"] = "Posiblemente vulnerable"
+        return forms_alertas
+    return {}
 
 def explotacion_obtener_alertas(explotaciones):
     explotacion_alertas = {}
-    explotacion_alertas["sitio"] = explotaciones["sitio"]
+    explotacion_alertas["pagina"] = "sitio " + explotaciones["sitio"]
     motivo = ""
     for exploit in explotaciones["explotaciones"]:
         for puerto in explotaciones["explotaciones"][exploit]:
             if explotaciones["explotaciones"][exploit][puerto] == 1:
-                motivo += "Exploit {0} ejecutado con éxito en puerto [{1}]\n".format(exploit,puerto)
-    explotacion_alertas["motivo"] = motivo
-    explotacion_alertas["estado"] = "Vulnerable"
-    return explotacion_alertas
+                motivo += "Exploit {0} ejecutado con Éxito\n".format(exploit)
+                break
+    if motivo != "":
+        explotacion_alertas["motivo"] = motivo
+        explotacion_alertas["estado"] = "Vulnerable"
+        return explotacion_alertas
+    return {}
 
 def estadisticas_explotacion(explotaciones):
     explotacion = []
@@ -751,6 +850,8 @@ def estadisticas_explotacion(explotaciones):
         explotacion.append(explotacion_temporal.copy())
     return explotacion
 
+
+# Ejecutar el programa principal
 @app.route("/ejecucion", methods=["GET","POST"])
 def ejecucion():
     if request.method == "POST":
@@ -761,34 +862,67 @@ def ejecucion():
     if request.method == "GET":
         return "GET no"
 
-@app.route("/consulta-buscar", methods=["GET","POST"])
-def consulta_buscar():
+# 
+@app.route("/consulta-volcado", methods=["GET","POST"])
+def consulta_volcado():
     if request.method == "POST":
-        respuesta = consulta_buscar_general()
+        respuesta = consulta_peticion_volcado()
         return respuesta
 
-@app.route("/consulta-analisis", methods=["GET","POST"])
-def consulta_analisis():
-    if request.method == "POST":
-        peticion_json = request.get_json()
-        #validar_json_consulta(peticion_json)
-        respuesta = consulta_buscar_analisis(peticion_json)
-        return respuesta
-
-@app.route("/reporte", methods=["GET","POST"])
-def reporte():
+@app.route("/consulta-reporte", methods=["GET","POST"])
+def consulta_reporte():
     if request.method == "POST":
         peticion_json = request.get_json()
         #validar_json_consulta(peticion_json)
-        respuesta = consulta_reporte(peticion_json)
+        respuesta = consulta_peticion_reporte(peticion_json)
         return respuesta
 
-@app.route("/exploits", methods=["GET","POST"])
+# Crear exploit
+@app.route("/exploits-crear", methods=["GET","POST"])
 def exploits():
     if request.method == "POST":
         peticion_json = request.get_json()
         #validar_json_exploit(peticion_json)    
         respuesta = guardar_exploit(peticion_json)
+        return respuesta
+    if request.method == "GET":
+        return "GET no"
+
+# Volcado de los nombres de exploits
+@app.route("/exploits-volcado", methods=["GET","POST"])
+def exploits_volcado():
+    if request.method == "POST":
+        respuesta = exploits_peticion_volcado()
+        return respuesta
+    if request.method == "GET":
+        return "GET no"
+
+# Dar exploit individual
+@app.route("/exploits-individual", methods=["GET","POST"])
+def exploits_individual():
+    if request.method == "POST":
+        peticion_json = request.get_json()
+        respuesta = exploits_peticion_individual(peticion_json)
+        return respuesta
+    if request.method == "GET":
+        return "GET no"
+
+# Modificar exploit
+@app.route("/exploits-modificar", methods=["GET","POST"])
+def exploits_modificar():
+    if request.method == "POST":
+        peticion_json = request.get_json()
+        respuesta = exploits_peticion_modificar(peticion_json)
+        return respuesta
+    if request.method == "GET":
+        return "GET no"
+
+# Eliminar exploit
+@app.route("/exploits-eliminar", methods=["GET","POST"])
+def exploits_eliminar():
+    if request.method == "POST":
+        peticion_json = request.get_json()
+        respuesta = exploits_peticion_eliminar(peticion_json)
         return respuesta
     if request.method == "GET":
         return "GET no"

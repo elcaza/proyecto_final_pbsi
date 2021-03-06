@@ -28,7 +28,7 @@ class Correo():
     def set_paginas(self, parametros):
         self.paginas = []
         if "paginas" in parametros:
-            for pagina in parametros["sitios"]:
+            for pagina in parametros["paginas"]:
                 self.paginas.append(pagina)
 
     def set_fecha(self, parametros):
@@ -49,7 +49,10 @@ class Correo():
     def crear_mensaje_pagina(self):
         self.correo_mensaje_texto = self.get_html()+self.get_head()+self.get_body_inicio()
         for pagina in self.paginas:
-            pagina_vulnerable = self.get_body_pagina(pagina["pagina"])
+            if pagina["pagina"] != "":
+                pagina_vulnerable = self.get_body_pagina(pagina["pagina"])
+            else:
+                pagina_vulnerable = ""
             motivo = self.get_body_motivo(pagina["motivo"])
             estado = self.get_body_estado(pagina["estado"])
             salto = self.get_body_salto()
@@ -124,16 +127,20 @@ class Correo():
         return body_fin
 
     def get_body_pagina(self, pagina):
+        titulo = "Pagina"
+        if pagina.startswith("sitio "):
+            titulo = "Sitio"
+            pagina = pagina.replace("sitio ","")
         pagina_vulnerable = """
                             <tr>    
                                 <td style="padding: 0; margin: 0; padding-left: 10px; padding-top: 20px;">
-                                    pagina
-                                </td>
-                                <td style="padding: 0; margin: 0;  padding-left: 10px; padding-top: 20px;">
                                     {0}
                                 </td>
+                                <td style="padding: 0; margin: 0;  padding-left: 10px; padding-top: 20px;">
+                                    {1}
+                                </td>
                             </tr>
-            """.format(pagina)
+            """.format(titulo, pagina)
         return pagina_vulnerable
 
     def get_body_motivo(self, motivo):

@@ -13,11 +13,12 @@ peticion = {
     #"sitio":"https://xss-game.appspot.com/level1",
     #"sitio":"http://localhost/joomla/",
     "sitio":"http://localhost/drupal7/",
+    #"sitio":"http://altoromutual.com:8080/",
     #sistemas.acatlan.unam.mx
-    "ejecucion":"",
+    "fecha":"",
     "puertos" : { 
-		"inicio" : 0,
-		"final" : 500
+		"inicio" : 1,
+		"final" : 1000
     },
     "cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
     "hilos":1,
