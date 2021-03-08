@@ -32,8 +32,38 @@
 		<button type="submit" class="scan__start">Iniciar</button>
 	</section>
 
+	<!-- <section class="modulos">
+		<h1 class="modulos__titulo">Módulos</h1>
+	</section> -->
+
 	<section class="modulos">
 		<h1 class="modulos__titulo">Módulos</h1>
+		<div class="modulos__modulo">
+			<label class="modulos__switch">
+				<input class="modulos__checkbox" type="checkbox">
+				<span class="modulos__slider modulos__round"></span>
+			</label>
+			<span class="modulos__nombre">Configuraciones generales</span>
+			<div class="modulos__config">
+				<div class="modulos__opcion__nombre">Puertos a escanear</div>
+				<div  class="modulos__opcion__descripcion">Selecciona los --top-ports a escanear</div>
+				<div class="modulos__opcion__valor"><input id="modulos_puertos" type="number"></div>
+			</div>
+			<div class="modulos__config">
+				<div class="modulos__opcion__nombre">Cookie</div>
+				<div class="modulos__opcion__descripcion">Seleccione una cookie. (Opcional)</div>
+				<div class="modulos__opcion__valor"><input id="modulos_cookie" type="text" value="PHDSESSID:jnj8mr8fugu61ma86p9o96frv0"></div>
+			</div>
+			<div class="modulos__config">
+				<div class="modulos__opcion__nombre">Profundidad</div>
+				<div class="modulos__opcion__descripcion">Probar exploits que coincidan completamente (1-4).					1) a					2) b
+
+				</div>
+				<div class="modulos__opcion__valor">
+					<input id="profundidad" type="number">
+				</div>
+			</div>
+		</div>
 	</section>
 
 	<section class="exploits">
@@ -123,7 +153,7 @@
 				17
 			</h2>
 		</div>
-
+		<!--
 		<div class="consultas__vulnes">
 			<h1 class="consultas__vulnes__titulo">
 				Vulnerabilidades encontradas
@@ -132,6 +162,7 @@
 				2
 			</h2>
 		</div>
+		-->
 		<div class="consultas__fecha">
 			<h1 class="consultas__fecha__titulo">
 				Último Análisis
@@ -142,9 +173,9 @@
 		</div>
 
 		<div class="consultas__opciones">
-			<button class="consultas__opciones__actuales">
+			<!-- <button class="consultas__opciones__actuales">
 				Actuales
-			</button>
+			</button> -->
 			<select class="modulos__select"></select>
 			<button class="consultas__opciones__proximo">
 				Buscar
@@ -161,23 +192,26 @@
 					<span>www.site.com</span>
 				</div>
 				<div class="consultas__sitio__fecha">
-					Último escaneo: <span>15/03/2021</span>
-				</div>
-				<div class="consultas__sitio__escaneos">
-					Escaneos: <span>12</span>
-				</div>
-				<div class="consultas__sitio__vulnerabilidades">
-					Vulnerabilidades: <span>1</span>
-				</div>
-				<div class="consultas__sitio__proximoScan">
-					Próximo escaneo: <span>12/01/21</span>
+					Fecha: <span>15/03/2021</span>
 				</div>
 				<div class="consultas__sitio__opciones">
 					<button>Ver más</button>
 					<button>Borrar</button>
 				</div>
 			</div>
-
+			<div class="consultas__sitio">
+				<div class="consultas__sitio__url">
+					<span>www.site.com</span>
+				</div>
+				<div class="consultas__sitio__fecha">
+					Fecha: <span>22/03/2021</span>
+				</div>
+				<div class="consultas__sitio__opciones">
+					<button>Ver más</button>
+					<button>Borrar</button>
+				</div>
+			</div>
+			<!--
 			<div class="consultas__sitio">
 				<div class="consultas__sitio__url">
 					<span>www.site.com</span>
@@ -244,6 +278,7 @@
 					<button>Borrar</button>
 				</div>
 			</div>
+			-->
 		</div>
 			
 	</section>
