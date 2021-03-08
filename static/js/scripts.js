@@ -7,7 +7,12 @@ document.addEventListener("DOMContentLoaded", function() {
 	let button_nav__proximosEscaneos = document.querySelector(".nav__proximosEscaneos");
 	let button_scan__options__url = document.querySelector(".scan__options__url");
 	let button_scan__options__file = document.querySelector(".scan__options__file");
-
+	let scan__start = document.querySelector(".scan__start");
+	let button_exploits__options__software = document.querySelector(".exploits__options__software");
+	let button_exploits__options__cms = document.querySelector(".exploits__options__cms");
+	let button_add__exploits = document.querySelector(".exploits__add");
+	let button_consultas__opciones__proximo = document.querySelector(".consultas__opciones__proximo");
+	
 	// Event listeners
 	button_nav__nuevo.addEventListener("click", function(){
 		body.classList.replace("vista_consultas", "vista_nuevo");
@@ -17,6 +22,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	button_nav__consultas.addEventListener("click", function(){
 		body.classList.replace("vista_nuevo", "vista_consultas");
 		body.classList.replace("vista_configuraciones", "vista_consultas");
+		start_consulta();
 	});
 	
 	button_nav__proximosEscaneos.addEventListener("click", function(){
@@ -32,9 +38,156 @@ document.addEventListener("DOMContentLoaded", function() {
 		body.classList.replace("url", "file");
 	});
 
+	button_exploits__options__software.addEventListener("click", function(){
+		body.classList.replace("in_cms", "in_software");
+	});
+
+	button_exploits__options__cms.addEventListener("click", function(){
+		body.classList.replace("in_software", "in_cms");
+	});
+
+	button_add__exploits.addEventListener("click", function(){
+		body.classList.toggle("add__exploit");
+	});
+
 	// Loading info
 	set_maxdate();
-	json_modulos = send_info("load_modules");
+	// Función async
+	json_modulos = prepara_envio("load_modules");
+
+	/**
+	 * Peticiones al backend
+	 */
+
+	// ************************************************************************************************
+	// ************************************************************************************************
+	// ************************************************************************************************
+	// ************************************************************************************************
+
+	// POST - ejecucion
+	scan__start.addEventListener("click", function(){
+		alert("iniciando scan");
+
+		let sitio = document.querySelector(".scan__url").value;
+		let file = document.querySelector(".scan__file").value;
+		// let sitio = document.querySelector(".scan__url").value;
+		// let sitio = document.querySelector(".scan__url").value;
+		// let sitio = document.querySelector(".scan__url").value;
+		/**
+		 * POST - ejecucion
+
+		Envio
+		peticion = {
+			"sitio":"http://localhost/joomla/",
+			"fecha":"",
+			"puertos" : { 
+				"inicio" : 1,
+				"final" : 1000
+			},
+			"cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
+			"profundidad":2
+		}
+		*/
+
+		let peticion = {};
+	});
+
+	// ************************************************************************************************
+	// ************************************************************************************************
+	// ************************************************************************************************
+	// ************************************************************************************************
+	// POST - consulta-volcado
+	// Variable global
+	var json_consultas;
+	function start_consulta() {
+		// @cromos
+		json_consultas = send_json_fetch(server_url+"/consulta-volcado", {});
+		console.log(json_consultas); // verificar si el objeto es el que mandaste
+
+
+		json_consultas = {
+			"analisis_totales": 97,
+			"ultima_fecha": "19/02/2021 00:07:26",
+			"analisis": [
+				{
+					"sitios":"url",
+					"fecha":"fecha"
+				},
+				{
+					"sitios":"url",
+					"fecha":"fecha"
+				}
+			]
+		}
+
+		document.querySelector(".consultas__analizados__numero").textContent = json_consultas.analisis_totales;
+		document.querySelector(".consultas__fecha__fecha").textContent = json_consultas.ultima_fecha;
+		let modulos__select = document.querySelector(".modulos__select");
+		let analisis = json_consultas.analisis;
+
+		analisis.forEach(element => {
+			modulos__select.add(new Option(element.sitios, element.sitios));
+		});
+		
+	}
+
+	// ************************************************************************************************
+	// ************************************************************************************************
+	// ************************************************************************************************
+	// ************************************************************************************************
+	// POST - consulta-reporte
+
+	button_consultas__opciones__proximo.addEventListener("click", function(){
+		let value_select = document.querySelector(".modulos__select").value;
+		let analisis = json_consultas.analisis;
+		analisis.forEach(element => {
+			if (element.sitios === value_select){
+				
+			}
+		});
+		
+		
+		alert("enviando: "+ document.querySelector(".modulos__select").value);
+
+		let peticion = {
+			"sitio": document.querySelector(".modulos__select").value,
+			"fecha":"NA"
+		}
+
+		send_json_fetch(server_url+"/consulta-reporte", peticion);
+	});
+
+	// function aaa(){
+	// 	let json_consultas = send_json_fetch(server_url+"/consulta-volcado", {});
+		
+	// 	json_consultas = {
+	// 		"analisis_totales": 97,
+	// 		"ultima_fecha": "19/02/2021 00:07:26",
+	// 		"analisis": [
+	// 			{
+	// 				"sitios":"url",
+	// 				"fecha":"fecha"
+	// 			},
+	// 			{
+	// 				"sitios":"url",
+	// 				"fecha":"fecha"
+	// 			}
+	// 		]
+	// 	}
+	// }
+
+	// Envio
+	// peticion = {
+	// 	"sitio": "http://localhost/drupal7/",
+	// 	"fecha":"01/03/2021 17:23:57"
+	// }
+
+
+	// ************************************************************************************************
+	// ************************************************************************************************
+	// ************************************************************************************************
+	// ************************************************************************************************
+
 });
 
 /**
@@ -42,7 +195,7 @@ document.addEventListener("DOMContentLoaded", function() {
  */
 
 // Función para enviar los datos en un json
-const server_url = "https://webhook.site/c6b104c7-9414-4821-8c63-5435b75f277b";
+const server_url = "http://localhost:3000";
 
 
 /**
@@ -53,10 +206,10 @@ function set_maxdate() {
 	document.querySelector("#next_scan").min = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
 }
 
-async function send_info(action) {
+async function prepara_envio(action) {
 	switch (action) {
 		case "load_modules":
-			let modulos = send_json2(server_url+"/hola", {"lala":"love"});
+			let modulos = send_json_fetch(server_url+"/hola", {"lala":"love"});
 			break;
 		
 		case "load_modules2":
@@ -70,11 +223,9 @@ async function send_info(action) {
 async function dummy_response(action) {
 	switch (action) {
 		case "load_modules":
-			alert(1)
 			break;
 		
 		case "load_modules2":
-			alert(2)
 			break;
 	
 		default:
@@ -82,10 +233,52 @@ async function dummy_response(action) {
 	}
 }
 
-function send_json2(){
-	fetch('https://jsonplaceholder.typicode.com/todos/1')
+/**
+ * Función que se encarga de hacer las peticiones
+ */
+function send_json_fetch(url, json){
+	/*
+	fetch(url)
 		.then(response => response.json())
 		.then(json => load_modules(json));
+
+	*/	
+
+	const data_to_send = JSON.stringify(json);
+	
+	let dataReceived = ""; 
+	fetch(url, {
+		// credentials: "same-origin",
+		// mode: "same-origin",
+		method: "post",
+		headers: { "Content-Type": "application/json" },
+		body: data_to_send
+	})
+		.then(resp => {
+			if (resp.status === 200) {
+				return resp.json()
+			} else {
+				console.log("Status: " + resp.status)
+				return Promise.reject("server")
+			}
+		})
+		.then(dataJson => {
+			console.log("evaluando");
+			try {
+				console.log(dataJson)
+				dataReceived = JSON.parse(dataJson);
+			} catch (error) {
+				console.log(error);
+			}
+		})
+		.catch(err => {
+			console.log("fallando");
+			if (err === "server") return
+			console.log(err)
+		})
+		
+		console.log(`Received: ${dataReceived}`);
+		load_modules({});	
 }
 
 function load_modules(json){
@@ -94,51 +287,25 @@ function load_modules(json){
 
 	json = [
 		{
-			"nombre":"Modulo 1",
+			"nombre":"Configuraciones generales",
 			"opciones":[
 				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+					"opcion_nombre":"Puertos a escanear",
+					"descripcion":"Selecciona los --top-ports a escanear",
 					"type":"number"
 				},
 				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-					"type":"boolean"
-				}	
-
-			]
-		},
-		{
-			"nombre":"Modulo 2",
-			"opciones":[
-				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum",
-					"type":"boolean"
-				}				
-
-			]
-		},
-		{
-			"nombre":"Modulo 3",
-			"opciones":[
-				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-					"type":"number"
+					"opcion_nombre":"Cookie",
+					"descripcion":"Seleccione una cookie. (Opcional)",
+					"type":"text"
 				},
 				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-					"type":"boolean"
-				},
-				{
-					"opcion_nombre":"Nombre de opción",
-					"descripcion":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+					"opcion_nombre":"Profundidad",
+					"descripcion":"Probar exploits que coincidan completamente (1-4).\
+					1) a\
+					2) b",
 					"type":"number"
-				}	
-
+				}
 			]
 		}
 	];
@@ -219,11 +386,14 @@ function load_modules(json){
 			if (type === "number"){
 				modulos__opcion__valor.innerHTML = "<input type='number'></input>";
 
+			}else if (type === "text"){
+				modulos__opcion__valor.innerHTML = "<input type='text'></input>";
+
 			}else if (type === "boolean"){
 				modulos__opcion__valor.innerHTML = '<label class="modulos__switch">\
 				<input type="checkbox" class="modulos__checkbox">\
 				<span class="modulos__slider modulos__round"></span>\
-			</label>';
+				</label>';
 			}
 
 			modulos__modulo.appendChild(modulos__config);
@@ -232,30 +402,6 @@ function load_modules(json){
 			modulos__config.appendChild(modulos__opcion__descripcion);
 			modulos__config.appendChild(modulos__opcion__valor);
 		});
-
-		// let modulos__config = document.createElement('div');
-		// modulos__config.classList.add("modulos__config");
-
-		// let modulos__opcion__nombre = document.createElement('div');
-		// modulos__opcion__nombre.classList.add("modulos__opcion__nombre");
-		// modulos__opcion__nombre.innerHTML = "1111";
-
-		// let modulos__opcion__descripcion = document.createElement('div');
-		// modulos__opcion__descripcion.classList.add("modulos__opcion__descripcion");
-		// modulos__opcion__descripcion.innerHTML = "2222";
-
-		// let modulos__opcion__valor = document.createElement('div');
-		// modulos__opcion__valor.classList.add("modulos__opcion__valor");
-		// modulos__opcion__valor.innerHTML = "3333";
-
-		
-
-		// modulos__modulo.appendChild(modulos__config);
-		// modulos__config.appendChild(modulos__opcion__nombre);
-		// modulos__config.appendChild(modulos__opcion__nombre);
-		// modulos__config.appendChild(modulos__opcion__descripcion);
-		// modulos__config.appendChild(modulos__opcion__valor);
-
 	});
 
 

@@ -19,10 +19,10 @@ def ejecutar_tres():
 
     peticion = {
         "sitio": "http://localhost/drupal7/",
-        "fecha":"01/03/2021 17:23:57"
+        "fecha":"07/03/2021 20:14:24"
     }
     r = requests.post("http://127.0.0.1:3000/consulta-reporte",data=json.dumps(peticion), headers=headers)
     print(r.text)
 
-ejecutar_uno()
-#ejecutar_tres()
+#ejecutar_uno()
+ejecutar_tres()

@@ -50,6 +50,16 @@ class Conector():
                     contenido = base64.encodebytes(archivo.read())
                 registro["contenido"] = contenido
                 registro.pop("ruta")
+                if "software_nombre" in registro:
+                    registro["software"] = {"software_nombre":registro["software_nombre"], "software_version":registro["software_version"]}
+                    registro.pop("software_nombre")
+                    registro.pop("software_version")
+                elif "cms_nombre" in registro:
+                    registro["cms"] = {"cms_nombre":registro["cms_nombre"], "cms_categoria":registro["cms_categoria"],"cms_extension_nombre":registro["cms_extension_nombre"], "cms_extension_version":registro["cms_extension_version"]}
+                    registro.pop("cms_nombre")
+                    registro.pop("cms_categoria")
+                    registro.pop("cms_extension_nombre")
+                    registro.pop("cms_extension_version")
                 return registro
 
     def exploit_actualizar_registro(self,json_cargar_datos):
@@ -81,15 +91,17 @@ class Conector():
                 if profundidad == 1:
                     softwares = coleccion_exploits.find({
                                                         "software_nombre":{"$regex":json_software["software_nombre"],"$options":"i"},
-                                                        "software_version":json_software["software_version"]})
+                                                        "software_version":json_software["software_version"]
+                                                        })
                 elif profundidad == 2:
                     softwares = coleccion_exploits.find({
                                                     "software_nombre":{"$regex":json_software["software_nombre"],"$options":"i"},
-                                                    "software_version":{"$regex":json_software["software_version"]+".*","$options":"i"}})
+                                                    "software_version":{"lte":json_software["software_version"]}
+                                                    })
                 else: 
                     softwares = coleccion_exploits.find({
-                                                    "software_nombre":{"$regex":json_software["software_nombre"],"$options":"i"},
-                                                    "software_version":{"$regex":".*","$options":"i"}})
+                                                    "software_nombre":{"$regex":json_software["software_nombre"],"$options":"i"}
+                                                    })
                 for software in softwares:
                     lenguaje = software["extension"]
                     if lenguaje == "sh":
@@ -112,19 +124,21 @@ class Conector():
                                                         "cms_nombre":{"$regex":json_cms["cms_nombre"],"$options":"i"},
                                                         "cms_categoria":{"$regex":json_cms["cms_categoria"],"$options":"i"},
                                                         "cms_extension_nombre":{"$regex":json_cms["cms_extension_nombre"],"$options":"i"},
-                                                        "cms_extension_version":{"$regex":json_cms["cms_extension_version"],"$options":"i"}})
+                                                        "cms_extension_version":json_cms["cms_extension_version"] 
+                                                    })
                 elif profundidad == 2:
                     cmss = coleccion_exploits.find({
                                                     "cms_nombre":{"$regex":json_cms["cms_nombre"],"$options":"i"},
                                                     "cms_categoria":{"$regex":json_cms["cms_categoria"],"$options":"i"},
                                                     "cms_extension_nombre":{"$regex":json_cms["cms_extension_nombre"],"$options":"i"},
-                                                    "cms_extension_version":{"$regex":".*"}})
+                                                    "cms_extension_version":{"lte":json_cms["cms_extension_version"]}
+                                                    })
                 else:
                     cmss = coleccion_exploits.find({
                                                     "cms_nombre":{"$regex":json_cms["cms_nombre"],"$options":"i"},
                                                     "cms_categoria":{"$regex":json_cms["cms_categoria"],"$options":"i"},
                                                     "cms_extension_nombre":{"$regex":".*"},
-                                                    "cms_extension_version":{"$regex":".*"}})
+                                                    })
                 for cms in cmss:
                     lenguaje = self.definir_lenguaje(cms["exploit"])
                     lenguaje = cms["extension"]
@@ -146,7 +160,7 @@ class Conector():
                 cves = coleccion_exploits.find({"cve":{"$regex":cve,"$options":"i"}})
                 
                 for cve_exploit in cves:
-                    lenguaje = software["extension"]
+                    lenguaje = cves["extension"]
                     if lenguaje == "sh":
                         lenguaje = ""
                     else:
@@ -214,8 +228,7 @@ class Conector():
         resultados = coleccion_analisis.find({},{"sitio":1,"fecha":1,"_id":0})
         analisis = []
         for resultado in resultados:
-            analisis.append("Sitio: {0}, Fecha: {1}".format(resultado["sitio"],resultado["fecha"]))
-            #analisis.append({"sitio": resultado["sitio"], "fecha":resultado["fecha"]})
+            analisis.append({"sitio": resultado["sitio"], "fecha":resultado["fecha"]})
         return analisis
 
     def obtener_analisis(self, peticion):
