@@ -97,9 +97,14 @@ document.addEventListener("DOMContentLoaded", function() {
 	// ************************************************************************************************
 	// ************************************************************************************************
 	// POST - consulta-volcado
-
+	// Variable global
+	var json_consultas;
 	function start_consulta() {
-		let json_consultas = send_json_fetch(server_url+"/consulta-volcado", {});
+		// @cromos
+		json_consultas = send_json_fetch(server_url+"/consulta-volcado", {});
+		console.log(json_consultas); // verificar si el objeto es el que mandaste
+
+
 		json_consultas = {
 			"analisis_totales": 97,
 			"ultima_fecha": "19/02/2021 00:07:26",
@@ -133,6 +138,14 @@ document.addEventListener("DOMContentLoaded", function() {
 	// POST - consulta-reporte
 
 	button_consultas__opciones__proximo.addEventListener("click", function(){
+		let value_select = document.querySelector(".modulos__select").value;
+		let analisis = json_consultas.analisis;
+		analisis.forEach(element => {
+			if (element.sitios === value_select){
+				
+			}
+		});
+		
 		
 		alert("enviando: "+ document.querySelector(".modulos__select").value);
 
@@ -144,24 +157,24 @@ document.addEventListener("DOMContentLoaded", function() {
 		send_json_fetch(server_url+"/consulta-reporte", peticion);
 	});
 
-	function aaa(){
-		let json_consultas = send_json_fetch(server_url+"/consulta-volcado", {});
+	// function aaa(){
+	// 	let json_consultas = send_json_fetch(server_url+"/consulta-volcado", {});
 		
-		json_consultas = {
-			"analisis_totales": 97,
-			"ultima_fecha": "19/02/2021 00:07:26",
-			"analisis": [
-				{
-					"sitios":"url",
-					"fecha":"fecha"
-				},
-				{
-					"sitios":"url",
-					"fecha":"fecha"
-				}
-			]
-		}
-	}
+	// 	json_consultas = {
+	// 		"analisis_totales": 97,
+	// 		"ultima_fecha": "19/02/2021 00:07:26",
+	// 		"analisis": [
+	// 			{
+	// 				"sitios":"url",
+	// 				"fecha":"fecha"
+	// 			},
+	// 			{
+	// 				"sitios":"url",
+	// 				"fecha":"fecha"
+	// 			}
+	// 		]
+	// 	}
+	// }
 
 	// Envio
 	// peticion = {
