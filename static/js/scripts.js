@@ -1,3 +1,6 @@
+// Variable global
+let json_consultas;
+
 // Main actions
 document.addEventListener("DOMContentLoaded", function() {
 	// Buttons
@@ -70,26 +73,20 @@ document.addEventListener("DOMContentLoaded", function() {
 
 		let sitio = document.querySelector(".scan__url").value;
 		let file = document.querySelector(".scan__file").value;
-		// let sitio = document.querySelector(".scan__url").value;
-		// let sitio = document.querySelector(".scan__url").value;
-		// let sitio = document.querySelector(".scan__url").value;
-		/**
-		 * POST - ejecucion
+		let fecha = document.querySelector("#next_scan").value
+		let puertos = document.querySelector("#modulos_puertos").value;
+		let cookie = document.querySelector("#modulos_cookie").value;
+		let profundidad = document.querySelector("#profundidad").value;
 
-		Envio
-		peticion = {
-			"sitio":"http://localhost/joomla/",
-			"fecha":"",
-			"puertos" : { 
-				"inicio" : 1,
-				"final" : 1000
-			},
-			"cookie":"PHDSESSID:jnj8mr8fugu61ma86p9o96frv0",
-			"profundidad":2
+		let peticion = {
+			"sitio":sitio,
+			"fecha":fecha,
+			"puertos":puertos,
+			"cookie":cookie,
+			"profundidad":profundidad
 		}
-		*/
 
-		let peticion = {};
+		send_json_fetch(server_url+"/ejecucion", peticion);
 	});
 
 	// ************************************************************************************************
@@ -98,37 +95,71 @@ document.addEventListener("DOMContentLoaded", function() {
 	// ************************************************************************************************
 	// POST - consulta-volcado
 	// Variable global
-	var json_consultas;
+	json_consultas;
 	function start_consulta() {
 		// @cromos
 		json_consultas = send_json_fetch(server_url+"/consulta-volcado", {});
 		console.log(json_consultas); // verificar si el objeto es el que mandaste
 
+		let array_sites = [];
+
 
 		json_consultas = {
 			"analisis_totales": 97,
-			"ultima_fecha": "19/02/2021 00:07:26",
+			"ultima_fecha": "19/02/2021",
 			"analisis": [
 				{
-					"sitios":"url",
+					"sitios":"sitio1.com",
+					"fecha":"01/02/21"
+				},
+				{
+					"sitios":"url.com",
 					"fecha":"fecha"
 				},
 				{
-					"sitios":"url",
-					"fecha":"fecha"
+					"sitios":"sitio1.com",
+					"fecha":"01/02/21"
+				},
+				{
+					"sitios":"sitio1.com",
+					"fecha":"01/02/21"
+				},
+				{
+					"sitios":"sitio1.com",
+					"fecha":"01/02/21"
+				},
+				{
+					"sitios":"sitio1.com",
+					"fecha":"01/02/21"
+				},
+				{
+					"sitios":"url.com",
+					"fecha":"01/02/21"
+				},
+				{
+					"sitios":"aaa.com",
+					"fecha":"01/02/21"
 				}
 			]
 		}
 
 		document.querySelector(".consultas__analizados__numero").textContent = json_consultas.analisis_totales;
 		document.querySelector(".consultas__fecha__fecha").textContent = json_consultas.ultima_fecha;
+		
 		let modulos__select = document.querySelector(".modulos__select");
 		let analisis = json_consultas.analisis;
 
 		analisis.forEach(element => {
-			modulos__select.add(new Option(element.sitios, element.sitios));
+			array_sites.push(element.sitios);
 		});
-		
+
+		array_sites = [...new Set(array_sites)];
+
+		modulos__select.innerHTML = "";
+
+		array_sites.forEach(element => {
+			modulos__select.add(new Option(element, element));
+		});
 	}
 
 	// ************************************************************************************************
@@ -139,22 +170,24 @@ document.addEventListener("DOMContentLoaded", function() {
 
 	button_consultas__opciones__proximo.addEventListener("click", function(){
 		let value_select = document.querySelector(".modulos__select").value;
-		let analisis = json_consultas.analisis;
-		analisis.forEach(element => {
-			if (element.sitios === value_select){
-				
-			}
-		});
+		// let analisis = json_consultas.analisis;
+		// analisis.forEach(element => {
+		// 	if (element.sitios === value_select){
+
+		// 	}
+		// });
 		
 		
-		alert("enviando: "+ document.querySelector(".modulos__select").value);
+		// alert("enviando: "+ document.querySelector(".modulos__select").value);
 
-		let peticion = {
-			"sitio": document.querySelector(".modulos__select").value,
-			"fecha":"NA"
-		}
+		// let peticion = {
+		// 	"sitio": document.querySelector(".modulos__select").value,
+		// 	"fecha":"NA"
+		// }
 
-		send_json_fetch(server_url+"/consulta-reporte", peticion);
+		// send_json_fetch(server_url+"/consulta-reporte", peticion);
+
+		load_sites(value_select);
 	});
 
 	// function aaa(){
@@ -195,7 +228,7 @@ document.addEventListener("DOMContentLoaded", function() {
  */
 
 // Función para enviar los datos en un json
-const server_url = "http://localhost:3000";
+const server_url = "https://webhook.site/7ad7e3f3-ed67-454e-8147-c853bed2fd63";
 
 
 /**
@@ -265,7 +298,6 @@ function send_json_fetch(url, json){
 		.then(dataJson => {
 			console.log("evaluando");
 			try {
-				console.log(dataJson)
 				dataReceived = JSON.parse(dataJson);
 			} catch (error) {
 				console.log(error);
@@ -278,11 +310,10 @@ function send_json_fetch(url, json){
 		})
 		
 		console.log(`Received: ${dataReceived}`);
-		load_modules({});	
+		// load_modules({});	
 }
 
 function load_modules(json){
-	console.log(json);
 	let target_modulos = document.querySelector(".modulos");
 
 	json = [
@@ -406,6 +437,82 @@ function load_modules(json){
 
 
 	console.log(json);
+}
+
+function load_sites(value_select){
+	let target_modulos = document.querySelector(".consultas__contenidor__sitio");
+
+	analisis = json_consultas.analisis;
+	console.log(typeof(analisis));
+	console.log(analisis);
+
+	document.querySelector(".consultas__contenidor__sitio").innerHTML = "";
+
+	analisis.forEach(element => {
+		console.log(element)
+		let fecha = element.fecha;
+		let sitios = element.sitios;
+
+		if (value_select === sitios) {
+				/*
+			<div class="consultas__sitio">
+				<div class="consultas__sitio__url">
+					<span>www.site.com</span>
+				</div>
+				<div class="consultas__sitio__fecha">
+					Fecha: <span>22/03/2021</span>
+				</div>
+				<div class="consultas__sitio__opciones">
+					<button>Ver más</button>
+					<button>Borrar</button>
+				</div>
+			</div>
+			*/
+
+			// Creación de elmentos
+			let consultas__sitio = document.createElement('div');
+			consultas__sitio.classList.add("consultas__sitio");
+
+			let consultas__sitio__url = document.createElement('div');
+			consultas__sitio__url.classList.add("consultas__sitio__url");
+
+			let span_site = document.createElement('span');
+			span_site.classList.add("span_site");
+			span_site.textContent = sitios;
+
+			let consultas__sitio__fecha = document.createElement('div');
+			consultas__sitio__fecha.classList.add("consultas__sitio__fecha");
+
+			let span_fecha = document.createElement('span');
+			span_fecha.classList.add("span_fecha");
+			span_fecha.textContent = fecha;
+
+			let consultas__sitio__opciones = document.createElement('div');
+			consultas__sitio__opciones.classList.add("consultas__sitio__opciones");
+
+			let button_ver_mas = document.createElement('button');
+			button_ver_mas.classList.add("button_ver_mas");
+			button_ver_mas.innerText = "Ver más";
+
+			let button_borrar = document.createElement('button');
+			button_borrar.classList.add("button_borrar");
+			button_borrar.innerText = "Borrar";
+
+			// Carga de elementos
+			consultas__sitio.appendChild(consultas__sitio__url);
+			consultas__sitio__url.appendChild(span_site);
+
+			consultas__sitio.appendChild(consultas__sitio__fecha);
+			consultas__sitio__fecha.appendChild(span_fecha);
+			
+			consultas__sitio.appendChild(consultas__sitio__opciones);
+			consultas__sitio__opciones.appendChild(button_ver_mas);
+			consultas__sitio__opciones.appendChild(button_borrar);
+
+			// Pintar el elmento terminado
+			target_modulos.appendChild(consultas__sitio);
+		}
+	});
 }
 
 async function send_json(url, json) {
