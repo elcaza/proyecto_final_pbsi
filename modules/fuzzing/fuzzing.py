@@ -514,7 +514,7 @@ def pre_enviar_peticiones(forms, diccionario, tipo, json_fuzzing, cookie=[]):
             i += 1
  
 def validarPreXSS(peticion, payload):
-   existe = re.search(re.compile(re.escape(payload)), peticion.content.decode())
+   existe = re.search(re.compile(re.escape(payload)), peticion.content.decode("ISO-8859-1"))
 
    if existe is not None:
       return True
@@ -523,7 +523,7 @@ def validarPreXSS(peticion, payload):
 def validarPreSQLi(peticion):
    diccionario = Singleton_Diccionarios_validacion()
    for cadena in diccionario.get_validar_sqli():
-      existe = re.search(re.compile(re.escape(cadena)), peticion.content.decode())
+      existe = re.search(re.compile(re.escape(cadena)), peticion.content.decode("ISO-8859-1"))
       if existe is not None:
          return True
    del diccionario
@@ -532,7 +532,7 @@ def validarPreSQLi(peticion):
 def validarPreLFI(peticion):
    diccionario = Singleton_Diccionarios_validacion()
    for cadena in diccionario.get_validar_lfi():
-      existe = re.search(re.compile(re.escape(cadena)), peticion.content.decode())
+      existe = re.search(re.compile(re.escape(cadena)), peticion.content.decode("ISO-8859-1"))
       if existe is not None:
          return True
    del diccionario

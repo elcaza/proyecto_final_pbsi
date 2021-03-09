@@ -8,13 +8,13 @@ from urllib.robotparser import RobotFileParser
 from fake_useragent import UserAgent
 import pathlib
 from bs4 import BeautifulSoup as bs
-from urllib.request import urlopen, URLError
+from urllib.request import urlopen
 import re
-import sys
 from os import path
 from jsmin import jsmin
 from xml.etree.ElementTree import fromstring, ElementTree
 from Wappalyzer import Wappalyzer, WebPage
+import ssl
 
 class Utilerias():
 	def __init__(self):
@@ -171,7 +171,7 @@ class Wordpress():
 					if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):
 						archivos_expuestos.append(archivo)
 					else:
-						respuesta = requests.post(path.join(self.sitio,archivo),headers=self.util.get_fake_user_agent())
+						respuesta = requests.post(path.join(self.sitio,archivo),headers=self.util.get_fake_user_agent(),verify=False)
 						if len(respuesta.history) > 0:
 							status_code_redirect = respuesta.history[0].status_code
 						if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):

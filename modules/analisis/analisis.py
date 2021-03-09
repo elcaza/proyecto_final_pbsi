@@ -192,12 +192,12 @@ class Wordpress():
 			else:
 				respuesta = self.util.get_peticion(path.join(self.sitio,"readme.html"))
 				if(match != None):
-					version = expresion_regular("[0-9][0-9|.]*",match)
+					version = self.expresion_regular("[0-9][0-9|.]*",match)
 				else:
-					dominio = obtener_dominio(self.sitio)
-					for enlace in sel.obtener_enlaces(self.sitio,dominio):
+					dominio = self.obtener_dominio(self.sitio)
+					for enlace in self.obtener_enlaces(self.sitio,dominio):
 						if self.expresion_regular("\.[png|jpg].*",enlace) == None:
-							version = busqueda_tag_meta(enlace)
+							version = self.busqueda_tag_meta(enlace)
 							if (version != "Desconocida"):
 								break
 		return version
@@ -262,7 +262,6 @@ class Wordpress():
 				lista_vulnerabilidades.append(element.get("cve"))
 				#lista_vulnerabilidades.append(element.get("description"))
 		return lista_vulnerabilidades
-
 
 class Moodle():
 	def __init__(self,sitio):
@@ -402,7 +401,6 @@ class Moodle():
 				#lista_vulnerabilidades.append(element.get("description"))
 		return lista_vulnerabilidades
 
-
 class Drupal():
 	def __init__(self,sitio):
 		self.url = sitio
@@ -411,9 +409,15 @@ class Drupal():
 	def inicio_drupal(self,deteccion_cms,tmp_diccionario):
 		tmp_cms = {}
 		config = self.carga_configuracion()
-		version = self.detect_version(config)
-		ver = version.strip().split('.')[0]
+		version = self.get_version_wappalyzer()
+		if version == None:
+			version = self.detect_version(config)
+		try:
+			ver = version.strip().split('.')[0]
+		except:
+			ver = version
 		modulos = config['directorios'][0][ver][0]['modules']
+		#print(modulos)
 		archivos = config['directorios'][0]['expuestos']
 		tmp_cms["nombre"] = "drupal"
 		tmp_cms["version"] = version
@@ -433,7 +437,7 @@ class Drupal():
 		if version == "7.x":
 			archivos = config['directorios'][0]["7"][0]['files']
 			for archivo in archivos:
-				print(self.url + archivo)
+				#print(self.url + archivo)
 				respuesta = self.util.get_peticion(self.url + archivo)
 				code = str(respuesta.status_code)[0]
 				if code != '4' and code != '3':
@@ -442,6 +446,20 @@ class Drupal():
 		if version:
 			return version
 		return ""
+
+	def get_version_wappalyzer(self):
+		version = None
+		wappalyzer = Wappalyzer.latest()
+		webpage = WebPage.new_from_url(self.url,verify=False)
+		tmp = wappalyzer.analyze_with_versions_and_categories(webpage)
+		for llave,valor in tmp.items():
+			if "drupal" in  llave.lower():
+				for llave2,valor2 in valor.items():
+					if llave2 == "versions":
+						if len(valor2):
+							version = valor2[0]
+		return version
+
 
 	def calcula_codigos(self,url,archivos):
 		peticiones = 0
@@ -602,11 +620,11 @@ class Joomla():
 				#lista_vulnerabilidades.append(element.get("description"))
 			return lista_vulnerabilidades
 
-
 class Obtencion_informacion():
 
-	def __init__(self):
-		self.sitio = sys.argv[1]
+	def __init__(self, sitio):
+		self.sitio = sitio
+		self.url_without_file()
 		self.tmp_diccionario = {}
 		self.json_informacion = {}
 		self.paginas = []
@@ -621,14 +639,18 @@ class Obtencion_informacion():
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path[:parsed.path.rfind("/")+1]
 		else:
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path
+		print(self.sitio)
 
 	def carga_configuracion(self):
-		f = open("./config/config_general.json","r")
+		ruta = path.abspath(path.dirname(__file__))
+		ruta += "/config/config_general.json"
+		f = open(ruta,"r")
 		datos = json.load(f)
+		f.close()
 		self.leguajes_configuracion = datos["lenguajes"]
 		self.frameworks_configuracion = datos["frameworks"]
 		self.librerias_configuracion = datos["librerias"]
-
+		
 	def get_version_server(self):
 		f = Utilerias()
 		tmp_dic = {}
@@ -649,9 +671,14 @@ class Obtencion_informacion():
 	def get_headers(self):
 		json_headers = {}
 		self.headers = []
-		comando = "python3 shcheck.py -d -j " + self.sitio
+		ruta = path.abspath(path.dirname(__file__)) + "/shcheck.py"
+		comando = "python3 " + ruta + " -d -j " + self.sitio
 		args = shlex.split(comando)
-		tmp_headers_json = json.loads(subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout)
+		try:
+			tmp_headers_json = json.loads(subprocess.run(args, stdout=subprocess.PIPE, text=True).stdout)
+		except:
+			self.tmp_diccionario["headers"] = []
+			return self.tmp_diccionario
 		try:
 			tmp_headers = tmp_headers_json[self.sitio]
 		except:
@@ -669,7 +696,8 @@ class Obtencion_informacion():
 		cifrados = {}
 		tmp_cifrado = []
 		if self.sitio.startswith("https"):
-			with open("./config/config_general.json","r") as cg:
+			ruta = path.abspath(path.dirname(__file__)) + "/config/config_general.json"
+			with open(ruta,"r") as cg:
 				configuracion = json.load(cg)
 
 			comando = "testssl -E --parallel --sneaky --jsonfile salida_ssl.json " + self.sitio
@@ -705,18 +733,18 @@ class Obtencion_informacion():
 					if tet_2.startswith(url):
 						if not(tet_2 in self.paginas):
 							self.paginas.append(tet_2)
-						elif not(tet_2.startswith("http")) and not(tet_2.startswith("https")):
-							link_2 = self.valida_link(tet_2,url)
-							contador = 0
-							esta = 0
-							for page in self.paginas:
-								contador += 1 
-								if (contador >= len(self.paginas)) and not(esta > 0):
-									self.paginas.append(link_2)
-									contador = 0
-									esta = 0
-								elif tet_2 in page:
-									esta += 1
+					elif not(tet_2.startswith("http")) and not(tet_2.startswith("https")):
+						link_2 = self.valida_link(tet_2,url)
+						contador = 0
+						esta = 0
+						for page in self.paginas:
+							contador += 1 
+							if (contador >= len(self.paginas)) and not(esta > 0):
+								self.paginas.append(link_2)
+								contador = 0
+								esta = 0
+							elif tet_2 in page:
+								esta += 1
 		return self.paginas
 
 	def valida_link(self,linea,url):
@@ -753,7 +781,7 @@ class Obtencion_informacion():
 						self.paginas.append(link)
 		for pagina in self.paginas:
 			self.web(pagina)
-			self.tmp_diccionario["paginas"] = self.paginas
+			self.tmp_diccionario["paginas"] = [ {"pagina":page} for page in self.paginas]
 		return self.tmp_diccionario
 
 
@@ -828,7 +856,6 @@ class Obtencion_informacion():
 		return wappalyzer.analyze_with_versions_and_categories(webpage)
 
 	def menu(self):
-		#self.get_directorios()
 		self.carga_configuracion()
 		self.get_version_server()
 		self.get_headers()
@@ -867,10 +894,16 @@ class Obtencion_informacion():
 			self.tmp_diccionario["archivos"] = []
 			self.tmp_diccionario["vulnerabilidades"] = []
 		self.get_librerias()
-		self.json_informacion[self.sitio] = self.tmp_diccionario
-		print(self.json_informacion)
+		self.json_informacion = self.tmp_diccionario
+
+	def get_json_informacion(self):
+		return self.json_informacion
 
 def main():
 	Obtencion_informacion()
 
-main()
+#main()
+
+def execute(sitio):
+	analisis = Obtencion_informacion(sitio)
+	return analisis.get_json_informacion()

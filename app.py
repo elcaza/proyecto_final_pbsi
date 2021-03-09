@@ -22,7 +22,7 @@ from subprocess import Popen
 ## Modulos
 from modules.obtencion_informacion import obtener_informacion
 from modules.alertas import alertas
-from modules.analisis import analisis2 as analisis
+from modules.analisis import analisis
 from modules.exploits import exploits as exp
 from modules.explotacion import explotacion
 from modules.fuzzing import fuzzing
@@ -65,7 +65,8 @@ def ejecucion_analisis(peticion):
             "sitio":peticion["sitio"],
             "cookie":peticion["cookie"],
             "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-            "profundidad":peticion["profundidad"]
+            "profundidad":peticion["profundidad"],
+            "analisis":{}
         }
 
         peticion_reporte = {
@@ -85,24 +86,24 @@ def ejecucion_analisis(peticion):
         print("Iniciando Información")
         numero_grafica = execute_informacion(peticion, peticion_proceso, peticion_reporte, numero_grafica)
 
-        print("Iniciando Análisis")
-        execute_analisis(peticion_proceso, peticion_reporte)
+        # print("Iniciando Análisis")
+        # execute_analisis(peticion_proceso, peticion_reporte)
 
-        print("Iniciando Fuzzing")
-        peticion_proceso["analisis"]["paginas"] = [{"pagina":"http://localhost/drupal7/","forms":{}}]
-        numero_grafica = execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
+        # print("Iniciando Fuzzing")
+        # #peticion_proceso["analisis"]["paginas"] = [{"pagina":"http://altoromutual.com:8080/feedback.jsp","forms":{}}]
+        # numero_grafica = execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
 
-        print("Iniciando Explotacion")
-        numero_grafica = execute_explotacion(con, peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
+        # print("Iniciando Explotacion")
+        # numero_grafica = execute_explotacion(con, peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
 
-        print("Iniciando Reporte")
-        execute_reporte(peticion_reporte)
+        # print("Iniciando Reporte")
+        # execute_reporte(peticion_reporte)
 
-        print("Enviando alertas")
-        execute_alerta(peticion_alerta)
+        # print("Enviando alertas")
+        # execute_alerta(peticion_alerta)
         
-        print("Guardando analisis")
-        con.guardar_analisis(peticion_proceso)
+        # print("Guardando analisis")
+        # con.guardar_analisis(peticion_proceso)
 
         return "Reporte generado"
 
@@ -235,6 +236,7 @@ def ciclo_primera_peticion():
 def execute_informacion(peticion, peticion_proceso, peticion_reporte, numero_grafica):
     respuesta_obtener_informacion = obtener_informacion.execute(peticion)
     peticion_proceso["informacion"] = respuesta_obtener_informacion
+    print(peticion_proceso)
     numero_grafica = reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica)
     return numero_grafica
 
@@ -502,14 +504,22 @@ def informacion_obtener_dnsdumpster(datos):
     return dnsdumpster
 
 def informacion_obtener_robtex(datos):
+    print(datos)
     robtex = []
     for dato in datos:
         if dato == "informacion":
             continue
+        if len(datos[dato]) == 0:
+            continue
         for tipo in datos[dato]:
             dominio = tipo["dominio"]
-            dns = tipo["dns"]
-            robtex.append([ dato.capitalize(), dominio, dns ])
+            if "dns" in tipo:
+                subdominio = tipo["dns"]
+            elif "host" in tipo:
+                subdominio = tipo["host"]
+            else:
+                subdominio = "NA"
+            robtex.append([ dato.capitalize(), dominio, subdominio ])
     if len(robtex) == 0:
         robtex.append(["NA","NA","NA"])
     return robtex
