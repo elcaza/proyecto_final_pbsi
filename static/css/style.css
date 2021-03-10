@@ -71,6 +71,10 @@ body.vista_configuraciones .main__proximosEscaneos {
     display: block;
 }
 
+body.vista_exploits .main__exploits {
+    display: block;
+}
+
 body.url .scan__options__url{
     background-color: #064766;
     color: #fefefe;
@@ -125,7 +129,8 @@ Sections Paddigs
 
 .main__nuevo,
 .main__consultas,
-.main__proximosEscaneos {
+.main__proximosEscaneos,
+.main__exploits {
     display: none;
     box-sizing: border-box;
     padding: 10px;
@@ -189,14 +194,16 @@ select {
 
 .nav__nuevo,
 .nav__consultas,
-.nav__proximosEscaneos {
+.nav__proximosEscaneos,
+.nav__exploits {
     display: inline;
     margin: 10px;
 }
 
 .nav__nuevo:hover,
 .nav__consultas:hover,
-.nav__proximosEscaneos:hover {
+.nav__proximosEscaneos:hover,
+.nav__exploits:hover {
     color: #3777a5;
     transition: 1s;
     border-bottom: 1px solid;

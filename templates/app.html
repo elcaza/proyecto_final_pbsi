@@ -15,6 +15,7 @@
 			<li class="nav__nuevo">Nuevo Análisis</li>
 			<li class="nav__consultas">Consultas</li>
 			<li class="nav__proximosEscaneos">Próximos escaneos</li>
+			<li class="nav__exploits">Exploits</li>
 		</ul>
 	</nav>
 
@@ -63,72 +64,6 @@
 					<input id="profundidad" type="number">
 				</div>
 			</div>
-		</div>
-	</section>
-
-	<section class="exploits">
-		<h1 class="modulos__titulo">Exploits</h1>
-		<button class="exploits__add">Agregar</button>
-		<div class="exploits__modulo">
-			<span class="exploits__nombre">Configuraciones generales</span>
-			<div class="exploits__config">
-				<div class="exploits__opcion__nombre">Nombre</div>
-				<div class="exploits__opcion__descripcion">Nombre para el exploit</div>
-				<div class="exploits__opcion__valor"><input type="number"></div>
-			</div>
-			<div class="exploits__config">
-				<div class="exploits__opcion__nombre">Contenido</div>
-				<div class="exploits__opcion__descripcion">Ingrese el exploit</div>
-				<div class="exploits__opcion__valor"><textarea name="" id="" cols="30" rows="10"></textarea></div>
-			</div>
-			<div class="exploits__config">
-				<div class="exploits__opcion__nombre">Tecnología</div>
-				<div class="exploits__opcion__descripcion">python2|python3|sh|ruby</div>
-				<div class="exploits__opcion__valor"><input type="text"></div>
-			</div>
-			<div class="exploits__config">
-				<div class="exploits__opcion__nombre">CVE</div>
-				<div class="exploits__opcion__descripcion">En caso de tener un CVE asociado</div>
-				<div class="exploits__opcion__valor"><input type="text"></div>
-			</div>
-
-			<div class="exploits__options-container">
-				<div class="exploits__options__software">Software</div><!--
-				--><div class="exploits__options__cms">CMS</div>
-			</div>
-			
-			<div class="exploits__config option__software">
-				<div class="exploits__opcion__nombre">Nombre del Software</div>
-				<div class="exploits__opcion__descripcion">Especifique el software</div>
-				<div class="exploits__opcion__valor"><input type="text"></div>
-			</div>
-			<div class="exploits__config option__software">
-				<div class="exploits__opcion__nombre">Versión</div>
-				<div class="exploits__opcion__descripcion">Especifique la versión</div>
-				<div class="exploits__opcion__valor"><input type="text"></div>
-			</div>
-
-			<div class="exploits__config option__cms">
-				<div class="exploits__opcion__nombre">Nombre del CMS</div>
-				<div class="exploits__opcion__descripcion">Especifique el CMS</div>
-				<div class="exploits__opcion__valor"><input type="text"></div>
-			</div>
-			<div class="exploits__config option__cms">
-				<div class="exploits__opcion__nombre">Categoría</div>
-				<div class="exploits__opcion__descripcion">Especifique la categoría</div>
-				<div class="exploits__opcion__valor"><input type="text"></div>
-			</div>
-			<div class="exploits__config option__cms">
-				<div class="exploits__opcion__nombre">Extensión</div>
-				<div class="exploits__opcion__descripcion">Especifique la extensión</div>
-				<div class="exploits__opcion__valor"><input type="text"></div>
-			</div>
-			<div class="exploits__config option__cms">
-				<div class="exploits__opcion__nombre">Versión</div>
-				<div class="exploits__opcion__descripcion">Especifique la versión</div>
-				<div class="exploits__opcion__valor"><input type="text"></div>
-			</div>
-			
 		</div>
 	</section>
 
@@ -301,6 +236,73 @@
 			www.test.com
 		</span>
 	</div>
+</section>
+<section class="main__exploits">
+	<section class="exploits">
+		<h1 class="modulos__titulo">Exploits</h1>
+		<button class="exploits__add">Agregar</button>
+		<div class="exploits__modulo">
+			<span class="exploits__nombre">Configuraciones generales</span>
+			<div class="exploits__config">
+				<div class="exploits__opcion__nombre">Nombre</div>
+				<div class="exploits__opcion__descripcion">Nombre para el exploit</div>
+				<div class="exploits__opcion__valor"><input type="number"></div>
+			</div>
+			<div class="exploits__config">
+				<div class="exploits__opcion__nombre">Contenido</div>
+				<div class="exploits__opcion__descripcion">Ingrese el exploit</div>
+				<div class="exploits__opcion__valor"><textarea name="" id="" cols="30" rows="10"></textarea></div>
+			</div>
+			<div class="exploits__config">
+				<div class="exploits__opcion__nombre">Tecnología</div>
+				<div class="exploits__opcion__descripcion">python2|python3|sh|ruby</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+			<div class="exploits__config">
+				<div class="exploits__opcion__nombre">CVE</div>
+				<div class="exploits__opcion__descripcion">En caso de tener un CVE asociado</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+
+			<div class="exploits__options-container">
+				<div class="exploits__options__software">Software</div><!--
+				--><div class="exploits__options__cms">CMS</div>
+			</div>
+			
+			<div class="exploits__config option__software">
+				<div class="exploits__opcion__nombre">Nombre del Software</div>
+				<div class="exploits__opcion__descripcion">Especifique el software</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+			<div class="exploits__config option__software">
+				<div class="exploits__opcion__nombre">Versión</div>
+				<div class="exploits__opcion__descripcion">Especifique la versión</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+
+			<div class="exploits__config option__cms">
+				<div class="exploits__opcion__nombre">Nombre del CMS</div>
+				<div class="exploits__opcion__descripcion">Especifique el CMS</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+			<div class="exploits__config option__cms">
+				<div class="exploits__opcion__nombre">Categoría</div>
+				<div class="exploits__opcion__descripcion">Especifique la categoría</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+			<div class="exploits__config option__cms">
+				<div class="exploits__opcion__nombre">Extensión</div>
+				<div class="exploits__opcion__descripcion">Especifique la extensión</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+			<div class="exploits__config option__cms">
+				<div class="exploits__opcion__nombre">Versión</div>
+				<div class="exploits__opcion__descripcion">Especifique la versión</div>
+				<div class="exploits__opcion__valor"><input type="text"></div>
+			</div>
+			
+		</div>
+	</section>
 </section>
 <!--Footer-->
 <footer>
