@@ -118,27 +118,27 @@ document.addEventListener("DOMContentLoaded", function() {
 				},
 				{
 					"sitios":"sitio1.com",
-					"fecha":"01/02/21"
+					"fecha":"02/02/21"
 				},
 				{
 					"sitios":"sitio1.com",
-					"fecha":"01/02/21"
+					"fecha":"03/02/21"
 				},
 				{
 					"sitios":"sitio1.com",
-					"fecha":"01/02/21"
+					"fecha":"04/02/21"
 				},
 				{
 					"sitios":"sitio1.com",
-					"fecha":"01/02/21"
+					"fecha":"05/02/21"
 				},
 				{
 					"sitios":"url.com",
-					"fecha":"01/02/21"
+					"fecha":"06/02/21"
 				},
 				{
 					"sitios":"aaa.com",
-					"fecha":"01/02/21"
+					"fecha":"07/02/21"
 				}
 			]
 		}
@@ -512,7 +512,44 @@ function load_sites(value_select){
 			// Pintar el elmento terminado
 			target_modulos.appendChild(consultas__sitio);
 		}
+	}); // Fin carga de botones y sitios
+
+	let elements;
+	// Agregar funciones al botón "ver más"
+	elements = document.querySelectorAll(".button_ver_mas");
+
+	let action_ver_mas = function(site, date) {
+		alert("Scan to " + site + " " + date);
+		console.log("Scan to " + site + " " + date);
+	};
+
+	Array.from(elements).forEach(function(element) {
+		element.addEventListener('click', function(){
+			let element_parent = element.closest(".consultas__sitio");
+			let url = element_parent.childNodes[0].innerText;
+			let date = element_parent.childNodes[1].innerText;
+			action_ver_mas(url, date);
+		});
 	});
+
+	// Agregar funciones al botón "Borrar"
+	elements = document.querySelectorAll(".button_borrar");
+
+	let action_borrar = function(site, date) {
+		alert("Borrar " + site + " " + date);
+		console.log("Borrar " + site + " " + date);
+	};
+
+	Array.from(elements).forEach(function(element) {
+		element.addEventListener('click', function(){
+			let element_parent = element.closest(".consultas__sitio");
+			let url = element_parent.childNodes[0].innerText;
+			let date = element_parent.childNodes[1].innerText;
+			action_borrar(url, date);
+		});
+	});
+
+
 }
 
 async function send_json(url, json) {
