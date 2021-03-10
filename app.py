@@ -80,22 +80,22 @@ def ejecucion_analisis(peticion):
             "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
         }
 
-        numero_grafica = 0
+        
         print("Iniciando Información")
-        numero_grafica = execute_informacion(peticion, peticion_proceso, peticion_reporte, numero_grafica)
+        execute_informacion(peticion, peticion_proceso, peticion_reporte)
 
         print("Iniciando Análisis")
-        numero_grafica = execute_analisis(peticion_proceso, peticion_reporte, numero_grafica)
+        execute_analisis(peticion_proceso, peticion_reporte)
 
         print("Iniciando Fuzzing")
         #peticion_proceso["analisis"]["paginas"] = [{"pagina":"http://altoromutual.com:8080/login.jsp","forms":{}}]
-        numero_grafica = execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
+        execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte)
 
         print("Iniciando Explotacion")
-        numero_grafica = execute_explotacion(con, peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
+        execute_explotacion(con, peticion_proceso, peticion_alerta, peticion_reporte)
 
-        print("Iniciando Reporte")
-        execute_reporte(peticion_reporte)
+        # print("Iniciando Reporte")
+        # execute_reporte(peticion_reporte)
 
         # print("Enviando alertas")
         # execute_alerta(peticion_alerta)
@@ -121,7 +121,7 @@ def consulta_peticion_volcado():
 def consulta_peticion_reporte(peticion):
     con = Conector()
     analisis = con.obtener_analisis(peticion)
-    numero_grafica = 0
+    0
     if analisis is not None:
         peticion_reporte = {
             "sitio":analisis["sitio"],
@@ -129,14 +129,12 @@ def consulta_peticion_reporte(peticion):
             "analisis":[],
         }
 
-        print(analisis)
-
-        numero_grafica = reporte_informacion(analisis, peticion_reporte, numero_grafica)
-        numero_grafica = reporte_analisis(analisis, peticion_reporte, numero_grafica)
-        numero_grafica = reporte_fuzzing(analisis, peticion_reporte, numero_grafica)
-        numero_grafica = reporte_explotacion(analisis, peticion_reporte, numero_grafica)
-        sitio = execute_reporte(peticion_reporte)
-        return json.dumps({"sitio":sitio})
+        reporte_informacion(analisis, peticion_reporte)
+        reporte_analisis(analisis, peticion_reporte)
+        reporte_fuzzing(analisis, peticion_reporte)
+        reporte_explotacion(analisis, peticion_reporte)
+        execute_reporte(peticion_reporte)
+        return json.dumps({"estado":"ok"})
     return json.dumps({"estado":"error"})
 
 def exploits_peticion_crear(peticion):
@@ -175,6 +173,15 @@ def exploits_peticion_eliminar(peticion_json):
     con.exploit_eliminar_registro(peticion_json)
     return json.dumps({"estado":"ok"})
 
+def proximos_peticion_escaneos():
+    peticiones = cola.get_peticiones()
+    pendientes = []
+    peticion_actual = cola.get_peticion_actual()
+    pendientes.append({"sitio":peticion_actual["sitio"],"fecha":peticion_actual["fecha"],"estado":"Actual"})
+    for peticion in peticiones:
+        pendientes.append({"sitio":peticion["sitio"],"fecha":peticion["fecha"],"estado":"Pendiente"})
+
+    return json.dumps(pendientes)
 '''
     Estructura de la cola 
 '''
@@ -195,10 +202,17 @@ class Encolamiento(metaclass=SingletonMeta):
         return "Peticion en cola"
 
     def pop_peticion(self):
+        self.peticion_actual = self.peticion[0].copy()
         return self.peticion.pop(0)
 
     def len_peticion(self):
-        return len(self.peticion)    
+        return len(self.peticion)
+
+    def get_peticiones(self):
+        return self.peticion
+    
+    def get_peticion_actual(self):
+        return self.peticion_actual
 
 @app.before_first_request
 def iniciar_ciclo_analisis():
@@ -235,42 +249,36 @@ def ciclo_primera_peticion():
 '''
     Funciones de execute
 '''
-def execute_informacion(peticion, peticion_proceso, peticion_reporte, numero_grafica):
+def execute_informacion(peticion, peticion_proceso, peticion_reporte):
     respuesta_obtener_informacion = obtener_informacion.execute(peticion)
     peticion_proceso["informacion"] = respuesta_obtener_informacion
-    print(peticion_proceso)
-    numero_grafica = reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica)
-    return numero_grafica
+    reporte_informacion(peticion_proceso, peticion_reporte)
 
-def execute_analisis(peticion_proceso, peticion_reporte, numero_grafica):
+def execute_analisis(peticion_proceso, peticion_reporte):
     respuesta_analisis = analisis.execute(peticion_proceso["sitio"])
     peticion_proceso["analisis"] = respuesta_analisis
-    reporte_analisis(peticion_proceso, peticion_reporte, numero_grafica)
-    return numero_grafica
+    reporte_analisis(peticion_proceso, peticion_reporte)
+    
 
 # Puede que truene en fuzzing_lanzar_fuzz
-def execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica):
+def execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte):
     fuzzing_lanzar_fuzz(peticion_proceso)
     alertas_fuzzing(peticion_proceso, peticion_alerta)
-    numero_grafica = reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica)
-    return numero_grafica
-
+    reporte_fuzzing(peticion_proceso, peticion_reporte)
+    
 # Puede que truene en explotacion_lanzar_exploit
-def execute_explotacion(con, peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica):
+def execute_explotacion(con, peticion_proceso, peticion_alerta, peticion_reporte):
     datos_explotacion, datos_identificados = obtener_datos_consulta_exploits(peticion_proceso)
     explotacion_lanzar_exploit(con, datos_identificados, datos_explotacion, peticion_proceso)
     alertas_explotacion(peticion_proceso, peticion_alerta)
-    numero_grafica = reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica)
-    return numero_grafica
-
+    reporte_explotacion(peticion_proceso, peticion_reporte)
+    
 def execute_alerta(peticion_alerta):
     resultado = enviar_alertas(peticion_alerta)
     return resultado
 
 def execute_reporte(peticion_reporte):
-    url = "file://" + root + "/reporte.html"
     reportes.execute(peticion_reporte)
-    return url
     
 '''
     Funciones de lanzamiento
@@ -371,17 +379,17 @@ def explotacion_obtener_alertas(explotaciones):
 '''
     Funciones de reportes
 '''
-def reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica):
+def reporte_informacion(peticion_proceso, peticion_reporte):
     informacion = {}
     informacion["datos"] = informacion_obtener_datos(peticion_proceso)
     informacion["dns_dumpster"] = informacion_obtener_dnsdumpster(peticion_proceso["informacion"]["dnsdumpster"])
     informacion["robtex"] = informacion_obtener_robtex(peticion_proceso["informacion"]["robtex"])
     informacion["puertos_generales"] = informacion_obtener_puertos_generales(peticion_proceso["informacion"]["puertos"])
     informacion["puertos_individuales"] = informacion_obtener_puertos_individuales(peticion_proceso["informacion"]["puertos"])
-    numero_grafica = reportes_informacion_crear(informacion, peticion_reporte, numero_grafica)
-    return numero_grafica
+    reportes_informacion_crear(informacion, peticion_reporte)
+    
 
-def reporte_analisis(peticion_proceso, peticion_reporte, numero_grafica):
+def reporte_analisis(peticion_proceso, peticion_reporte):
     analisis = {}
     analisis["servidor"] = analisis_obtener_servidor(peticion_proceso["analisis"]["servidor"], "Servidor") # Nombre y versión
     analisis["cms"] = analisis_obtener_servidor(peticion_proceso["analisis"]["cms"], "CMS") # Nombre y versión
@@ -398,10 +406,10 @@ def reporte_analisis(peticion_proceso, peticion_reporte, numero_grafica):
 
     analisis["paginas"] = analisis_obtener_paginas(peticion_proceso["analisis"]["paginas"]) # Total
 
-    reportes_analisis_crear(analisis, grafica_cifrados, peticion_reporte, numero_grafica)
-    return numero_grafica
+    reportes_analisis_crear(analisis, grafica_cifrados, peticion_reporte)
+    
 
-def reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica):
+def reporte_fuzzing(peticion_proceso, peticion_reporte):
     fuzzing_estadistica_general = []
     fuzzing_estadistica_individual = []
     paginas = len(peticion_proceso["analisis"]["paginas"])
@@ -417,71 +425,63 @@ def reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica):
     fuzzing_estadistica_general.append(sqli)
     fuzzing_estadistica_general.append(lfi)
     #print(fuzzing_estadistica_general)
-    numero_grafica = reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte, numero_grafica)
+    reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte)
         
-    return numero_grafica
+    
 
-def reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica):
+def reporte_explotacion(peticion_proceso, peticion_reporte):
     explotacion_estadisticas = estadisticas_explotacion(peticion_proceso)
     #explotacion_estadisticas = [["AAAA.SH","Exitoso"], ["BBBB.SH","Fracaso"], ["CCCC.SH","Inconcluso"]]
-    numero_grafica = reportes_explotacion_crear(explotacion_estadisticas, peticion_reporte, numero_grafica)
-    return numero_grafica
+    reportes_explotacion_crear(explotacion_estadisticas, peticion_reporte)
+    
 
 '''
     Funciones para crear la estructura de los reportes
 '''
-def reportes_informacion_crear(informacion, peticion_reporte, numero_grafica):
-    reporte = root + "/modules/reportes/ifram_grafica_info"
-    reporte_grafica = reporte + "{0}.html".format(numero_grafica)
+def reportes_informacion_crear(informacion, peticion_reporte):
+    reporte = root + "/templates/ifram_grafica_informacion.html"
+    reporte_relativo = "/reporte-informacion"
 
     analisis = reportes_informacion_crear_general(informacion["datos"])
     peticion_reporte["analisis"].append(analisis)
 
-    reportes_informacion_crear_general_puertos_grafica(informacion["puertos_generales"],reporte_grafica)
-    analisis = reportes_informacion_crear_general_puertos(informacion["puertos_generales"],reporte_grafica)
+    reportes_informacion_crear_general_puertos_grafica(informacion["puertos_generales"],reporte)
+    analisis = reportes_informacion_crear_general_puertos(informacion["puertos_generales"],reporte_relativo)
     peticion_reporte["analisis"].append(analisis)
-    numero_grafica += 1
     
     analisis = reportes_informacion_crear_subgeneral(informacion)
     for valor in analisis:
         peticion_reporte["analisis"].append(valor)
-    
-    return numero_grafica
 
-def reportes_analisis_crear(datos_analisis, grafica_cifrados, peticion_reporte, numero_grafica):
-    reporte = root + "/modules/reportes/ifram_grafica_analisis"
-    reporte_grafica = reporte + "{0}.html".format(numero_grafica)
-    numero_grafica += 1
-    reportes_analisis_crear_cifrados_grafica(grafica_cifrados,reporte_grafica)
-    analisis = reportes_analisis_crear_general(datos_analisis, reporte_grafica)
+def reportes_analisis_crear(datos_analisis, grafica_cifrados, peticion_reporte):
+    reporte = root + "/templates/ifram_grafica_analisis.html"
+    reporte_relativo = "/reporte-analisis"
+
+    reportes_analisis_crear_cifrados_grafica(grafica_cifrados,reporte)
+    analisis = reportes_analisis_crear_general(datos_analisis, reporte_relativo)
     for valor in analisis:
         peticion_reporte["analisis"].append(valor)
-    return numero_grafica
 
-def reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte, numero_grafica):
-    reporte = root + "/modules/reportes/ifram_grafica"
-    reporte_grafica = reporte + "{0}.html".format(numero_grafica)
-    numero_grafica += 1
+def reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte):
+    reporte = root + "/templates/ifram_grafica_fuzzing.html"
+    reporte_relativo = "/reporte-fuzzing"
 
-    reportes_fuzzing_crear_general_grafica(fuzzing_estadistica_general, reporte_grafica )
-    analisis = reportes_fuzzing_crear_general(fuzzing_estadistica_general, reporte_grafica )
+    reportes_fuzzing_crear_general_grafica(fuzzing_estadistica_general, reporte )
+    analisis = reportes_fuzzing_crear_general(fuzzing_estadistica_general, reporte_relativo )
     peticion_reporte["analisis"].append(analisis)
     
     analisis = reportes_fuzzing_crear_individual(fuzzing_estadistica_individual)
     peticion_reporte["analisis"].append(analisis)
 
-    return numero_grafica
 
-def reportes_explotacion_crear(explotacion_estadisticas, peticion_reporte, numero_grafica):
-    reporte = root + "/modules/reportes/ifram_grafica_explotacion"
-    reporte_grafica = reporte + "{0}.html".format(numero_grafica)
-    numero_grafica += 1
+def reportes_explotacion_crear(explotacion_estadisticas, peticion_reporte):
+    reporte = root + "/templates/ifram_grafica_explotacion.html"
+    reporte_relativo = "/reporte-explotacion"
 
-    reportes_explotacion_crear_general_grafica(explotacion_estadisticas,reporte_grafica)
-    analisis = reportes_explotacion_crear_general(explotacion_estadisticas, reporte_grafica)
+    reportes_explotacion_crear_general_grafica(explotacion_estadisticas,reporte)
+    analisis = reportes_explotacion_crear_general(explotacion_estadisticas, reporte_relativo)
     peticion_reporte["analisis"].append(analisis)
     
-    return numero_grafica
 
 '''
     Funciones para obtener los datos para los reportes
@@ -603,7 +603,7 @@ def analisis_obtener_cifrados(datos):
             if datos[dato] == "seguro":
                 resultados_grafica[2] += 1
         return resultados, resultados_grafica
-    return [["No se encontraron cifrados"]], [0,0,0]
+    return [["No se encontraron cifrados","NA"]], [0,0,0]
 
 def analisis_obtener_paginas(datos): return [[len(datos)]]
 
@@ -992,6 +992,29 @@ def principal():
 @app.route("/reporte")
 def reporte():
     return render_template("reporte.html")
+
+@app.route("/reporte-informacion")
+def reporte_grafica_informacion():
+    return render_template("ifram_grafica_informacion.html")
+
+@app.route("/reporte-analisis")
+def reporte_grafica_analisis():
+    return render_template("ifram_grafica_analisis.html")
+
+@app.route("/reporte-fuzzing")
+def reporte_grafica_fuzzing():
+    return render_template("ifram_grafica_fuzzing.html")
+
+@app.route("/reporte-explotacion")
+def reporte_grafica_explotacion():
+    return render_template("ifram_grafica_explotacion.html")
+
+@app.route("/proximos-escaneos", methods=["GET","POST"])
+def proximos_escaneos():
+    print(request.method)
+    if request.method == "POST":
+        respuesta = proximos_peticion_escaneos()
+        return respuesta
 
 # Función para iniciar el análisis
 @app.route("/ejecucion", methods=["GET","POST"])

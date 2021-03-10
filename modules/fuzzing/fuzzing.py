@@ -143,11 +143,11 @@ class Lanzar_fuzzing(threading.Thread):
       #WebDriverException
       try: 
          self.driver = webdriver.Chrome("/usr/bin/chromedriver",options=self.sin_navegador)
+         self.driver.set_page_load_timeout(5)
          self.error = 0
       except WebDriverException:
          self.error = 1
       #self.driver = webdriver.Chrome("/usr/bin/chromedriver")
-      self.driver.set_page_load_timeout(5)
       self.threadID = threadID
       self.nombre = nombre
       self.diccionario = diccionario

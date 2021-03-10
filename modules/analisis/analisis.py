@@ -655,7 +655,13 @@ class Obtencion_informacion():
 		f = Utilerias()
 		tmp_dic = {}
 		wappalyzer = Wappalyzer.latest()
-		webpage = WebPage.new_from_url(self.sitio,verify=False)
+		while True:
+			try:
+				webpage = WebPage.new_from_url(self.sitio,verify=False)
+				print("Wap Falló :CCC")
+				break
+			except:
+				pass
 		tmp = wappalyzer.analyze_with_versions_and_categories(webpage)
 		for llave,valor in tmp.items():
 			for llave2,valor2 in valor.items():

@@ -1,5 +1,6 @@
 from datetime import datetime
 from modules import strings
+from os import path
 
 class Reporte():
     def __init__(self, parametros):
@@ -344,7 +345,8 @@ class Reporte():
 
     def crear_reporte(self):
         reporte_html = self.get_html()+self.get_head()+self.get_body()+self.get_footer()
-        with open("reporte.html","w") as reporte:
+        ruta = "./templates/reporte.html"
+        with open(ruta,"w") as reporte:
             reporte.write(reporte_html)
             
 def execute(paremetros):
