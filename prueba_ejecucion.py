@@ -13,9 +13,10 @@ peticion = {
     #"sitio":"https://xss-game.appspot.com/level1",
     #"sitio":"http://localhost/joomla/",
     #"sitio":"http://localhost/drupal7/",
-    #"sitio":"http://altoromutual.com:8080/",
-    "sitio":"https://seguridad.unam.mx/",
-    #sistemas.acatlan.unam.mx
+    "sitio":"http://altoromutual.com:8080/",
+    #"sitio":"https://seguridad.unam.mx/",
+    #"sitio":"https://localhost/drupal7/",
+    # sistemas.acatlan.unam.mx
     "fecha":"",
     "puertos" : { 
 		"inicio" : 1,

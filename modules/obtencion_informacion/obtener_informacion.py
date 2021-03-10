@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+from app import informacion_obtener_datos, informacion_obtener_dnsdumpster
 import json
 import random
 # from googlesearch import search
@@ -22,13 +23,10 @@ from os import path
 
 
 class Robtex_informacion():
-	def __init__(self, dominio):
+	def __init__(self, dominio, ip_address):
 		self.base_api_url = 'https://freeapi.robtex.com/'
 		self.dominio = dominio
-		try:
-			self.ip_address = socket.gethostbyname(self.dominio)
-		except socket.gaierror:
-			self.ip_address = ""
+		self.ip_address = ip_address
 		self.informacion_robtex = {}
 
 	def ip_query(self):
@@ -69,52 +67,40 @@ class Robtex_informacion():
 			return None
 
 	def clasificacion_registros(self):
-		self.informacion_robtex = {"informacion": {"ip": self.ip_address,
-		"ciudad": "NA",
-		"pais": "NA",
-		"red": "NA"}		, "dns_forward": [], "host_forward": [], "mx_forward": [], "host_reverse": []}
-		if self.ip_address != "" and IP(self.ip_address).iptype() == "PUBLIC":
-			temp_NS = []
-			temp_A = []
-			temp_MX = []
-
-			forward = self.pdns_forward()
-			reverse = self.pdns_reverse()
+		temp_NS = []
+		temp_A = []
+		temp_MX = []
+		forward = self.pdns_forward()
+		reverse = self.pdns_reverse()
+		ip = self.ip_query()
+		while ip == None:
+			time.sleep(180)
 			ip = self.ip_query()
-
-			while ip == None:
-				time.sleep(180)
-				ip = self.ip_query()
-
-			while forward == None:
-				time.sleep(180)
-				forward = self.pdns_forward()
-
-			while reverse == None:
-				time.sleep(180)
-				reverse = self.pdns_reverse()
-
-			informacion = {}
-			informacion["ip"] = self.ip_address
-			informacion["ciudad"] = ip["city"]
-			informacion["pais"] = ip["country"]
-			informacion["red"] = ip["bgproute"]
-			self.informacion_robtex["informacion"] = informacion
-			if("list" in str(type(forward))):
-				for registro in forward:
-					self.tipos_registros(registro, temp_NS, temp_A, temp_MX, "forward")
-			else:
-				self.tipos_registros(forward, temp_NS, temp_A, temp_MX, "forward")
-
-			temp_NS = []
-			temp_A = []
-			temp_MX = []
-
-			if("list" in str(type(reverse))):
-				for registro in reverse:
-					self.tipos_registros(registro, temp_NS, temp_A, temp_MX, "reverse")
-			else:
-				self.tipos_registros(reverse, temp_NS, temp_A, temp_MX, "reverse")
+		while forward == None:
+			time.sleep(180)
+			forward = self.pdns_forward()
+		while reverse == None:
+			time.sleep(180)
+			reverse = self.pdns_reverse()
+		informacion = {}
+		informacion["ip"] = self.ip_address
+		informacion["ciudad"] = ip["city"]
+		informacion["pais"] = ip["country"]
+		informacion["red"] = ip["bgproute"]
+		self.informacion_robtex["informacion"] = informacion
+		if("list" in str(type(forward))):
+			for registro in forward:
+				self.tipos_registros(registro, temp_NS, temp_A, temp_MX, "forward")
+		else:
+			self.tipos_registros(forward, temp_NS, temp_A, temp_MX, "forward")
+		temp_NS = []
+		temp_A = []
+		temp_MX = []
+		if("list" in str(type(reverse))):
+			for registro in reverse:
+				self.tipos_registros(registro, temp_NS, temp_A, temp_MX, "reverse")
+		else:
+			self.tipos_registros(reverse, temp_NS, temp_A, temp_MX, "reverse")
 		return self.informacion_robtex
 
 	def tipos_registros(self, registro, temp_NS, temp_A, temp_MX, tipo_busqueda):
@@ -187,10 +173,30 @@ class Obtener_informacion():
 		return self.opciones_puertos
 
 	def ejecutar(self):
-		# self.busqueda_dnsdumpster()
-		# self.busqueda_robtex()
-		# self.scanner_puertos()
-		self.google()
+		try:
+			self.ip_address = socket.gethostbyname(self.sitio)
+		except socket.gaierror:
+			self.ip_address = ""
+		if self.ip_address != "" and IP(self.ip_address).iptype() == "PUBLIC":
+			self.busqueda_dnsdumpster()
+			self.busqueda_robtex()
+			self.google()
+			
+		self.json_informacion["dnsdumpster"] = {"txt":[],"mx":[],"dns":[],"host":[{
+			"dominio": "",
+			"ip": "",
+			"dns_inverso": "",
+			"pais": "",
+			"cabecera": ""
+			}]
+		}
+		self.json_informacion["robtex"] = {"informacion": {"ip": self.ip_address,
+		"ciudad": "NA",
+		"pais": "NA",
+		"red": "NA"},
+		"dns_forward": [], "host_forward": [], "mx_forward": [], "host_reverse": []}
+		self.scanner_puertos()
+		
 
 	def google(self):
 		self.json_informacion["google"] = []
@@ -266,7 +272,7 @@ class Obtener_informacion():
 
 	def busqueda_robtex(self):
 		print("Entra a Robtex")
-		robtex = Robtex_informacion(self.sitio)
+		robtex = Robtex_informacion(self.sitio, self.ip_address)
 		robtex_final = robtex.clasificacion_registros()
 		self.json_informacion["robtex"] = robtex_final
 
@@ -308,48 +314,35 @@ class Obtener_informacion():
 
 	def busqueda_dnsdumpster(self):
 		print("Entra a DNSDumpster")
-		informacion_dnsdumpster = {}
-		informacion_dnsdumpster["txt"] = []
-		informacion_dnsdumpster["mx"] = []
-		informacion_dnsdumpster["dns"] = []
-		informacion_dnsdumpster["host"] = [{
-			"dominio": "",
-			"ip": "",
-			"dns_inverso": "",
-			"pais": "",
-			"cabecera": ""
-		}]
 		dns = []
 		mx = []
 		host = []
 		temp_registros = {}
 		contador_datos = 0
-		try:
-			self.ip_address = socket.gethostbyname(self.sitio)
-		except socket.gaierror:
-			self.ip_address = ""
-
-		if self.ip_address != "" and IP(self.ip_address).iptype() == "PUBLIC":
-			registros = DNSDumpsterAPI().search(self.sitio)
-			if len(registros) != 0:
-				registros = registros["dns_records"]
-
-				informacion_dnsdumpster["txt"] = registros["txt"]
-				for registro_dns in registros["dns"]:
-					dns.append(self.clasificacion_dnsdumspter(
-					    registro_dns, temp_registros, contador_datos))
-					temp_registros = {}
-				informacion_dnsdumpster['dns'] = dns
-				for registro_mx in registros["mx"]:
-					mx.append(self.clasificacion_dnsdumspter(
-					    registro_mx, temp_registros, contador_datos))
-					temp_registros = {}
-				informacion_dnsdumpster['mx'] = mx
-				for registro_host in registros["host"]:
-					host.append(self.clasificacion_dnsdumspter(
-					    registro_host, temp_registros, contador_datos))
-					temp_registros = {}
-				informacion_dnsdumpster['host'] = host
+		informacion_dnsdumpster = {}
+		informacion_dnsdumpster["txt"] = []
+		informacion_dnsdumpster['dns'] = []
+		informacion_dnsdumpster['mx'] = []
+		informacion_dnsdumpster['host'] = []
+		registros = DNSDumpsterAPI().search(self.sitio)
+		if len(registros) != 0:
+			registros = registros["dns_records"]
+			informacion_dnsdumpster["txt"] = registros["txt"]
+			for registro_dns in registros["dns"]:
+				dns.append(self.clasificacion_dnsdumspter(
+				    registro_dns, temp_registros, contador_datos))
+				temp_registros = {}
+			informacion_dnsdumpster['dns'] = dns
+			for registro_mx in registros["mx"]:
+				mx.append(self.clasificacion_dnsdumspter(
+				    registro_mx, temp_registros, contador_datos))
+				temp_registros = {}
+			informacion_dnsdumpster['mx'] = mx
+			for registro_host in registros["host"]:
+				host.append(self.clasificacion_dnsdumspter(
+				    registro_host, temp_registros, contador_datos))
+				temp_registros = {}
+			informacion_dnsdumpster['host'] = host
 		self.json_informacion["dnsdumpster"] = informacion_dnsdumpster
 
 	def clasificacion_dnsdumspter(self, registros_tipos, temp_registros, contador_datos):

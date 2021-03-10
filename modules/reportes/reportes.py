@@ -114,15 +114,15 @@ class Reporte():
             }
 
             .fracaso {
-                background-color: #ff000091;
+                background-color: #9e2424;
             }
 
             .exito {
-                background-color: #027fff99;
+                background-color: #024C81;
             }
 
             .inconcluso {
-                background-color: yellow;
+                background-color: #adadad;
             }
 
             .tabla-descripcion-grafica {

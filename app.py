@@ -9,15 +9,14 @@ from flask_cors import CORS
 
 ## Utileria
 from base64 import decode, encode
-from os import path, popen, remove
+from os import path, remove
+import plotly.express as px
 from datetime import datetime
 import plotly.graph_objects as go
 import json
 from time import sleep
 import requests
 import threading
-import webbrowser
-from subprocess import Popen
 
 ## Modulos
 from modules.obtencion_informacion import obtener_informacion
@@ -66,7 +65,7 @@ def ejecucion_analisis(peticion):
             "cookie":peticion["cookie"],
             "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             "profundidad":peticion["profundidad"],
-            "analisis":{}
+            #"analisis":{}
         }
 
         peticion_reporte = {
@@ -86,24 +85,24 @@ def ejecucion_analisis(peticion):
         print("Iniciando Información")
         numero_grafica = execute_informacion(peticion, peticion_proceso, peticion_reporte, numero_grafica)
 
-        # print("Iniciando Análisis")
-        # execute_analisis(peticion_proceso, peticion_reporte)
+        print("Iniciando Análisis")
+        numero_grafica = execute_analisis(peticion_proceso, peticion_reporte, numero_grafica)
 
-        # print("Iniciando Fuzzing")
-        # #peticion_proceso["analisis"]["paginas"] = [{"pagina":"http://altoromutual.com:8080/feedback.jsp","forms":{}}]
-        # numero_grafica = execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
+        print("Iniciando Fuzzing")
+        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"http://altoromutual.com:8080/login.jsp","forms":{}}]
+        numero_grafica = execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
 
-        # print("Iniciando Explotacion")
-        # numero_grafica = execute_explotacion(con, peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
+        print("Iniciando Explotacion")
+        numero_grafica = execute_explotacion(con, peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica)
 
-        # print("Iniciando Reporte")
-        # execute_reporte(peticion_reporte)
+        print("Iniciando Reporte")
+        execute_reporte(peticion_reporte)
 
         # print("Enviando alertas")
         # execute_alerta(peticion_alerta)
         
-        # print("Guardando analisis")
-        # con.guardar_analisis(peticion_proceso)
+        print("Guardando analisis")
+        con.guardar_analisis(peticion_proceso)
 
         return "Reporte generado"
 
@@ -213,8 +212,12 @@ def ciclo_analisis():
         print("Obteniendo peticiones\nPeticiones en cola ->",cola.len_peticion())
         if peticiones > 0:
             peticion = cola.pop_peticion()
+            # try:
+            #     ejecucion_analisis(peticion)
+            # except Exception as e:
+            #     print("Ocurrió un error bro", e)
             ejecucion_analisis(peticion)
-        sleep(10)
+        sleep(1)
 
 def iniciar_ciclo_primera_peticion():
     thread = threading.Thread(target=ciclo_primera_peticion)
@@ -240,10 +243,11 @@ def execute_informacion(peticion, peticion_proceso, peticion_reporte, numero_gra
     numero_grafica = reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica)
     return numero_grafica
 
-def execute_analisis(peticion_proceso, peticion_reporte):
+def execute_analisis(peticion_proceso, peticion_reporte, numero_grafica):
     respuesta_analisis = analisis.execute(peticion_proceso["sitio"])
     peticion_proceso["analisis"] = respuesta_analisis
-    reporte_analisis(peticion_proceso, peticion_reporte)
+    reporte_analisis(peticion_proceso, peticion_reporte, numero_grafica)
+    return numero_grafica
 
 # Puede que truene en fuzzing_lanzar_fuzz
 def execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte, numero_grafica):
@@ -378,13 +382,15 @@ def reporte_informacion(peticion_proceso, peticion_reporte, numero_grafica):
     numero_grafica = reportes_informacion_crear(informacion, peticion_reporte, numero_grafica)
     return numero_grafica
 
-def reporte_analisis(peticion_proceso, peticion_reporte):
+def reporte_analisis(peticion_proceso, peticion_reporte, numero_grafica):
     analisis = {}
     analisis["servidor"] = analisis_obtener_servidor(peticion_proceso["analisis"]["servidor"], "Servidor") # Nombre y versión
     analisis["cms"] = analisis_obtener_servidor(peticion_proceso["analisis"]["cms"], "CMS") # Nombre y versión
     analisis["librerias"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["librerias"],"Libreria") #  Nombre y versión
     analisis["frameworks"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["frameworks"],"Framework") # Nombre y versión
     analisis["lenguajes"] = analisis_obtener_cms_datos(peticion_proceso["analisis"]["lenguajes"],"Lenguaje") # Nombre y versión
+    
+    analisis["cifrados"], grafica_cifrados = analisis_obtener_cifrados(peticion_proceso["analisis"]["cifrados"]) # Nombre y tipo
 
     analisis["plugins"] = analisis_obtener_datos(peticion_proceso["analisis"]["plugins"],"Plugins") # Listado
     analisis["archivos"] = analisis_obtener_datos(peticion_proceso["analisis"]["archivos"], "Archivos") # Listado
@@ -393,7 +399,8 @@ def reporte_analisis(peticion_proceso, peticion_reporte):
 
     analisis["paginas"] = analisis_obtener_paginas(peticion_proceso["analisis"]["paginas"]) # Total
 
-    reportes_analisis_crear(analisis, peticion_reporte)
+    reportes_analisis_crear(analisis, grafica_cifrados, peticion_reporte, numero_grafica)
+    return numero_grafica
 
 def reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica):
     fuzzing_estadistica_general = []
@@ -410,12 +417,14 @@ def reporte_fuzzing(peticion_proceso, peticion_reporte, numero_grafica):
     fuzzing_estadistica_general.append(xss)
     fuzzing_estadistica_general.append(sqli)
     fuzzing_estadistica_general.append(lfi)
+    #print(fuzzing_estadistica_general)
     numero_grafica = reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte, numero_grafica)
         
     return numero_grafica
 
 def reporte_explotacion(peticion_proceso, peticion_reporte, numero_grafica):
     explotacion_estadisticas = estadisticas_explotacion(peticion_proceso)
+    #explotacion_estadisticas = [["AAAA.SH","Exitoso"], ["BBBB.SH","Fracaso"], ["CCCC.SH","Inconcluso"]]
     numero_grafica = reportes_explotacion_crear(explotacion_estadisticas, peticion_reporte, numero_grafica)
     return numero_grafica
 
@@ -440,10 +449,15 @@ def reportes_informacion_crear(informacion, peticion_reporte, numero_grafica):
     
     return numero_grafica
 
-def reportes_analisis_crear(datos_analisis, peticion_reporte):
-    analisis = reportes_analisis_crear_general(datos_analisis)
+def reportes_analisis_crear(datos_analisis, grafica_cifrados, peticion_reporte, numero_grafica):
+    reporte = root + "/modules/reportes/ifram_grafica_analisis"
+    reporte_grafica = reporte + "{0}.html".format(numero_grafica)
+    numero_grafica += 1
+    reportes_analisis_crear_cifrados_grafica(grafica_cifrados,reporte_grafica)
+    analisis = reportes_analisis_crear_general(datos_analisis, reporte_grafica)
     for valor in analisis:
         peticion_reporte["analisis"].append(valor)
+    return numero_grafica
 
 def reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte, numero_grafica):
     reporte = root + "/modules/reportes/ifram_grafica"
@@ -539,7 +553,7 @@ def informacion_obtener_puertos_individuales(datos):
             puerto = valor["puerto"]
             protocolo = valor["protocolo"]
             servicio = valor["servicio"]
-            puertos_individuales.append([ dato.capitalize(), puerto, protocolo, servicio ])
+            puertos_individuales.append([ dato.capitalize(), puerto, protocolo, servicio.capitalize() ])
     if len(puertos_individuales) == 0:
         puertos_individuales.append(["NA","NA","NA","NA"])
     return puertos_individuales
@@ -576,6 +590,21 @@ def analisis_obtener_datos(datos, tipo):
     if len(datos) != 0:
         return [[dato] for dato in datos]
     return [["No se encontraron {0}".format(tipo)]]
+
+def analisis_obtener_cifrados(datos):
+    resultados = []
+    resultados_grafica = [0,0,0]
+    if len(datos) != 0:
+        for dato in datos:
+            resultados.append([dato.replace("_"," "), datos[dato].capitalize()])
+            if datos[dato] == "debil":
+                resultados_grafica[0] += 1
+            if datos[dato] == "recomendado":
+                resultados_grafica[1] += 1
+            if datos[dato] == "seguro":
+                resultados_grafica[2] += 1
+        return resultados, resultados_grafica
+    return [["No se encontraron cifrados"]], [0,0,0]
 
 def analisis_obtener_paginas(datos): return [[len(datos)]]
 
@@ -623,16 +652,39 @@ def reportes_informacion_crear_general_puertos_grafica(informacion, reporte):
     filtrados = informacion[3]
     puertos_estado = ["Abiertos","Cerrados","Filtrados"]
     puertos = [abiertos,cerrados,filtrados]
-    informacio_diagrama = go.Figure(data=[go.Pie(labels=puertos_estado, values=puertos)])
-    informacio_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
+
+    colors = ['#024C81', '#E7A44C', '#538A6B']
+    informacion_diagrama = go.Figure(data=[go.Pie(labels=puertos_estado, values=puertos)])
+    informacion_diagrama.update_traces(hoverinfo='label+percent', textinfo='value', textfont_size=20,
+                  marker=dict(colors=colors, line=dict(color='#000000', width=1)))
+    informacion_diagrama.update_layout(title_text="Resultados del módulo de información")
+    informacion_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
+
+def reportes_analisis_crear_cifrados_grafica(grafica_cifrados,reporte):
+    debil = grafica_cifrados[0]
+    recomendado = grafica_cifrados[1]
+    seguro = grafica_cifrados[2]
+    puertos_estado = ["Debil","Recomendado","Seguro"]
+    puertos = [debil,recomendado,seguro]
+
+    colors = ['#024C81', '#E7A44C', '#538A6B']
+    analasis_diagrama = go.Figure(data=[go.Pie(labels=puertos_estado, values=puertos)])
+    analasis_diagrama.update_traces(hoverinfo='label+percent', textinfo='value', textfont_size=20,
+                  marker=dict(colors=colors, line=dict(color='#000000', width=1)))
+    analasis_diagrama.update_layout(title_text="Resultados del módulo de análisis")
+    analasis_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
 
 def reportes_fuzzing_crear_general_grafica(fuzzing_estadisticas,reporte):
-    xss = fuzzing_estadisticas[0][1]
-    sqli = fuzzing_estadisticas[0][2]
-    lfi = fuzzing_estadisticas[0][3]
+    xss = fuzzing_estadisticas[1]
+    sqli = fuzzing_estadisticas[2]
+    lfi = fuzzing_estadisticas[3]
     ataques = ["XSS","SQLi","LFI"]
 
+    colors = ['#024C81', '#E7A44C', '#538A6B']
     fuzzing_diagrama = go.Figure(data=[go.Pie(labels=ataques, values=[xss,sqli,lfi])])
+    fuzzing_diagrama.update_traces(hoverinfo='label+percent', textinfo='value', textfont_size=20,
+                  marker=dict(colors=colors, line=dict(color='#000000', width=1)))
+    fuzzing_diagrama.update_layout(title_text="Resultados del módulo de fuzzing")
     fuzzing_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
 
 def reportes_explotacion_crear_general_grafica(explotacion_estadisticas,reporte):
@@ -649,9 +701,12 @@ def reportes_explotacion_crear_general_grafica(explotacion_estadisticas,reporte)
             if explotacion[1] == "Inconcluso":
                 inconcluso += 1
     ataques_resultado = [exito, fracaso, inconcluso]
-    fuzzing_diagrama = go.Figure(data=[go.Pie(labels=ataques, values=ataques_resultado)])
-    
-    fuzzing_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
+    colors = ['#024C81', '#9e2424', '#adadad']
+    explotacion_diagrama = go.Figure(data=[go.Pie(labels=ataques, values=ataques_resultado)])
+    explotacion_diagrama.update_traces(hoverinfo='label+percent', textinfo='value', textfont_size=20,
+                  marker=dict(colors=colors, line=dict(color='#000000', width=1)))
+    explotacion_diagrama.update_layout(title_text="Resultados del módulo de Explotación")
+    explotacion_diagrama.write_html(reporte, full_html=False, include_plotlyjs="cdn")
 
 '''
     Funciones para crear los submódulos de los reportes
@@ -715,11 +770,12 @@ def reportes_informacion_crear_subgeneral(informacion):
     return analisis
 
 # Análisis
-def reportes_analisis_crear_general(datos_analisis):
+def reportes_analisis_crear_general(datos_analisis, grafica_cifrados):
     analisis = []
     datos = {}
     datos["servidor"] = datos_analisis["servidor"] + datos_analisis["cms"]
     datos["cms"] = datos_analisis["librerias"] + datos_analisis["frameworks"] + datos_analisis["lenguajes"]
+    datos["cifrados"] = datos_analisis["cifrados"]
     datos["plugins"] = datos_analisis["plugins"]
     datos["archivos"] = datos_analisis["archivos"] 
     datos["vulnerabilidades"] = datos_analisis["vulnerabilidades"]
@@ -741,6 +797,14 @@ def reportes_analisis_crear_general(datos_analisis):
                         "titulo":"Librerías, Frameworks, Lenguajes",
                         "grafica":"",
                         "cabecera":["Tipo","Nombre","Versión"],
+                        "datos":datos[dato]
+            }
+        elif dato == "cifrados":
+            analisis_individual = {
+                        "categoria":"",
+                        "titulo":"Cifrados",
+                        "grafica":grafica_cifrados,
+                        "cabecera":["Nombre","Interpretación"],
                         "datos":datos[dato]
             }
         else:

@@ -1,5 +1,5 @@
 from selenium import webdriver
-from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, ElementNotInteractableException, WebDriverException
+from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, ElementNotInteractableException, WebDriverException, JavascriptException
 import time
 import threading
 import re
@@ -244,6 +244,10 @@ class Form():
          return False
       except TimeoutException:
          return True
+      except JavascriptException:
+         for valor in self.form_completo["form"]["inputs"]:
+            if valor.get_attribute("name").lower() == "submit" or valor.get_attribute("id").lower() == "submit":
+               valor.click()
 
    def set_input(self, input_individual, valor):
       try:

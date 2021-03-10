@@ -695,6 +695,7 @@ class Obtencion_informacion():
 	def get_cifrados(self):
 		cifrados = {}
 		tmp_cifrado = []
+		self.tmp_diccionario["cifrados"] = {}
 		if self.sitio.startswith("https"):
 			ruta = path.abspath(path.dirname(__file__)) + "/config/config_general.json"
 			with open(ruta,"r") as cg:
@@ -715,12 +716,17 @@ class Obtencion_informacion():
 									if cifrado in valor:
 										tmp_cifrado = valor.split()
 										if "TLS" in tmp_cifrado[0]:
-											cifrados[tmp_cifrado[0] + tmp_cifrado[1] + " - " + tmp_cifrado[-1]] = interprete
+											nombre_cifrado = tmp_cifrado[0] + tmp_cifrado[1] + " - " + tmp_cifrado[-1]
+											nombre_cifrado = nombre_cifrado.replace(".","_")
+											cifrados[nombre_cifrado] = interprete
+											
 										else:
+											nombre_cifrado = tmp_cifrado[0] + tmp_cifrado[1] + " - " + tmp_cifrado[-1]
+											nombre_cifrado = nombre_cifrado.replace(".","_")
 											cifrados[tmp_cifrado[0] + " - " + tmp_cifrado[-1]] = interprete
 				self.tmp_diccionario["cifrados"] = cifrados
 			except:
-				self.tmp_diccionario["cifrados"] = {}
+				pass
 		return self.tmp_diccionario
 
 
