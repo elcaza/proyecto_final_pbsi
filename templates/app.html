@@ -40,10 +40,10 @@
 	<section class="modulos">
 		<h1 class="modulos__titulo">Módulos</h1>
 		<div class="modulos__modulo">
-			<label class="modulos__switch">
+			<!-- <label class="modulos__switch">
 				<input class="modulos__checkbox" type="checkbox">
 				<span class="modulos__slider modulos__round"></span>
-			</label>
+			</label> -->
 			<span class="modulos__nombre">Configuraciones generales</span>
 			<div class="modulos__config">
 				<div class="modulos__opcion__nombre">Puertos a escanear</div>
@@ -62,6 +62,27 @@
 				</div>
 				<div class="modulos__opcion__valor">
 					<input id="profundidad" type="number">
+				</div>
+			</div>
+			<div class="modulos__config">
+				<div class="modulos__opcion__nombre">Redireccionamiento</div>
+				<div class="modulos__opcion__descripcion">Permitir seguir el flujo de redirecciones
+
+				</div>
+				<div class="modulos__opcion__valor">
+					<label class="modulos__switch">
+						<input id="redireccionamiento" class="modulos__checkbox" type="checkbox">
+						<span class="modulos__slider modulos__round"></span>
+					</label>
+				</div>
+			</div>
+			<div class="modulos__config">
+				<div class="modulos__opcion__nombre">Lista negra</div>
+				<div class="modulos__opcion__descripcion">URLS a omitir durante la prueba. Separadas por un salto de línea.
+
+				</div>
+				<div class="modulos__opcion__valor">
+					<textarea name="" id="lista_negra" cols="30" rows="10"></textarea>
 				</div>
 			</div>
 		</div>

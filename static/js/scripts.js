@@ -87,6 +87,22 @@ document.addEventListener("DOMContentLoaded", function() {
 		let puertos = document.querySelector("#modulos_puertos").value;
 		let cookie = document.querySelector("#modulos_cookie").value;
 		let profundidad = document.querySelector("#profundidad").value;
+		//@cromos
+		let redireccionamiento = document.querySelector("#redireccionamiento").checked;
+		let lista_negra = document.querySelector("#lista_negra").value;
+		let array_lista_negra = [];
+
+		// Cada nueva línea será un elemento del array
+		lista_negra = lista_negra.split('\n');
+		
+		lista_negra.forEach(element => {
+			// corroborar si el elemento es una url
+			// Pendiente
+			array_lista_negra.push(element);
+		});
+
+		// alert(redireccionamiento)
+		// alert(lista_negra)		
 
 		let peticion = {
 			"sitio":sitio,
@@ -96,7 +112,10 @@ document.addEventListener("DOMContentLoaded", function() {
 				"final":puertos
 			},
 			"cookie":cookie,
-			"profundidad":profundidad
+			"profundidad":profundidad,
+			// @cromos
+			"redireccionamiento":redireccionamiento,
+			"lista_negra":array_lista_negra
 		}
 
 		send_json_fetch(server_url+"/ejecucion", peticion);
