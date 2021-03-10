@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	let button_nav__nuevo = document.querySelector(".nav__nuevo");
 	let button_nav__consultas = document.querySelector(".nav__consultas");
 	let button_nav__proximosEscaneos = document.querySelector(".nav__proximosEscaneos");
+	let button_nav__exploits = document.querySelector(".nav__exploits");
 	let button_scan__options__url = document.querySelector(".scan__options__url");
 	let button_scan__options__file = document.querySelector(".scan__options__file");
 	let scan__start = document.querySelector(".scan__start");
@@ -20,17 +21,26 @@ document.addEventListener("DOMContentLoaded", function() {
 	button_nav__nuevo.addEventListener("click", function(){
 		body.classList.replace("vista_consultas", "vista_nuevo");
 		body.classList.replace("vista_configuraciones", "vista_nuevo");
+		body.classList.replace("vista_exploits", "vista_nuevo");
 	});
 	
 	button_nav__consultas.addEventListener("click", function(){
 		body.classList.replace("vista_nuevo", "vista_consultas");
 		body.classList.replace("vista_configuraciones", "vista_consultas");
+		body.classList.replace("vista_exploits", "vista_consultas");
 		start_consulta();
 	});
 	
 	button_nav__proximosEscaneos.addEventListener("click", function(){
 		body.classList.replace("vista_nuevo", "vista_configuraciones");
 		body.classList.replace("vista_consultas", "vista_configuraciones");
+		body.classList.replace("vista_exploits", "vista_configuraciones");
+	});
+
+	button_nav__exploits.addEventListener("click", function(){
+		body.classList.replace("vista_nuevo", "vista_exploits");
+		body.classList.replace("vista_consultas", "vista_exploits");
+		body.classList.replace("vista_configuraciones", "vista_exploits");
 	});
 
 	button_scan__options__url.addEventListener("click", function(){
@@ -50,7 +60,45 @@ document.addEventListener("DOMContentLoaded", function() {
 	});
 
 	button_add__exploits.addEventListener("click", function(){
-		body.classList.toggle("add__exploit");
+		//@cromos
+		alert("Añadiendo exploit");
+
+		let opcion = "";
+		let nombre = document.querySelector("#exploit_name").value;
+		let contenido_exploit = document.querySelector("#contenido_exploit").value;
+		let tecnologia = document.querySelector("#tecnologia").value
+		let exploit_cve = document.querySelector("#exploit_cve").value;
+		let exploit_software = document.querySelector("#exploit_software").value;
+		let exploit_software_version = document.querySelector("#exploit_software_version").value;
+		let exploit_cms = document.querySelector("#exploit_cms").value;
+		let exploit_categoria = document.querySelector("#exploit_categoria").value;
+		let exploit_extension = document.querySelector("#exploit_extension").value;
+		let exploit_version = document.querySelector("#exploit_version").value;
+
+		if ( document.querySelector("body").classList.contains("in_software") ){
+			opcion = "software";
+		} else if ( document.querySelector("body").classList.contains("in_cms") ) {
+			opcion = "cms";
+		}
+
+
+		// exploits-crear
+		let peticion = {
+			"opcion":opcion, // ( software | cms )
+			"nombre":nombre,
+			"contenido_exploit":contenido_exploit,
+			"tecnologia":tecnologia,
+			"exploit_cve":exploit_cve,
+			"exploit_software":exploit_software,
+			"exploit_software_version":exploit_software_version,
+			"exploit_cms":exploit_cms,
+			"exploit_categoria":exploit_categoria,
+			"exploit_extension":exploit_extension,
+			"exploit_version":exploit_version
+		}
+		console.log(peticion);
+
+		send_json_fetch(server_url+"/exploits-crear", peticion);
 	});
 
 	// Loading info
@@ -77,6 +125,22 @@ document.addEventListener("DOMContentLoaded", function() {
 		let puertos = document.querySelector("#modulos_puertos").value;
 		let cookie = document.querySelector("#modulos_cookie").value;
 		let profundidad = document.querySelector("#profundidad").value;
+		//@cromos
+		let redireccionamiento = document.querySelector("#redireccionamiento").checked;
+		let lista_negra = document.querySelector("#lista_negra").value;
+		let array_lista_negra = [];
+
+		// Cada nueva línea será un elemento del array
+		lista_negra = lista_negra.split('\n');
+		
+		lista_negra.forEach(element => {
+			// corroborar si el elemento es una url
+			// Pendiente
+			array_lista_negra.push(element);
+		});
+
+		// alert(redireccionamiento)
+		// alert(lista_negra)		
 
 		let peticion = {
 			"sitio":sitio,
@@ -86,7 +150,10 @@ document.addEventListener("DOMContentLoaded", function() {
 				"final":puertos
 			},
 			"cookie":cookie,
-			"profundidad":profundidad
+			"profundidad":profundidad,
+			// @cromos
+			"redireccionamiento":redireccionamiento,
+			"lista_negra":array_lista_negra
 		}
 
 		send_json_fetch(server_url+"/ejecucion", peticion);
