@@ -24,5 +24,5 @@ def ejecutar_tres():
     r = requests.post("http://127.0.0.1:3000/consulta-reporte",data=json.dumps(peticion), headers=headers)
     print(r.text)
 
-#ejecutar_uno()
-ejecutar_tres()
+ejecutar_uno()
+#ejecutar_tres()

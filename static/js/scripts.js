@@ -1,6 +1,6 @@
 // Variable global
 let json_consultas;
-
+let json_proximos_escaneos;
 // Main actions
 document.addEventListener("DOMContentLoaded", function() {
 	// Buttons
@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		body.classList.replace("vista_nuevo", "vista_configuraciones");
 		body.classList.replace("vista_consultas", "vista_configuraciones");
 		body.classList.replace("vista_exploits", "vista_configuraciones");
+		start_proximos_escaneos();
 	});
 
 	button_nav__exploits.addEventListener("click", function(){
@@ -192,6 +193,64 @@ document.addEventListener("DOMContentLoaded", function() {
 				json_consultas = json_respuesta;
 			}
 		)
+	}
+
+
+	json_proximos_escaneos;
+	function start_proximos_escaneos() {
+		send_json_fetch_2(server_url+"/proximos-escaneos", {})
+		.then(
+			json_respuesta =>{
+				json_proximos_escaneos = json_respuesta;
+				// @capi checa esto plx
+				let target_modulos = document.querySelector(".main__proximosEscaneos__contenedor");
+				target_modulos.innerHTML = "";
+				json_proximos_escaneos.forEach(element => {
+					console.log(element)
+
+					let sitios = element.sitio;
+					let estado = element.estado;
+					/*
+					<div class="main__proximosEscaneos__datos">
+						<div class="main__proximosEscaneos__sitio">
+							<span>www.site.com</span>
+						</div>
+						<div class="main__proximosEscaneos__fecha">
+							Fecha: <span>22/03/2021</span>
+						</div>
+					</div>
+					*/
+
+					// Creación de elmentos
+					let consultas__sitio = document.createElement('div');
+					consultas__sitio.classList.add("main__proximosEscaneos__datos");
+
+					let consultas__sitio__url = document.createElement('div');
+					consultas__sitio__url.classList.add("main__proximosEscaneos__sitio");
+
+					let span_site = document.createElement('span');
+					span_site.classList.add("main__proximosEscaneos__sitio");
+					span_site.textContent = sitios;
+
+					let consultas__sitio__estado = document.createElement('div');
+					consultas__sitio__estado.classList.add("main__proximosEscaneos__fecha");
+
+					let span_estado = document.createElement('span');
+					span_estado.classList.add("main__proximosEscaneos__fecha");
+					span_estado.textContent = estado;
+
+					// Carga de elementos
+					consultas__sitio.appendChild(consultas__sitio__url);
+					consultas__sitio__url.appendChild(span_site);
+
+					consultas__sitio.appendChild(consultas__sitio__estado);
+					consultas__sitio__estado.appendChild(span_estado);
+
+					// Pintar el elmento terminado
+					target_modulos.appendChild(consultas__sitio);
+
+				}); // Fin carga de botones y sitios
+			})
 	}
 
 	// ************************************************************************************************

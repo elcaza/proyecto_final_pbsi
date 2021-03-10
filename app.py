@@ -176,11 +176,13 @@ def exploits_peticion_eliminar(peticion_json):
 def proximos_peticion_escaneos():
     peticiones = cola.get_peticiones()
     pendientes = []
-    peticion_actual = cola.get_peticion_actual()
-    pendientes.append({"sitio":peticion_actual["sitio"],"fecha":peticion_actual["fecha"],"estado":"Actual"})
-    for peticion in peticiones:
-        pendientes.append({"sitio":peticion["sitio"],"fecha":peticion["fecha"],"estado":"Pendiente"})
-
+    if len(peticiones) != 0:
+        peticion_actual = cola.get_peticion_actual()
+        pendientes.append({"sitio":peticion_actual["sitio"],"fecha":peticion_actual["fecha"],"estado":"Actual"})
+        for peticion in peticiones:
+            pendientes.append({"sitio":peticion["sitio"],"fecha":peticion["fecha"],"estado":"Pendiente"})
+    else:
+        pendientes.append({})
     return json.dumps(pendientes)
 '''
     Estructura de la cola 
@@ -195,8 +197,9 @@ class SingletonMeta(type):
 
 class Encolamiento(metaclass=SingletonMeta):
     def __init__(self):
-       self.peticion = []
-    
+        self.peticion = []
+        self.peticion_actual = {}
+
     def add_peticion(self, peticion):
         self.peticion.append(peticion)
         return "Peticion en cola"
@@ -214,6 +217,9 @@ class Encolamiento(metaclass=SingletonMeta):
     def get_peticion_actual(self):
         return self.peticion_actual
 
+    def reset_peticion_actual(self):
+        self.peticion_actual = {}
+
 @app.before_first_request
 def iniciar_ciclo_analisis():
     thread = threading.Thread(target=ciclo_analisis)
@@ -222,7 +228,7 @@ def iniciar_ciclo_analisis():
 def ciclo_analisis():
     while True:
         peticiones = cola.len_peticion()
-        print("Obteniendo peticiones\nPeticiones en cola ->",cola.len_peticion())
+        print("Obteniendo peticiones\nPeticiones en cola ->",peticiones)
         if peticiones > 0:
             peticion = cola.pop_peticion()
             # try:
@@ -230,7 +236,8 @@ def ciclo_analisis():
             # except Exception as e:
             #     print("Ocurrió un error bro", e)
             ejecucion_analisis(peticion)
-        sleep(1)
+        cola.reset_peticion_actual()
+        sleep(2)
 
 def iniciar_ciclo_primera_peticion():
     thread = threading.Thread(target=ciclo_primera_peticion)
