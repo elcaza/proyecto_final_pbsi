@@ -286,7 +286,8 @@ button:hover {
 
 .modulos input,
 .exploits input,
-.exploits textarea {
+.exploits textarea,
+#lista_negra {
     margin: 10px auto;
     width: 90%;
     border-radius: 3px;
@@ -431,7 +432,7 @@ input:checked + .modulos__slider:before {
 }
 
 .exploits__modulo {
-    display: none;
+    display: block;
     box-sizing: border-box;
     border: 1px solid;
     margin: 10px 0 10px 0;

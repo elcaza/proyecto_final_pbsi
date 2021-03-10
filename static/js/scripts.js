@@ -60,7 +60,45 @@ document.addEventListener("DOMContentLoaded", function() {
 	});
 
 	button_add__exploits.addEventListener("click", function(){
-		body.classList.toggle("add__exploit");
+		//@cromos
+		alert("Añadiendo exploit");
+
+		let opcion = "";
+		let nombre = document.querySelector("#exploit_name").value;
+		let contenido_exploit = document.querySelector("#contenido_exploit").value;
+		let tecnologia = document.querySelector("#tecnologia").value
+		let exploit_cve = document.querySelector("#exploit_cve").value;
+		let exploit_software = document.querySelector("#exploit_software").value;
+		let exploit_software_version = document.querySelector("#exploit_software_version").value;
+		let exploit_cms = document.querySelector("#exploit_cms").value;
+		let exploit_categoria = document.querySelector("#exploit_categoria").value;
+		let exploit_extension = document.querySelector("#exploit_extension").value;
+		let exploit_version = document.querySelector("#exploit_version").value;
+
+		if ( document.querySelector("body").classList.contains("in_software") ){
+			opcion = "software";
+		} else if ( document.querySelector("body").classList.contains("in_cms") ) {
+			opcion = "cms";
+		}
+
+
+		// exploits-crear
+		let peticion = {
+			"opcion":opcion, // ( software | cms )
+			"nombre":nombre,
+			"contenido_exploit":contenido_exploit,
+			"tecnologia":tecnologia,
+			"exploit_cve":exploit_cve,
+			"exploit_software":exploit_software,
+			"exploit_software_version":exploit_software_version,
+			"exploit_cms":exploit_cms,
+			"exploit_categoria":exploit_categoria,
+			"exploit_extension":exploit_extension,
+			"exploit_version":exploit_version
+		}
+		console.log(peticion);
+
+		send_json_fetch(server_url+"/exploits-crear", peticion);
 	});
 
 	// Loading info
