@@ -18,8 +18,8 @@ def ejecutar_tres():
     }
 
     peticion = {
-        "sitio": "http://localhost/drupal7/",
-        "fecha":"07/03/2021 20:14:24"
+        "sitio":"http://localhost/joomla/",
+        "fecha":"10/03/2021 00:00:18"
     }
     r = requests.post("http://127.0.0.1:3000/consulta-reporte",data=json.dumps(peticion), headers=headers)
     print(r.text)

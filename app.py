@@ -81,7 +81,6 @@ def ejecucion_analisis(peticion):
         }
 
         numero_grafica = 0
-
         print("Iniciando Información")
         numero_grafica = execute_informacion(peticion, peticion_proceso, peticion_reporte, numero_grafica)
 
@@ -133,11 +132,11 @@ def consulta_peticion_reporte(peticion):
         print(analisis)
 
         numero_grafica = reporte_informacion(analisis, peticion_reporte, numero_grafica)
-        reporte_analisis(analisis, peticion_reporte)
+        numero_grafica = reporte_analisis(analisis, peticion_reporte, numero_grafica)
         numero_grafica = reporte_fuzzing(analisis, peticion_reporte, numero_grafica)
         numero_grafica = reporte_explotacion(analisis, peticion_reporte, numero_grafica)
-        execute_reporte(peticion_reporte)
-        return json.dumps({"estado":"ok"})
+        sitio = execute_reporte(peticion_reporte)
+        return json.dumps({"sitio":sitio})
     return json.dumps({"estado":"error"})
 
 def exploits_peticion_crear(peticion):
@@ -989,6 +988,10 @@ def obtener_cms_version_unica(peticion_proceso, caracteristica, cms):
 @app.route("/")
 def principal():
     return render_template("app.html")
+
+@app.route("/reporte")
+def reporte():
+    return render_template("reporte.html")
 
 # Función para iniciar el análisis
 @app.route("/ejecucion", methods=["GET","POST"])

@@ -81,7 +81,10 @@ document.addEventListener("DOMContentLoaded", function() {
 		let peticion = {
 			"sitio":sitio,
 			"fecha":fecha,
-			"puertos":puertos,
+			"puertos":{
+				"inicio":1,
+				"final":puertos
+			},
 			"cookie":cookie,
 			"profundidad":profundidad
 		}
@@ -98,68 +101,30 @@ document.addEventListener("DOMContentLoaded", function() {
 	json_consultas;
 	function start_consulta() {
 		// @cromos
-		json_consultas = send_json_fetch(server_url+"/consulta-volcado", {});
-		console.log(json_consultas); // verificar si el objeto es el que mandaste
-
-		let array_sites = [];
-
-
-		json_consultas = {
-			"analisis_totales": 97,
-			"ultima_fecha": "19/02/2021",
-			"analisis": [
-				{
-					"sitios":"sitio1.com",
-					"fecha":"01/02/21"
-				},
-				{
-					"sitios":"url.com",
-					"fecha":"fecha"
-				},
-				{
-					"sitios":"sitio1.com",
-					"fecha":"02/02/21"
-				},
-				{
-					"sitios":"sitio1.com",
-					"fecha":"03/02/21"
-				},
-				{
-					"sitios":"sitio1.com",
-					"fecha":"04/02/21"
-				},
-				{
-					"sitios":"sitio1.com",
-					"fecha":"05/02/21"
-				},
-				{
-					"sitios":"url.com",
-					"fecha":"06/02/21"
-				},
-				{
-					"sitios":"aaa.com",
-					"fecha":"07/02/21"
-				}
-			]
-		}
-
-		document.querySelector(".consultas__analizados__numero").textContent = json_consultas.analisis_totales;
-		document.querySelector(".consultas__fecha__fecha").textContent = json_consultas.ultima_fecha;
+		send_json_fetch_2(server_url+"/consulta-volcado", {})
+		.then(
+			json_respuesta =>{
+				let array_sites = [];
+				document.querySelector(".consultas__analizados__numero").textContent = json_respuesta.analisis_totales;
+				document.querySelector(".consultas__fecha__fecha").textContent = json_respuesta.ultima_fecha;
+				
+				let modulos__select = document.querySelector(".modulos__select");
+				let analisis = json_respuesta.analisis;
 		
-		let modulos__select = document.querySelector(".modulos__select");
-		let analisis = json_consultas.analisis;
-
-		analisis.forEach(element => {
-			array_sites.push(element.sitios);
-		});
-
-		array_sites = [...new Set(array_sites)];
-
-		modulos__select.innerHTML = "";
-
-		array_sites.forEach(element => {
-			modulos__select.add(new Option(element, element));
-		});
+				analisis.forEach(element => {
+					array_sites.push(element.sitio);
+				});
+		
+				array_sites = [...new Set(array_sites)];
+		
+				modulos__select.innerHTML = "";
+				console.log(array_sites)
+				array_sites.forEach(element => {
+					modulos__select.add(new Option(element, element));
+				});
+				json_consultas = json_respuesta;
+			}
+		)
 	}
 
 	// ************************************************************************************************
@@ -228,7 +193,7 @@ document.addEventListener("DOMContentLoaded", function() {
  */
 
 // Función para enviar los datos en un json
-const server_url = "https://webhook.site/7ad7e3f3-ed67-454e-8147-c853bed2fd63";
+const server_url = "http://localhost:3000";
 
 
 /**
@@ -269,6 +234,24 @@ async function dummy_response(action) {
 /**
  * Función que se encarga de hacer las peticiones
  */
+async function send_json_fetch_2(url, json){
+	const response = await fetch(url, {
+		method: 'POST', // *GET, POST, PUT, DELETE, etc.
+		mode: 'cors', // no-cors, *cors, same-origin
+		cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+		credentials: 'same-origin', // include, *same-origin, omit
+		headers: {
+		  'Content-Type': 'application/json'
+		  // 'Content-Type': 'application/x-www-form-urlencoded',
+		},
+		redirect: 'follow', // manual, *follow, error
+		referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+		body: JSON.stringify(json) // body data type must match "Content-Type" header
+	  });
+	  return response.json(); // parses JSON response into native JavaScript objects
+}
+
+
 function send_json_fetch(url, json){
 	/*
 	fetch(url)
@@ -278,7 +261,7 @@ function send_json_fetch(url, json){
 	*/	
 
 	const data_to_send = JSON.stringify(json);
-	
+	console.log(data_to_send)
 	let dataReceived = ""; 
 	fetch(url, {
 		// credentials: "same-origin",
@@ -288,7 +271,7 @@ function send_json_fetch(url, json){
 		body: data_to_send
 	})
 		.then(resp => {
-			if (resp.status === 200) {
+			if (resp.status === 200) {				
 				return resp.json()
 			} else {
 				console.log("Status: " + resp.status)
@@ -298,7 +281,7 @@ function send_json_fetch(url, json){
 		.then(dataJson => {
 			console.log("evaluando");
 			try {
-				dataReceived = JSON.parse(dataJson);
+				dataReceived = dataJson;
 			} catch (error) {
 				console.log(error);
 			}
@@ -451,7 +434,7 @@ function load_sites(value_select){
 	analisis.forEach(element => {
 		console.log(element)
 		let fecha = element.fecha;
-		let sitios = element.sitios;
+		let sitios = element.sitio;
 
 		if (value_select === sitios) {
 				/*
@@ -519,8 +502,12 @@ function load_sites(value_select){
 	elements = document.querySelectorAll(".button_ver_mas");
 
 	let action_ver_mas = function(site, date) {
-		alert("Scan to " + site + " " + date);
-		console.log("Scan to " + site + " " + date);
+		send_json_fetch_2(server_url+"/consulta-reporte", {"sitio":site,"fecha":date})
+		.then(
+			json_respuesta =>{
+				window.open("http://localhost:3000/reporte");
+			}
+		);
 	};
 
 	Array.from(elements).forEach(function(element) {
