@@ -26,10 +26,13 @@ class Utilerias():
 
 
 	def get_peticion(self,sitio):
-		if sitio.startswith("https"):
-			respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),verify=False)
-		else:
-			respuesta = requests.get(sitio,headers=self.get_fake_user_agent())
+		try:
+			if sitio.startswith("https"):
+				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),verify=False,cookies=self.get_cookies())
+			else:
+				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),cookies=self.get_cookies())
+		except:
+			respuesta = ""
 		return respuesta
 
 	def obtener_path_file(self,relative_path,file_name,extension):
@@ -48,8 +51,11 @@ class Utilerias():
 		return  existe
 
 	def obtener_contenido_html(self,sitio):
-		respuesta = self.get_peticion(sitio)
-		return BeautifulSoup(respuesta.content, "html.parser")
+		try:
+			respuesta = self.get_peticion(sitio)
+			return BeautifulSoup(respuesta.content, "html.parser")
+		except:
+			return ""
 
 	def buscar_archivo_comun(self,lista_urls):
 		files_comunes = []
@@ -125,6 +131,25 @@ class Utilerias():
 				vulnes_cms.append({"cve":cve,"description":description})
 		return vulnes_cms
 
+	def get_cookies(self):
+		cookies_tmp = []
+		cookies = {}
+		c_tmp = []
+		config_file = self.obtener_path_file("config/","config_general",".json")
+		with open(config_file) as configuracion:
+			datos = json.load(configuracion)
+		cookies_data = datos["cookie"]
+		if "," in cookies_data:
+			cookies_tmp = cookies_data.split(",")
+			for cookie in cookies_tmp:
+				c_tmp = cookie.split(":")
+				cookies[c_tmp[0]] = c_tmp[-1]
+		else:
+			cookies_tmp = cookies_data.split(":")
+			cookies[cookies_tmp[0]] = cookies_tmp[1]
+
+		return cookies
+
 class Wordpress():
 
 	def __init__(self,sitio):
@@ -171,7 +196,7 @@ class Wordpress():
 					if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):
 						archivos_expuestos.append(archivo)
 					else:
-						respuesta = requests.post(path.join(self.sitio,archivo),headers=self.util.get_fake_user_agent(),verify=False)
+						respuesta = requests.post(path.join(self.sitio,archivo),headers=self.util.get_fake_user_agent(),verify=False,cookies=self.util.get_cookies())
 						if len(respuesta.history) > 0:
 							status_code_redirect = respuesta.history[0].status_code
 						if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):
@@ -227,18 +252,19 @@ class Wordpress():
 	def detect_cms(self):
 		resultado = False
 		respuesta = self.util.get_peticion(self.sitio)
-		if respuesta.headers.get("Link") != None and "wp-json" in respuesta.headers["Link"]:
-			resultado = True
-		elif respuesta.headers.get("Set-Cookie") != None and re.search(".*[w|W]ord[p|P]ress.*",respuesta.headers["Set-Cookie"]):
-			resultado = True
-		else:
-			respuesta = self.util.get_peticion(path.join(self.sitio,"readme.html"))
-			if(respuesta.ok and re.search("[w|W]ord[p|P]ress",respuesta.text) != None):
+		if respuesta != "":
+			if respuesta.headers.get("Link") != None and "wp-json" in respuesta.headers["Link"]:
 				resultado = True
-			elif self.util.directorio_existente(path.join(self.sitio,"wp-includes")):
+			elif respuesta.headers.get("Set-Cookie") != None and re.search(".*[w|W]ord[p|P]ress.*",respuesta.headers["Set-Cookie"]):
 				resultado = True
-			elif self.util.directorio_existente(path.join(self.sitio, "wp-content")):
-				resultado = True
+			else:
+				respuesta = self.util.get_peticion(path.join(self.sitio,"readme.html"))
+				if(respuesta.ok and re.search("[w|W]ord[p|P]ress",respuesta.text) != None):
+					resultado = True
+				elif self.util.directorio_existente(path.join(self.sitio,"wp-includes")):
+					resultado = True
+				elif self.util.directorio_existente(path.join(self.sitio, "wp-content")):
+					resultado = True
 
 		if resultado:
 			return "wordpress"
@@ -373,8 +399,9 @@ class Moodle():
 				else:
 					temp_url = self.url + "/" + directorio_root
 				respuesta = self.util.get_peticion(self.url)
-				if respuesta.status_code == 200 and self.util.directorio_existente(self.url):
-					cont += 1
+				if respuesta != "":
+					if respuesta.status_code == 200 and self.util.directorio_existente(self.url):
+						cont += 1
 			if cont > 5:
 				respuesta = self.util.get_peticion(self.url)
 				if config_moodle["identifier"] in respuesta.text:
@@ -471,17 +498,21 @@ class Drupal():
 
 
 	def detect_cms(self):
-		config_drupal = self.carga_configuracion()
+		try:
+			config_drupal = self.carga_configuracion()
+		except:
+			config_drupal = None
 		respuesta = self.util.get_peticion(self.url)
-		respuesta_head = str(respuesta.headers)
-		respuesta_get = str(respuesta.text)
-		root = self.url
-		if config_drupal:
-			cabeceras = config_drupal['cabeceras']
-			cuerpo = config_drupal['cuerpo']
-			busca = config_drupal['directorios'][0]['root']
-			if self.busca_respuesta(cabeceras,respuesta_head) or self.busca_respuesta(cuerpo, respuesta_get) or self.detectar_meta():
-				return "drupal"
+		if respuesta != "" and config_drupal != None:
+			respuesta_head = str(respuesta.headers)
+			respuesta_get = str(respuesta.text)
+			root = self.url
+			if config_drupal:
+				cabeceras = config_drupal['cabeceras']
+				cuerpo = config_drupal['cuerpo']
+				busca = config_drupal['directorios'][0]['root']
+				if self.busca_respuesta(cabeceras,respuesta_head) or self.busca_respuesta(cuerpo, respuesta_get) or self.detectar_meta():
+					return "drupal"
 		return None
 
 	def carga_configuracion(self):
@@ -577,18 +608,21 @@ class Joomla():
 
 	def checar_meta_joomla(self):
 		soup = self.util.obtener_contenido_html(self.sitio)
-		return self.buscar_joomla(soup, "meta",{'name':'generator'},"joomla")
+		if soup != "":
+			return self.buscar_joomla(soup, "meta",{'name':'generator'},"joomla")
 
 	def checar_dom_elements(self):
 		soup = self.util.obtener_contenido_html(self.sitio)
-		return self.buscar_joomla(soup, "script", {'class':re.compile('(joomla*)')},"joomla")
+		if soup != "":
+			return self.buscar_joomla(soup, "script", {'class':re.compile('(joomla*)')},"joomla")
 
 	def checar_administrador_pagina(self):
 		soup = self.util.obtener_contenido_html(self.sitio+"/administrator")
-		if (self.buscar_joomla(soup, "img", {'src':re.compile('(joomla*)')}, "joomla") | self.buscar_joomla(soup, "a", {'class':re.compile('(joomla*)')}, "joomla")):
-			return True
-		else:
-			return False
+		if soup != "":
+			if (self.buscar_joomla(soup, "img", {'src':re.compile('(joomla*)')}, "joomla") | self.buscar_joomla(soup, "a", {'class':re.compile('(joomla*)')}, "joomla")):
+				return True
+			else:
+				return False
 
 	def buscar_joomla(self,soup,tag,attrs_objeto,if_containts):
 		metatags = soup.find_all(tag,attrs=attrs_objeto)
@@ -630,6 +664,7 @@ class Obtencion_informacion():
 		self.paginas = []
 		self.paginas.append(self.sitio)
 		self.util = Utilerias()
+		self.util.get_cookies()
 		self.menu()
 
 	def url_without_file(self):
@@ -701,7 +736,6 @@ class Obtencion_informacion():
 	def get_cifrados(self):
 		cifrados = {}
 		tmp_cifrado = []
-		self.tmp_diccionario["cifrados"] = {}
 		if self.sitio.startswith("https"):
 			ruta = path.abspath(path.dirname(__file__)) + "/config/config_general.json"
 			with open(ruta,"r") as cg:
@@ -732,31 +766,32 @@ class Obtencion_informacion():
 											cifrados[tmp_cifrado[0] + " - " + tmp_cifrado[-1]] = interprete
 				self.tmp_diccionario["cifrados"] = cifrados
 			except:
-				pass
+				self.tmp_diccionario["cifrados"] = {}
 		return self.tmp_diccionario
 
 
 	def web(self,url):
 		s = self.util.obtener_contenido_html(self.sitio)
-		for link in s.findAll('a'):
-			tet_2 = link.get('href')
-			if tet_2 != None:
-				if not(tet_2.startswith("#")):
-					if tet_2.startswith(url):
-						if not(tet_2 in self.paginas):
-							self.paginas.append(tet_2)
-					elif not(tet_2.startswith("http")) and not(tet_2.startswith("https")):
-						link_2 = self.valida_link(tet_2,url)
-						contador = 0
-						esta = 0
-						for page in self.paginas:
-							contador += 1 
-							if (contador >= len(self.paginas)) and not(esta > 0):
-								self.paginas.append(link_2)
-								contador = 0
-								esta = 0
-							elif tet_2 in page:
-								esta += 1
+		if s != "":
+			for link in s.findAll('a'):
+				tet_2 = link.get('href')
+				if tet_2 != None:
+					if not(tet_2.startswith("#")):
+						if tet_2.startswith(url):
+							if not(tet_2 in self.paginas):
+								self.paginas.append(tet_2)
+						elif not(tet_2.startswith("http")) and not(tet_2.startswith("https")):
+							link_2 = self.valida_link(tet_2,url)
+							contador = 0
+							esta = 0
+							for page in self.paginas:
+								contador += 1 
+								if (contador >= len(self.paginas)) and not(esta > 0):
+									self.paginas.append(link_2)
+									contador = 0
+									esta = 0
+								elif tet_2 in page:
+									esta += 1
 		return self.paginas
 
 	def valida_link(self,linea,url):
@@ -801,19 +836,20 @@ class Obtencion_informacion():
 		lenguajes = []
 		tmp_leng = {}
 		resultado = self.get_peticion_w()
-		for lenguaje in self.leguajes_configuracion:
-			lenguaje = lenguaje.rstrip('\n')
-			for llave,valor in resultado.items():
-				if lenguaje.lower() in llave.lower():
-					tmp_leng = {}
-					tmp_leng["nombre"] = llave
-					for llave2, valor2 in valor.items():
-						if llave2 == "versions":
-							try:
-								tmp_leng["version"] = valor2
-							except:
-								tmp_leng["version"] = []
-					lenguajes.append(tmp_leng)
+		if resultado != "":
+			for lenguaje in self.leguajes_configuracion:
+				lenguaje = lenguaje.rstrip('\n')
+				for llave,valor in resultado.items():
+					if lenguaje.lower() in llave.lower():
+						tmp_leng = {}
+						tmp_leng["nombre"] = llave
+						for llave2, valor2 in valor.items():
+							if llave2 == "versions":
+								try:
+									tmp_leng["version"] = valor2
+								except:
+									tmp_leng["version"] = []
+						lenguajes.append(tmp_leng)
 		self.tmp_diccionario["lenguajes"] = lenguajes
 		return self.tmp_diccionario
 
@@ -821,19 +857,20 @@ class Obtencion_informacion():
 		frameworks = []
 		tmp_frame = {}
 		resultado = self.get_peticion_w()
-		for frame in self.frameworks_configuracion:
-			frame = frame.rstrip('\n')
-			for llave,valor in resultado.items():
-				if frame.lower() in llave.lower():
-					tmp_frame = {}
-					tmp_frame["nombre"] = llave
-					for llave2, valor2 in valor.items():
-						if llave2 == "versions":
-							try:
-								tmp_frame["version"] = valor2
-							except:
-								tmp_frame["version"] = []
-					frameworks.append(tmp_frame)
+		if resultado != "":
+			for frame in self.frameworks_configuracion:
+				frame = frame.rstrip('\n')
+				for llave,valor in resultado.items():
+					if frame.lower() in llave.lower():
+						tmp_frame = {}
+						tmp_frame["nombre"] = llave
+						for llave2, valor2 in valor.items():
+							if llave2 == "versions":
+								try:
+									tmp_frame["version"] = valor2
+								except:
+									tmp_frame["version"] = []
+						frameworks.append(tmp_frame)
 		self.tmp_diccionario["frameworks"] = frameworks
 		return self.tmp_diccionario
 
@@ -842,30 +879,36 @@ class Obtencion_informacion():
 		tmp_libreria = {}
 		tmp_total = []
 		resultado  = self.get_peticion_w()
-		for libreria in self.librerias_configuracion:
-			libreria = libreria.rstrip('\n')
-			for llave, valor in resultado.items():
-				if libreria.lower() in llave.lower():
-					tmp_libreria = {}
-					tmp_libreria["nombre"] = llave
-					for llave2, valor2 in valor.items():
-						if llave2 == "versions":
-							try:
-								tmp_libreria["version"] = valor2
-							except:
-								tmp_libreria["version"] = []
-					librerias.append(tmp_libreria)
-		try:
-			tmp_total = self.tmp_diccionario["librerias"] + librerias
-			self.tmp_diccionario["librerias"] = tmp_total
-		except:
-			self.tmp_diccionario["librerias"] = librerias
+		if resultado != "":
+			for libreria in self.librerias_configuracion:
+				libreria = libreria.rstrip('\n')
+				for llave, valor in resultado.items():
+					if libreria.lower() in llave.lower():
+						tmp_libreria = {}
+						tmp_libreria["nombre"] = llave
+						for llave2, valor2 in valor.items():
+							if llave2 == "versions":
+								try:
+									tmp_libreria["version"] = valor2
+								except:
+									tmp_libreria["version"] = []
+						librerias.append(tmp_libreria)
+			try:
+				tmp_total = self.tmp_diccionario["librerias"] + librerias
+				self.tmp_diccionario["librerias"] = tmp_total
+			except:
+				self.tmp_diccionario["librerias"] = librerias
+		else:
+			self.tmp_diccionario["librerias"] = []
 		return self.tmp_diccionario
 
 	def get_peticion_w(self):
-		wappalyzer = Wappalyzer.latest()
-		webpage = WebPage.new_from_url(self.sitio,verify=False)
-		return wappalyzer.analyze_with_versions_and_categories(webpage)
+		try:
+			wappalyzer = Wappalyzer.latest()
+			webpage = WebPage.new_from_url(self.sitio,verify=False)
+			return wappalyzer.analyze_with_versions_and_categories(webpage)
+		except:
+			return ""
 
 	def menu(self):
 		self.carga_configuracion()

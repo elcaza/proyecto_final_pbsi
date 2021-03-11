@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 	// POST - ejecucion
 	scan__start.addEventListener("click", function(){
-		alert("iniciando scan");
+		//alert("iniciando scan");
 
 		let sitio = document.querySelector(".scan__url").value;
 		let file = document.querySelector(".scan__file").value;

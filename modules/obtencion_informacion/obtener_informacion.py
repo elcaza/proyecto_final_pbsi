@@ -181,20 +181,20 @@ class Obtener_informacion():
 			self.busqueda_dnsdumpster()
 			self.busqueda_robtex()
 			self.google()
-			
-		self.json_informacion["dnsdumpster"] = {"txt":[],"mx":[],"dns":[],"host":[{
+		else:
+			self.json_informacion["dnsdumpster"] = {"txt":[],"mx":[],"dns":[],"host":[{
 			"dominio": "",
 			"ip": "",
 			"dns_inverso": "",
 			"pais": "",
 			"cabecera": ""
 			}]
-		}
-		self.json_informacion["robtex"] = {"informacion": {"ip": self.ip_address,
-		"ciudad": "NA",
-		"pais": "NA",
-		"red": "NA"},
-		"dns_forward": [], "host_forward": [], "mx_forward": [], "host_reverse": []}
+			}
+			self.json_informacion["robtex"] = {"informacion": {"ip": self.ip_address,
+			"ciudad": "NA",
+			"pais": "NA",
+			"red": "NA"},
+			"dns_forward": [], "host_forward": [], "mx_forward": [], "host_reverse": []}
 		self.scanner_puertos()
 		
 
@@ -209,7 +209,10 @@ class Obtener_informacion():
 				dork_final = dork_site + " " + dork
 				dork_sites.append(dork_final)
 		for query in dork_sites:
-			resultados_query = self.busqueda(query)
+			try:
+				resultados_query = self.busqueda(query)
+			except:
+				resultados_query = []
 			resultados_finales = resultados_finales + resultados_query
 			#time.sleep(120)
 		print(resultados_finales)
@@ -392,4 +395,6 @@ def obtener_sitio_dominio(sitio_limpiar):
 def execute(parametros):
 	sitio_limpio = obtener_sitio_dominio(parametros["sitio"])
 	informacion = Obtener_informacion(sitio_limpio,parametros)
+	print(informacion.json_informacion)
+	time.sleep(500)
 	return informacion.json_informacion

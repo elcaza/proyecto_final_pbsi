@@ -65,7 +65,8 @@ def ejecucion_analisis(peticion):
             "cookie":peticion["cookie"],
             "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             "profundidad":peticion["profundidad"],
-            #"analisis":{}
+            "redireccionamiento":peticion["redireccionamiento"],
+            "lista_negra":peticion["lista_negra"]
         }
 
         peticion_reporte = {
@@ -88,7 +89,7 @@ def ejecucion_analisis(peticion):
         execute_analisis(peticion_proceso, peticion_reporte)
 
         print("Iniciando Fuzzing")
-        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"http://altoromutual.com:8080/login.jsp","forms":{}}]
+        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"http://www.altoromutual.com:8080/status_check.jsp","forms":{}}]
         execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte)
 
         print("Iniciando Explotacion")
@@ -231,11 +232,11 @@ def ciclo_analisis():
         print("Obteniendo peticiones\nPeticiones en cola ->",peticiones)
         if peticiones > 0:
             peticion = cola.pop_peticion()
-            # try:
-            #     ejecucion_analisis(peticion)
-            # except Exception as e:
-            #     print("Ocurrió un error bro", e)
-            ejecucion_analisis(peticion)
+            try:
+                ejecucion_analisis(peticion)
+            except Exception as e:
+                print("Ocurrió un error bro", e)
+            #ejecucion_analisis(peticion)
         cola.reset_peticion_actual()
         sleep(2)
 
