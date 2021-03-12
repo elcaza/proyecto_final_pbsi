@@ -20,7 +20,7 @@ import ssl
 class Utilerias():
 	def __init__(self, cookies):
 		self.user_agent = UserAgent()
-		self.cookie = self.get_cookies(cookies)
+		self.set_cookies(cookies)
 
 	def get_fake_user_agent(self):
 		return {'User-Agent': self.user_agent.random}
@@ -29,10 +29,10 @@ class Utilerias():
 	def get_peticion(self,sitio):
 		try:
 			if sitio.startswith("https"):
-				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),verify=False,cookies=self.get_cookies(self.cookie))
+				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),verify=False,cookies=self.cookie)
 			else:
-				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),cookies=self.get_cookies(self.cookie))
-		except:
+				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),cookies=self.cookie)
+		except Exception as e:
 			respuesta = ""
 		return respuesta
 
@@ -132,7 +132,10 @@ class Utilerias():
 				vulnes_cms.append({"cve":cve,"description":description})
 		return vulnes_cms
 
-	def get_cookies(self, cookie):
+	def get_cookies(self):
+		return self.cookie
+
+	def set_cookies(self, cookie):
 		cookies_tmp = []
 		cookies = {}
 		c_tmp = []
@@ -145,8 +148,7 @@ class Utilerias():
 		else:
 			cookies_tmp = cookies_data.split(":")
 			cookies[cookies_tmp[0]] = cookies_tmp[1]
-
-		return cookies
+		self.cookie = cookies
 
 class Wordpress():
 
@@ -195,7 +197,7 @@ class Wordpress():
 					if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):
 						archivos_expuestos.append(archivo)
 					else:
-						respuesta = requests.post(path.join(self.sitio,archivo),headers=self.util.get_fake_user_agent(),verify=False,cookies=self.util.get_cookies(self.cookie))
+						respuesta = requests.post(path.join(self.sitio,archivo),headers=self.util.get_fake_user_agent(),verify=False,cookies=self.util.get_cookies())
 						if len(respuesta.history) > 0:
 							status_code_redirect = respuesta.history[0].status_code
 						if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):
@@ -673,7 +675,6 @@ class Obtencion_informacion():
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path[:parsed.path.rfind("/")+1]
 		else:
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path
-		print(self.sitio)
 
 	def carga_configuracion(self):
 		ruta = path.abspath(path.dirname(__file__))
@@ -688,13 +689,19 @@ class Obtencion_informacion():
 	def get_version_server(self):
 		tmp_dic = {}
 		wappalyzer = Wappalyzer.latest()
+		error = 0
 		while True:
 			try:
 				webpage = WebPage.new_from_url(self.sitio,verify=False)
 				print("Wap Falló :CCC")
 				break
 			except:
-				pass
+				if error < 5:
+					error += 1
+				else:
+					error = 0
+					break
+
 		tmp = wappalyzer.analyze_with_versions_and_categories(webpage)
 		for llave,valor in tmp.items():
 			for llave2,valor2 in valor.items():
@@ -765,6 +772,8 @@ class Obtencion_informacion():
 				self.tmp_diccionario["cifrados"] = cifrados
 			except:
 				self.tmp_diccionario["cifrados"] = {}
+		else:
+			self.tmp_diccionario["cifrados"] = {}
 		return self.tmp_diccionario
 
 

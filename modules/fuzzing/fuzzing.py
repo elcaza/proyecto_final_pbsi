@@ -1,5 +1,5 @@
 from selenium import webdriver
-from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, ElementNotInteractableException, WebDriverException, JavascriptException
+from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, ElementNotInteractableException, WebDriverException, JavascriptException, InvalidCookieDomainException
 import time
 import threading
 import re
@@ -132,14 +132,6 @@ class Singleton_Diccionarios_validacion(metaclass=SingletonMeta):
 
    def get_validar_lfi(self):
       return self.diccionario_validar_lfi
-'''
-, in check_response
-    raise exception_class(message, screen, stacktrace)
-selenium.common.exceptions.StaleElementReferenceException: Message: stale element reference: element is not attached to the page document
-
-https://www.seguridad.unam.mx/
-'''
-
 
 class Lanzar_fuzzing(threading.Thread):
    def __init__(self, threadID, nombre, diccionario, url, tipo, cookie):
@@ -277,7 +269,10 @@ def actualizar_profundidad_iframes(driver, iframe_profundidad, iframe_posicion):
    if iframe_posicion > -1:
       for profundidad in range(iframe_profundidad):
          # Try
-         driver.switch_to.frame(driver.find_elements_by_tag_name("iframe")[iframe_posicion])
+         try:
+            driver.switch_to.frame(driver.find_elements_by_tag_name("iframe")[iframe_posicion])
+         except TimeoutException:
+            pass
    return True
 
 def actualizar_formulario(driver,formulario_iteracion, url, iframe_posicion = -1, iframe_profundidad = 0, error = 0):
@@ -315,7 +310,11 @@ def enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, json_forms, 
 
       if len(cookie) > 0:
          for cookie_individual in cookie:
-            driver.add_cookie(cookie_individual)
+            try:
+               driver.add_cookie(cookie_individual)
+            except InvalidCookieDomainException:
+               print("Cookie invalida")
+               pass
    # Encuentros de iFrame embebidos
    try:
       actualizar_profundidad_iframes(driver, iframe_profundidad, iframe_posicion)
