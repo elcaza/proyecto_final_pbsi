@@ -18,8 +18,9 @@ from Wappalyzer import Wappalyzer, WebPage
 import ssl
 
 class Utilerias():
-	def __init__(self):
+	def __init__(self, cookies):
 		self.user_agent = UserAgent()
+		self.cookie = self.get_cookies(cookies)
 
 	def get_fake_user_agent(self):
 		return {'User-Agent': self.user_agent.random}
@@ -28,9 +29,9 @@ class Utilerias():
 	def get_peticion(self,sitio):
 		try:
 			if sitio.startswith("https"):
-				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),verify=False,cookies=self.get_cookies())
+				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),verify=False,cookies=self.get_cookies(self.cookie))
 			else:
-				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),cookies=self.get_cookies())
+				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),cookies=self.get_cookies(self.cookie))
 		except:
 			respuesta = ""
 		return respuesta
@@ -131,14 +132,11 @@ class Utilerias():
 				vulnes_cms.append({"cve":cve,"description":description})
 		return vulnes_cms
 
-	def get_cookies(self):
+	def get_cookies(self, cookie):
 		cookies_tmp = []
 		cookies = {}
 		c_tmp = []
-		config_file = self.obtener_path_file("config/","config_general",".json")
-		with open(config_file) as configuracion:
-			datos = json.load(configuracion)
-		cookies_data = datos["cookie"]
+		cookies_data = cookie
 		if "," in cookies_data:
 			cookies_tmp = cookies_data.split(",")
 			for cookie in cookies_tmp:
@@ -152,9 +150,10 @@ class Utilerias():
 
 class Wordpress():
 
-	def __init__(self,sitio):
-		self.util = Utilerias()
+	def __init__(self,sitio, cookie):
+		self.util = Utilerias(cookie)
 		self.sitio = sitio
+		self.cookie = cookie
 
 	def inicio_wordpress(self,deteccion_cms,tmp_diccionario):
 		info = self.carga_configuracion()
@@ -162,7 +161,7 @@ class Wordpress():
 		tmp_cms["nombre"] = "wordpress"
 		tmp_cms["version"] = self.obtener_version_wordpress()
 		tmp_diccionario["cms"] = tmp_cms
-		informacion_expuesta = self.obtener_informacion_sensible(info)
+		informacion_expuesta = self.obtener_informacion_sensible(info, self.cookie)
 		tmp_diccionario["plugins"] = informacion_expuesta.pop("plugins")
 		tmp_diccionario["librerias"] = []
 		tmp_diccionario["archivos"] = informacion_expuesta.pop("exposed_files")
@@ -196,7 +195,7 @@ class Wordpress():
 					if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):
 						archivos_expuestos.append(archivo)
 					else:
-						respuesta = requests.post(path.join(self.sitio,archivo),headers=self.util.get_fake_user_agent(),verify=False,cookies=self.util.get_cookies())
+						respuesta = requests.post(path.join(self.sitio,archivo),headers=self.util.get_fake_user_agent(),verify=False,cookies=self.util.get_cookies(self.cookie))
 						if len(respuesta.history) > 0:
 							status_code_redirect = respuesta.history[0].status_code
 						if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):
@@ -290,9 +289,9 @@ class Wordpress():
 		return lista_vulnerabilidades
 
 class Moodle():
-	def __init__(self,sitio):
+	def __init__(self,sitio,cookie):
 		self.url = sitio
-		self.util = Utilerias()
+		self.util = Utilerias(cookie)
 
 	def inicio_moodle(self,deteccion_cms,tmp_diccionario):
 		info = self.carga_configuracion()
@@ -429,9 +428,9 @@ class Moodle():
 		return lista_vulnerabilidades
 
 class Drupal():
-	def __init__(self,sitio):
+	def __init__(self,sitio, cookie):
 		self.url = sitio
-		self.util = Utilerias()
+		self.util = Utilerias(cookie)
 
 	def inicio_drupal(self,deteccion_cms,tmp_diccionario):
 		tmp_cms = {}
@@ -565,9 +564,9 @@ class Drupal():
 			return []
 
 class Joomla():
-	def __init__(self,sitio):
+	def __init__(self,sitio, cookie):
 		self.sitio = sitio
-		self.util = Utilerias()
+		self.util = Utilerias(cookie)
 
 	def inicio_joomla(self,deteccion_cms,tmp_diccionario):
 		tmp_cms = {}
@@ -656,15 +655,15 @@ class Joomla():
 
 class Obtencion_informacion():
 
-	def __init__(self, sitio):
+	def __init__(self, sitio, cookie):
 		self.sitio = sitio
 		self.url_without_file()
 		self.tmp_diccionario = {}
 		self.json_informacion = {}
 		self.paginas = []
 		self.paginas.append(self.sitio)
-		self.util = Utilerias()
-		self.util.get_cookies()
+		self.util = Utilerias(cookie)
+		self.cookie = cookie
 		self.menu()
 
 	def url_without_file(self):
@@ -687,7 +686,6 @@ class Obtencion_informacion():
 		self.librerias_configuracion = datos["librerias"]
 		
 	def get_version_server(self):
-		f = Utilerias()
 		tmp_dic = {}
 		wappalyzer = Wappalyzer.latest()
 		while True:
@@ -924,13 +922,13 @@ class Obtencion_informacion():
 
 		for cms_key in detect_list:
 			if "Drupal" == cms_key:
-				r_objeto = Drupal(self.sitio)
+				r_objeto = Drupal(self.sitio, self.cookie)
 			elif "Moodle" == cms_key:
-				r_objeto = Moodle(self.sitio)
+				r_objeto = Moodle(self.sitio, self.cookie)
 			elif "Joomla" == cms_key:
-				r_objeto = Joomla(self.sitio)
+				r_objeto = Joomla(self.sitio, self.cookie)
 			elif "Wordpress" == cms_key:
-				r_objeto = Wordpress(self.sitio)
+				r_objeto = Wordpress(self.sitio, self.cookie)
 			deteccion_cms = r_objeto.detect_cms()
 			if deteccion_cms:
 				break
@@ -959,6 +957,6 @@ def main():
 
 #main()
 
-def execute(sitio):
-	analisis = Obtencion_informacion(sitio)
+def execute(sitio, cookie):
+	analisis = Obtencion_informacion(sitio, cookie)
 	return analisis.get_json_informacion()

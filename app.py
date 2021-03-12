@@ -66,7 +66,8 @@ def ejecucion_analisis(peticion):
             "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             "profundidad":peticion["profundidad"],
             "redireccionamiento":peticion["redireccionamiento"],
-            "lista_negra":peticion["lista_negra"]
+            "lista_negra":peticion["lista_negra"],
+            #"analisis":{"paginas":[]}
         }
 
         peticion_reporte = {
@@ -89,7 +90,7 @@ def ejecucion_analisis(peticion):
         execute_analisis(peticion_proceso, peticion_reporte)
 
         print("Iniciando Fuzzing")
-        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"http://www.altoromutual.com:8080/status_check.jsp","forms":{}}]
+        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://www.seguridad.unam.mx/","forms":{}}]
         execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte)
 
         print("Iniciando Explotacion")
@@ -232,11 +233,11 @@ def ciclo_analisis():
         print("Obteniendo peticiones\nPeticiones en cola ->",peticiones)
         if peticiones > 0:
             peticion = cola.pop_peticion()
-            try:
-                ejecucion_analisis(peticion)
-            except Exception as e:
-                print("Ocurrió un error bro", e)
-            #ejecucion_analisis(peticion)
+            # try:
+            #     ejecucion_analisis(peticion)
+            # except Exception as e:
+            #     print("Ocurrió un error bro", e)
+            ejecucion_analisis(peticion)
         cola.reset_peticion_actual()
         sleep(2)
 
@@ -263,7 +264,7 @@ def execute_informacion(peticion, peticion_proceso, peticion_reporte):
     reporte_informacion(peticion_proceso, peticion_reporte)
 
 def execute_analisis(peticion_proceso, peticion_reporte):
-    respuesta_analisis = analisis.execute(peticion_proceso["sitio"])
+    respuesta_analisis = analisis.execute(peticion_proceso["sitio"], peticion_proceso["cookie"])
     peticion_proceso["analisis"] = respuesta_analisis
     reporte_analisis(peticion_proceso, peticion_reporte)
     
@@ -513,13 +514,16 @@ def informacion_obtener_dnsdumpster(datos):
     dnsdumpster = []
     for dato in datos:
         for tipo in datos[dato]:
-            dominio = tipo["dominio"]
-            ip = tipo["ip"]
-            dns_inverso = tipo["dns_inverso"]
-            pais = tipo["pais"]
-            cabecera = tipo["cabecera"]
-            if dato == "host" and dominio != "" and ip != "" and dns_inverso != "" and pais != "":
-                dnsdumpster.append([ dato.capitalize(), dominio, ip, dns_inverso, pais ])
+            if dato == "txt":
+                dnsdumpster.append([ dato.capitalize(), tipo, "NA","NA","NA"])
+            else:
+                dominio = tipo["dominio"]
+                ip = tipo["ip"]
+                dns_inverso = tipo["dns_inverso"]
+                pais = tipo["pais"]
+                cabecera = tipo["cabecera"]
+                if dato == "host" and dominio != "" and ip != "" and dns_inverso != "" and pais != "":
+                    dnsdumpster.append([ dato.capitalize(), dominio, ip, dns_inverso, pais ])
     if len(dnsdumpster) == 0:
         dnsdumpster.append(["NA","NA","NA","NA","NA"])
     return dnsdumpster

@@ -395,6 +395,4 @@ def obtener_sitio_dominio(sitio_limpiar):
 def execute(parametros):
 	sitio_limpio = obtener_sitio_dominio(parametros["sitio"])
 	informacion = Obtener_informacion(sitio_limpio,parametros)
-	print(informacion.json_informacion)
-	time.sleep(500)
 	return informacion.json_informacion

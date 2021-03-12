@@ -301,14 +301,17 @@ def enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, json_forms, 
 
    if iframe_posicion == -1:
       # Falla en Tiempo de ejecucion
-      try:
-         driver.get(url)   
-      except TimeoutException:
-         if error < 5:
-            error += 1
-            enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, json_forms, cookie, iframe_posicion, iframe_profundidad, error)
-         else:
-            return False
+      while True:
+         try:
+            driver.get(url)   
+            error = 0
+            break
+         except TimeoutException:
+            if error < 5:
+               error += 1
+            else:
+               error = 0
+               break
 
       if len(cookie) > 0:
          for cookie_individual in cookie:
