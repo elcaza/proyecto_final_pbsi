@@ -365,7 +365,7 @@ def enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, json_forms, 
 
          if json_fuzzing["forms"].get(form_utilizar) is None:
             json_fuzzing["forms"].update({form_utilizar:[]})
-         json_fuzzing["forms"][form_utilizar].append({"inputs":[],"tipo":tipo,"xss":False,"sqli":False,"lfi":False})
+         json_fuzzing["forms"][form_utilizar].append({"inputs":[],"tipo":tipo,"xss":False,"sqli":False,"lfi":False,"codigo":0})
          i = len(json_fuzzing["forms"][form_utilizar])-1
          json_fuzzing["forms"][form_utilizar][i]["inputs"] = formulario.get_peticion()
 
@@ -483,6 +483,18 @@ def pre_enviar_peticiones(forms, diccionario, tipo, json_fuzzing, cookie=[]):
                   payload += input_individual+"="+valor
                
                peticion = sesion.get(url+payload, headers=headers, cookies=cookies)
+               codigo = validarPreCodigo(peticion)
+
+               if codigo:
+                  if tipo == "xss":
+                     json_fuzzing["forms"][form][i]["xss"] = True
+                  elif tipo == "sqli":
+                     json_fuzzing["forms"][form][i]["sqli"] = True
+                  elif tipo == "lfi":
+                     json_fuzzing["forms"][form][i]["lfi"] = True
+                  
+                  json_fuzzing["forms"][form][i]["codigo"] = codigo
+                  continue
 
                if peticion.elapsed.seconds > 5:
                   if tipo == "xss":
@@ -508,7 +520,20 @@ def pre_enviar_peticiones(forms, diccionario, tipo, json_fuzzing, cookie=[]):
                payload = {}
                for input_individual in forms["forms"][form]["inputs"]:
                   payload[input_individual] = valor
+
                peticion = sesion.post(url, headers=headers, cookies=cookies, data=json.dumps(payload))
+               codigo = validarPreCodigo(peticion)
+
+               if codigo:
+                  if tipo == "xss":
+                     json_fuzzing["forms"][form][i]["xss"] = True
+                  elif tipo == "sqli":
+                     json_fuzzing["forms"][form][i]["sqli"] = True
+                  elif tipo == "lfi":
+                     json_fuzzing["forms"][form][i]["lfi"] = True
+                     
+                  json_fuzzing["forms"][form][i]["codigo"] = codigo
+                  continue
 
                if peticion.elapsed.seconds > 5:
                   if tipo == "xss":
@@ -555,6 +580,11 @@ def validarPreLFI(peticion):
    del diccionario
    return False
    
+def validarPreCodigo(peticion):
+   codigo = peticion.status_code
+   if codigo >= 500 or codigo <= 599:
+      return True
+
 def execute(parametros):
    url, cookie = obtener_valores_iniciales(parametros)
    json_fuzzing = crear_hijos_fuzzing(url,cookie)

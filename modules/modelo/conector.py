@@ -160,7 +160,7 @@ class Conector():
                 cves = coleccion_exploits.find({"cve":{"$regex":cve,"$options":"i"}})
                 
                 for cve_exploit in cves:
-                    lenguaje = cves["extension"]
+                    lenguaje = cve_exploit["extension"]
                     if lenguaje == "sh":
                         lenguaje = ""
                     else:

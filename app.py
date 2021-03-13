@@ -14,7 +14,7 @@ import plotly.express as px
 from datetime import datetime
 import plotly.graph_objects as go
 import json
-from time import sleep
+from time import sleep, time
 import requests
 import threading
 
@@ -267,7 +267,6 @@ def execute_analisis(peticion_proceso, peticion_reporte):
     respuesta_analisis = analisis.execute(peticion_proceso["sitio"], peticion_proceso["cookie"])
     peticion_proceso["analisis"] = respuesta_analisis
     reporte_analisis(peticion_proceso, peticion_reporte)
-    
 
 # Puede que truene en fuzzing_lanzar_fuzz
 def execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte):
@@ -287,8 +286,9 @@ def execute_alerta(peticion_alerta):
     return resultado
 
 def execute_reporte(peticion_reporte):
+    print(peticion_reporte)
     reportes.execute(peticion_reporte)
-    
+    reportes_csv_crear(peticion_reporte)
 '''
     Funciones de lanzamiento
 '''
@@ -396,7 +396,6 @@ def reporte_informacion(peticion_proceso, peticion_reporte):
     informacion["puertos_generales"] = informacion_obtener_puertos_generales(peticion_proceso["informacion"]["puertos"])
     informacion["puertos_individuales"] = informacion_obtener_puertos_individuales(peticion_proceso["informacion"]["puertos"])
     reportes_informacion_crear(informacion, peticion_reporte)
-    
 
 def reporte_analisis(peticion_proceso, peticion_reporte):
     analisis = {}
@@ -416,7 +415,6 @@ def reporte_analisis(peticion_proceso, peticion_reporte):
     analisis["paginas"] = analisis_obtener_paginas(peticion_proceso["analisis"]["paginas"]) # Total
 
     reportes_analisis_crear(analisis, grafica_cifrados, peticion_reporte)
-    
 
 def reporte_fuzzing(peticion_proceso, peticion_reporte):
     fuzzing_estadistica_general = []
@@ -436,8 +434,6 @@ def reporte_fuzzing(peticion_proceso, peticion_reporte):
     #print(fuzzing_estadistica_general)
     reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte)
         
-    
-
 def reporte_explotacion(peticion_proceso, peticion_reporte):
     explotacion_estadisticas = estadisticas_explotacion(peticion_proceso)
     #explotacion_estadisticas = [["AAAA.SH","Exitoso"], ["BBBB.SH","Fracaso"], ["CCCC.SH","Inconcluso"]]
@@ -481,7 +477,6 @@ def reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_indi
     
     analisis = reportes_fuzzing_crear_individual(fuzzing_estadistica_individual)
     peticion_reporte["analisis"].append(analisis)
-
 
 def reportes_explotacion_crear(explotacion_estadisticas, peticion_reporte):
     reporte = root + "/templates/ifram_grafica_explotacion.html"
@@ -907,9 +902,10 @@ def buscar_exploits(datos_identificados, con):
 def obtener_datos_consulta_exploits(peticion_proceso):
     datos_identificados = {"software":[],"cms":[], "cve":[], "profundidad": 2}
     
+    # Obtener Softwares
     datos_identificados["software"].extend(obtener_software_version_unica(peticion_proceso["analisis"], "servidor"))
+    
     cms = obtener_software_version_unica(peticion_proceso["analisis"], "cms")
-
     if len(cms) != 0:
         cms_nombre = cms[0]["software_nombre"]
     else:
@@ -919,14 +915,19 @@ def obtener_datos_consulta_exploits(peticion_proceso):
     datos_identificados["software"].extend(obtener_sofware_versiones(peticion_proceso["analisis"], "lenguajes"))
     datos_identificados["software"].extend(obtener_sofware_versiones(peticion_proceso["analisis"], "frameworks"))
     datos_identificados["software"].extend(obtener_sofware_versiones(peticion_proceso["analisis"], "librerias"))
-    datos_identificados["cms"].extend(obtener_cms_version_unica(peticion_proceso["analisis"], "dato", cms_nombre))
-    
+
+    datos_identificados["software"].extend(obtener_software_version_unica_puertos(peticion_proceso["informacion"]))
+    # Obtener Características de CMS
+    datos_identificados["cms"].extend(obtener_cms_sin_version(peticion_proceso["analisis"], "plugins", cms_nombre))
+
+    # Obtener CVE
     if "vulnerabilidades" in peticion_proceso["analisis"]:
         for cve in peticion_proceso["analisis"]["vulnerabilidades"]:
             datos_identificados["cve"].append(cve)
 
     datos_identificados["profundidad"] = peticion_proceso["profundidad"]
 
+    # Obtener datos para cargar los exploits
     if peticion_proceso["sitio"].startswith("https"):
         datos_explotacion = {"sitio":peticion_proceso["sitio"],"puertos":["443"]}
     else:
@@ -936,36 +937,36 @@ def obtener_datos_consulta_exploits(peticion_proceso):
         for puerto in peticion_proceso["informacion"]["puertos"]["abiertos"]:
             if puerto != "80" or puerto != "443":
                 datos_explotacion["puertos"].append(puerto["puerto"])
-
     return datos_explotacion, datos_identificados
 
 ## Obtener las versiones de los softwares con múltiples versiones, ej: Bibliotecas, Frameworks
 def obtener_sofware_versiones(peticion_proceso, caracteristica):
     datos_identificados = []
-    nombre = ""
-    version = ""
     if caracteristica in peticion_proceso:
-        if "nombre" in peticion_proceso[caracteristica]:
-            nombre= peticion_proceso[caracteristica]["nombre"]
-        if "version" in peticion_proceso[caracteristica]:
-            if len(peticion_proceso[caracteristica]["version"]) > 0:
-                for tipo in peticion_proceso[caracteristica]["version"]:
-                    version = peticion_proceso[caracteristica]["version"][tipo]
-                    version_regex = re.search(patron_version, version)
-                    if version_regex is not None :
-                        version = float(version_regex.group())
-                    else:
-                        version = 0
-                    datos_identificados.append({"software_nombre":nombre,"software_version":version})
-            if len(peticion_proceso[caracteristica]["version"]) == 0:
-                datos_identificados.append({"software_nombre":nombre,"software_version":0})
+        for dato in peticion_proceso[caracteristica]:
+            nombre = ""
+            version = 0
+            if "nombre" in dato:
+                nombre = dato["nombre"]
+            if "version" in dato:
+                if len(dato["version"]) > 0:
+                    for tipo in dato["version"]:
+                        version = dato["version"][tipo]
+                        version_regex = re.search(patron_version, version)
+                        if version_regex is not None :
+                            version = float(version_regex.group())
+                        else:
+                            version = 0
+                        datos_identificados.append({"software_nombre":nombre,"software_version":version})
+                if len(dato["version"]) == 0:
+                    datos_identificados.append({"software_nombre":nombre,"software_version":0})
     return datos_identificados
 
 ## Obtener las versiones de los softwares con versión única, ej: Servidor, CMS
 def obtener_software_version_unica(peticion_proceso, caracteristica):
     datos_identificados = []
     nombre = ""
-    version = ""
+    version = 0
     if caracteristica in peticion_proceso:
         if "nombre" in peticion_proceso[caracteristica]:
             nombre = peticion_proceso[caracteristica]["nombre"]
@@ -980,18 +981,75 @@ def obtener_software_version_unica(peticion_proceso, caracteristica):
     return datos_identificados
 
 ## Obtener las versiones únicas de los Plugins, Temas
-def obtener_cms_version_unica(peticion_proceso, caracteristica, cms):
+def obtener_cms_sin_version(peticion_proceso, caracteristica, cms):
     datos_identificados = []
     nombre = ""
-    version = ""
     if caracteristica in peticion_proceso:
-        if "nombre" in peticion_proceso[caracteristica]:
-            nombre = peticion_proceso[caracteristica]["nombre"]
-        if "version" in peticion_proceso[caracteristica]:
-            version = peticion_proceso[caracteristica]["version"]
-        datos_identificados.append({"cms_nombre":cms,"cms_categoria":caracteristica, "cms_extension_nombre":nombre,"cms_extension_version":version})
+        for dato in peticion_proceso[caracteristica]:
+            nombre = dato
+            datos_identificados.append({"cms_nombre":cms,"cms_categoria":caracteristica, "cms_extension_nombre":nombre,"cms_extension_version":0})
     return datos_identificados
 
+## Obtener las versiones únicas de los Plugins, Temas
+def obtener_cms_version_unica(peticion_proceso, caracteristica, cms):
+    datos_identificados = []
+    if caracteristica in peticion_proceso:
+        for dato in peticion_proceso[caracteristica]:
+            nombre = ""
+            version = 0
+            if "nombre" in dato:
+                nombre = dato["nombre"]
+            if "version" in dato:
+                version = dato["version"]
+                version_regex = re.search(patron_version, version)
+                if version_regex is not None :
+                    version = float(version_regex.group())
+                else:
+                    version = 0    
+            datos_identificados.append({"cms_nombre":cms,"cms_categoria":caracteristica, "cms_extension_nombre":nombre,"cms_extension_version":version})
+    return datos_identificados
+
+## Obtener las versiones de los softwares con versión única, ej: HTTP
+def obtener_software_version_unica_puertos(peticion_proceso):
+    datos_identificados = []
+    version = 0
+
+    for puertos in peticion_proceso["puertos"]["abiertos"]:
+        puerto = str(puertos["servicio"])
+        if "version" in puertos:
+            version = str(puertos["version"])
+            version_regex = re.search(patron_version, version)
+            if version_regex:
+                version = float(version_regex.group())
+            else:
+                version = 0
+        datos_identificados.append({"software_nombre":puerto,"software_version":version})
+    return datos_identificados
+
+# Reportes
+## Crear archivo CSV
+def reportes_csv_crear(peticion_reporte):
+    sitio = peticion_reporte["sitio"].replace(",","_").replace("/","_").replace(":","_")
+    fecha = peticion_reporte["fecha"].replace(",","_").replace(" ","_").replace("/","_").replace(":","_")
+    archivos = "cvs_{0}_{1}_".format(sitio, fecha)
+    for cvs in peticion_reporte["analisis"]:
+        categoria = cvs["categoria"].replace(" ","")
+        titulo = cvs["titulo"].replace(" ","")
+        valores_cabecera = ""
+        archivo_particular = "{0}_{1}_{2}.cvs".format(archivos,categoria,titulo)
+
+        for cabecera in cvs["cabecera"]:
+            valores_cabecera += cabecera + ","
+        valores_cabecera = valores_cabecera[:-1]
+
+        with open(archivo_particular,"w") as archivo_cvs:
+            archivo_cvs.write(valores_cabecera + "\n")
+            for datos in cvs["datos"]:
+                valores_datos = ""
+                for dato in datos:
+                    valores_datos += str(dato).replace(",","_") + ","
+                valores_datos = valores_datos[:-1]
+                archivo_cvs.write(valores_datos + "\n")
 
 '''
     Rutas

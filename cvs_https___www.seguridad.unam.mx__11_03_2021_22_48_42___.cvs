@@ -1,0 +1,6 @@
+Headers
+X-XSS-Protection - 1; mode=block
+X-Frame-Options - sameorigin
+X-Content-Type-Options - nosniff
+Strict-Transport-Security - max-age=31536000; includeSubDomains
+Expect-CT - max-age=604800_ report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"

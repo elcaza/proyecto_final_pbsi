@@ -81,22 +81,35 @@ document.addEventListener("DOMContentLoaded", function() {
 		} else if ( document.querySelector("body").classList.contains("in_cms") ) {
 			opcion = "cms";
 		}
+		let peticion;
 
-
-		// exploits-crear
-		let peticion = {
-			"opcion":opcion, // ( software | cms )
-			"nombre":nombre,
-			"contenido_exploit":contenido_exploit,
-			"tecnologia":tecnologia,
-			"exploit_cve":exploit_cve,
-			"exploit_software":exploit_software,
-			"exploit_software_version":exploit_software_version,
-			"exploit_cms":exploit_cms,
-			"exploit_categoria":exploit_categoria,
-			"exploit_extension":exploit_extension,
-			"exploit_version":exploit_version
+		if (opcion === "software"){
+			peticion = {
+				"exploit":nombre,
+				"contenido":contenido_exploit,
+				"extension":tecnologia,
+				"cve":exploit_cve,
+				"software":{
+					"software_nombre":exploit_software,
+					"software_version":exploit_software_version,
+				}
+			}
 		}
+		else{
+			peticion = {
+				"exploit":nombre,
+				"contenido":contenido_exploit,
+				"extension":tecnologia,
+				"cve":exploit_cve,
+				"cms":{
+					"cms_nombre":exploit_cms,
+					"cms_categoria":exploit_categoria,
+					"cms_extension_nombre":exploit_extension,
+					"cms_extension_version":exploit_version
+				}
+			}
+		}
+
 		console.log(peticion);
 
 		send_json_fetch(server_url+"/exploits-crear", peticion);

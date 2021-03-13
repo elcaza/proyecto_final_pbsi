@@ -1,0 +1,7 @@
+Página,XSS,SQLi,LFI
+https://localhost/joomla/,0,0,0
+https://localhost/joomla/joomla/,0,0,0
+https://localhost/joomla/joomla/index.php,0,0,0
+https://localhost/joomla/joomla/index.php/component/users/?view=remind&Itemid=101,0,0,0
+https://localhost/joomla/joomla/index.php/component/users/?view=reset&Itemid=101,0,0,0
+https://localhost/joomla/joomla/joomla/index.php/component/users/?view=reset&Itemid=101,0,0,0

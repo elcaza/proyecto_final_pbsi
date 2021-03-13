@@ -17,7 +17,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 from IPy import IP
-from os import path
+from os import path, sep
 # from stem import Signal
 # from stem.control import Controller
 
@@ -290,12 +290,13 @@ class Obtener_informacion():
 		puertos_filtrados = []
 		puertos_sin_filtrar = []
 		valores_puertos = self.opciones_puertos
-		comando = "nmap --max-retries 0 --top-ports " + str(valores_puertos["final"]) + " " + self.sitio
+		comando = "nmap -sV --max-retries 0 --top-ports " + str(valores_puertos["final"]) + " " + self.sitio
 		args = shlex.split(comando)
 		salida_comando = subprocess.run(args, stdout=subprocess.PIPE, text=True)
 		separa_salida = salida_comando.stdout.split("\n")
 		for linea in separa_salida:
 			regex = r"^[0-9]+/(tcp|udp)[ ]*(open|filtered|closed)[ ]*.*"
+			patron_version = r"^(\d+\.?\d*)"
 			temp_informacion = {}
 			if re.match(regex, linea):
 				separar_linea = linea.split()
@@ -303,6 +304,13 @@ class Obtener_informacion():
 				temp_informacion["puerto"] = puerto_protocolo[0]
 				temp_informacion["protocolo"] = puerto_protocolo[1]
 				temp_informacion["servicio"] = separar_linea[2]
+				for version in separar_linea[3:]:
+					version_regex = re.search(patron_version, version)
+					if version_regex:
+						temp_informacion["version"] = version_regex.group()
+						break
+					else:
+						temp_informacion["version"] = 0
 				if separar_linea[1] == "open":
 					puertos_abiertos.append(temp_informacion)
 					puertos_completos["abiertos"] = puertos_abiertos
@@ -312,7 +320,6 @@ class Obtener_informacion():
 				elif separar_linea[1] == "closed":
 					puertos_cerrados.append(temp_informacion)
 					puertos_completos["cerrados"] = puertos_cerrados
-
 		self.json_informacion["puertos"] = puertos_completos
 
 	def busqueda_dnsdumpster(self):
