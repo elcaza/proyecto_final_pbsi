@@ -1190,4 +1190,4 @@ cola = Encolamiento()
 # Ejecucion de Flask
 if __name__ == "__main__":
     iniciar_ciclo_primera_peticion()
-    app.run(host='127.0.0.1', port=3000, debug=True)
+    app.run(host='0.0.0.0', port=3000, debug=True)
