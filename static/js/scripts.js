@@ -17,7 +17,102 @@ document.addEventListener("DOMContentLoaded", function() {
 	let button_add__exploits = document.querySelector(".exploits__add");
 	let button_consultas__opciones__proximo = document.querySelector(".consultas__opciones__proximo");
 	let button_exploits__editar = document.querySelector(".exploits__editar");
+	let button_exploits__borrar = document.querySelector(".exploits__borrar");
 	
+	// ************************************************************************************************
+	// ************************************************************************************************
+	// ************************************************************************************************
+	// ************************************************************************************************
+	// POST - exploits-individual
+
+	button_exploits__editar.addEventListener("click", function(){
+		// @cromos
+		let value_select = document.querySelector(".exploits__select").value;
+
+		let peticion = {
+			"exploit":value_select
+		}
+
+		// let response = send_json_fetch(server_url+"/ejecucion", peticion);
+
+		response = {
+			"exploit":"shell_drupalgeddon2.sh",
+			"contenido":"BASE64",
+			"extension":"sh",
+			"cve":"CVE-2018-002",
+			"cms":{
+				"cms_nombre":"Drupal",
+				"cms_categoria":"pluggin",
+				"cms_extension_nombre":"Form 7",
+				"cms_extension_version":"9.8"
+			}
+		}
+
+		let explot_name = document.querySelector("#exploit_name");
+		let contenido_exploit = document.querySelector("#contenido_exploit");
+		let tecnologia = document.querySelector("#tecnologia");
+		let exploit_cve = document.querySelector("#exploit_cve");
+
+		explot_name.value = response.exploit;
+		contenido_exploit.value = response.contenido;
+		tecnologia.value = response.extension;
+		exploit_cve.value = response.cve;
+
+		// software
+		if ('software' in response) {
+			document.querySelector("body").classList.replace("in_cms", "in_software");
+			let exploit_software = document.querySelector("#exploit_software");
+			let exploit_software_version = document.querySelector("#exploit_software_version");
+
+			exploit_software.value = response.software.software_nombre;
+			exploit_software_version.value = response.software.software_version;
+		} //cms
+		else if('cms' in response) {
+			document.querySelector("body").classList.replace("in_software", "in_cms");
+			let exploit_cms = document.querySelector("#exploit_cms");
+			let exploit_categoria = document.querySelector("#exploit_categoria");
+			let exploit_extension = document.querySelector("#exploit_extension");
+			let exploit_version = document.querySelector("#exploit_version");
+
+			exploit_cms.value = response.cms.cms_nombre;
+			exploit_categoria.value = response.cms.cms_categoria;
+			exploit_extension.value = response.cms.cms_extension_nombre;
+			exploit_version.value = response.cms.cms_extension_version;
+		}
+		
+
+		// Recibe
+
+		// Recibe
+		// peticion = {
+		// "exploit": "shell_drupalgeddon2.sh",
+		// "contenido": "BASE64", 
+		// "extension":"python3",
+		// "cve": "CVE-2018-002", 
+		// "software":{
+		// 	"software_nombre": "Drupal", 
+		// 	"software_version": "7.57"
+		// }
+		// }
+
+		// Ó
+
+		// peticion = {
+		// "exploit":"shell_drupalgeddon2.sh",
+		// "contenido":"BASE64",
+		// "extension":"sh",
+		// "cve":"CVE-2018-002",
+		// "cms":{
+		// 	"cms_nombre":"Drupal",
+		// 	"cms_categoria":"pluggin",
+		// 	"cms_extension_nombre":"Form 7",
+		// 	"cms_extension_version":"9.8"
+		// }
+		// }
+
+
+	});
+
 	// Event listeners
 	button_nav__nuevo.addEventListener("click", function(){
 		body.classList.replace("vista_consultas", "vista_nuevo");
@@ -79,14 +174,6 @@ document.addEventListener("DOMContentLoaded", function() {
 		let exploit_extension = document.querySelector("#exploit_extension").value;
 		let exploit_version = document.querySelector("#exploit_version").value;
 
-		function utf8_to_b64( str ) {
-			return window.btoa(unescape(encodeURIComponent( str )));
-		}
-
-		function b64_to_utf8( str ) {
-			return decodeURIComponent(escape(window.atob( str )));
-		}
-
 		// Contenido to b64
 		contenido_exploit = utf8_to_b64( contenido_exploit );
 
@@ -128,6 +215,23 @@ document.addEventListener("DOMContentLoaded", function() {
 		console.log(peticion);
 
 		send_json_fetch(server_url+"/exploits-crear", peticion);
+
+		reload_site();
+	});
+
+	button_exploits__borrar.addEventListener("click", function(){
+		//@cromos
+		// POST - exploits-eliminar
+
+		alert("Eliminando exploit");
+		let value_select = document.querySelector(".exploits__select").value;
+		peticion = {
+			"exploit":value_select
+		}
+
+		console.log(peticion);
+
+		send_json_fetch(server_url+"/exploits-eliminar", peticion);
 
 		reload_site();
 	});
@@ -345,92 +449,6 @@ document.addEventListener("DOMContentLoaded", function() {
 		// send_json_fetch(server_url+"/consulta-reporte", peticion);
 
 		load_sites(value_select);
-	});
-
-
-	// ************************************************************************************************
-	// ************************************************************************************************
-	// ************************************************************************************************
-	// ************************************************************************************************
-	// POST - exploits-individual
-
-	button_exploits__editar.addEventListener("click", function(){
-		console.log("okkkk")
-		alert(111)
-		let value_select = document.querySelector(".exploits__select").value;
-
-		let peticion = {
-			"exploit":value_select
-		}
-
-		// let response = send_json_fetch(server_url+"/ejecucion", peticion);
-
-		response = {
-			"exploit": "shell_drupalgeddon2.sh",
-			"contenido": "BASE64", 
-			"extension":"python3",
-			"cve": "CVE-2018-002", 
-			"software":{
-				"software_nombre": "Drupal", 
-				"software_version": "7.57"
-			}
-		}
-
-		let explot_name = document.querySelector("#exploit_name");
-		let contenido_exploit = document.querySelector("#contenido_exploit");
-		let tecnologia = document.querySelector("#tecnologia");
-		let exploit_cve = document.querySelector("#exploit_cve");
-
-		explot_name.textContent = response.exploit;
-		contenido_exploit.textContent = response.contenido;
-		tecnologia.textContent = response.extension;
-		exploit_cve.textContent = response.cve;
-
-		alert("heey")
-
-		// software
-		if ('software' in myObj) {
-			let exploit_software = document.querySelector("#exploit_software");
-			let exploit_software_version = document.querySelector("#exploit_software_version");
-		} //cms
-		else if('cms' in myObj) {
-			let contenido_exploit = document.querySelector("#exploit_cms");
-			let exploit_categoria = document.querySelector("#exploit_categoria");
-			let exploit_extension = document.querySelector("#exploit_extension");
-			let exploit_version = document.querySelector("#exploit_version");
-		}
-		
-
-		// Recibe
-
-		// Recibe
-		// peticion = {
-		// "exploit": "shell_drupalgeddon2.sh",
-		// "contenido": "BASE64", 
-		// "extension":"python3",
-		// "cve": "CVE-2018-002", 
-		// "software":{
-		// 	"software_nombre": "Drupal", 
-		// 	"software_version": "7.57"
-		// }
-		// }
-
-		// Ó
-
-		// peticion = {
-		// "exploit":"shell_drupalgeddon2.sh",
-		// "contenido":"BASE64",
-		// "extension":"sh",
-		// "cve":"CVE-2018-002",
-		// "cms":{
-		// 	"cms_nombre":"Drupal",
-		// 	"cms_categoria":"pluggin",
-		// 	"cms_extension_nombre":"Form 7",
-		// 	"cms_extension_version":"9.8"
-		// }
-		// }
-
-
 	});
 
 });
@@ -842,5 +860,13 @@ async function send_json(url, json) {
 }
 
 function reload_site(){
-	//window.location.reload()
+	window.location.reload()
+}
+
+function utf8_to_b64( str ) {
+	return window.btoa(unescape(encodeURIComponent( str )));
+}
+
+function b64_to_utf8( str ) {
+	return decodeURIComponent(escape(window.atob( str )));
 }
