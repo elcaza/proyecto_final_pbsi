@@ -125,12 +125,13 @@ thead {
 	font-weight: bold;
 }
 
-tr {
-
+thead tr,
+thead th {
+	text-align: center;
 }
 
-th,td {
-
+th,td,tr{
+	text-align: left;
 }
 
 .grafica {

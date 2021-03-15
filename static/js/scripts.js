@@ -76,6 +76,18 @@ document.addEventListener("DOMContentLoaded", function() {
 		let exploit_extension = document.querySelector("#exploit_extension").value;
 		let exploit_version = document.querySelector("#exploit_version").value;
 
+		function utf8_to_b64( str ) {
+			return window.btoa(unescape(encodeURIComponent( str )));
+		}
+
+		function b64_to_utf8( str ) {
+			return decodeURIComponent(escape(window.atob( str )));
+		}
+
+		// Contenido to b64
+		contenido_exploit = utf8_to_b64( contenido_exploit );
+
+
 		if ( document.querySelector("body").classList.contains("in_software") ){
 			opcion = "software";
 		} else if ( document.querySelector("body").classList.contains("in_cms") ) {
@@ -738,5 +750,5 @@ async function send_json(url, json) {
 }
 
 function reload_site(){
-	window.location.reload()
+	//window.location.reload()
 }
