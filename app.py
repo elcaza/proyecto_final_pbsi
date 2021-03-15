@@ -249,7 +249,7 @@ def ciclo_primera_peticion():
     server_abajo = True
     while server_abajo:
         try:
-            peticion = requests.get("http://127.0.0.1:3000/")
+            peticion = requests.get("http://0.0.0.0:3000/")
             if peticion.status_code == 200:
                 server_abajo = False
         except:
