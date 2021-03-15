@@ -312,7 +312,8 @@ button:hover {
     display: inline-block
 }
 
-.modulos__select {
+.modulos__select,
+.exploits__select {
     display: inline-block
 }
 
@@ -428,6 +429,14 @@ input:checked + .modulos__slider:before {
 }
 
 .exploits__add {
+
+}
+
+.exploits__editar {
+
+}
+
+.exploits__borrar {
 
 }
 
