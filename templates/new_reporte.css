@@ -1,0 +1,217 @@
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+/**
+===========================================
+START CSS
+===========================================
+*/
+
+body {
+	margin: 0;
+	padding: 0;
+}
+
+div{
+	text-align: center;
+}
+
+table{
+	margin: 0 auto;
+}
+
+.contenedor-grafica {
+	width: 600px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.contenedor-titulo {
+	background-color: #044767;
+	width: auto;
+	margin: auto;
+}
+
+.titulo {
+	line-height: 80px;
+	font-size: 36px;
+	font-family: sans-serif;
+	color: #FFFFFF;
+	margin: 0;
+	padding: 0;
+	font-weight: bold;
+
+
+}
+
+h2.subtitulo {
+	font-size: 1.5em;
+	padding: 1em;
+	box-sizing: border-box;
+	font-weight: bold;
+}
+
+h3.subtitulo {
+	background-color: #064766;
+    color: #fee;
+    padding: 40px 20px;
+    font-weight: bold;
+    font-size: 2em;
+}
+
+h3.categoria {
+
+}
+
+h4.subtitulo {
+	font-size: 1em;
+	padding: 1em;
+	box-sizing: border-box;
+	font-weight: bold;
+}
+
+table {
+	width: 1200px;
+	margin: auto;
+}
+
+thead {
+	background-color: red;
+	font-weight: bold;
+}
+
+tr {
+
+}
+
+th,td {
+
+}
+
+.grafica {
+	width: inherit;
+}
+
+.categoria {
+	margin-left: 20;
+}
+
+.fracaso {
+	background-color: #9e2424;
+}
+
+.exito {
+	background-color: #024C81;
+}
+
+.inconcluso {
+	background-color: #adadad;
+}
+
+.tabla-descripcion-grafica {
+	table-layout: fixed;
+	width: 90%;
+	border-collapse: collapse;
+	margin: auto;
+}
+
+.tabla-descripcion-renglon-grafica {
+	padding: 20px;
+}
+
+.tabla-descripcion-renglon {
+	padding: 10px;
+}
+
+.contenedor-grafica{
+	margin-top:40px;
+}
+
+.linea-divisora {
+	margin-left: 20px;
+	margin-right: 20px;
+	margin-bottom: 30px;
+	margin-top: 25px;
+}
+
+.linea-doble-divisora {
+	margin-left: 20px;
+	margin-right: 20px;
+	margin-bottom: 30px;
+	margin-top: 25px;
+	border-top: double;
+}
+
+thead th:nth-child(1) {
+	width: 10%;
+}
+
+thead th:nth-child(2) {
+	width: 40%;
+}
+
+thead th:nth-child(3) {
+	width: 10%;
+}
+
+th,
+td {
+	letter-spacing: 1px;
+}
+
+tbody td {
+	text-align: center;
+}
+
+tbody tr:nth-child(odd) {
+	background-color: #027fb99b;
+}
+
+tbody tr:nth-child(even) {
+	background-color: #ececec;
+}

@@ -628,6 +628,33 @@ input:checked + .modulos__slider:before {
 
 }
 
+.main__proximosEscaneos__contenedor {
+
+}
+
+.main__proximosEscaneos__datos {
+
+}
+
+.main__proximosEscaneos__fecha,
+.main__proximosEscaneos__sitio {
+    display: inline-block;
+    width: 49%;
+    margin-left: -6px;
+    border: 1px solid;
+    padding: 10px;
+    box-sizing: border-box;
+    margin-bottom: -1px;
+}
+
+.main__proximosEscaneos__fecha {
+
+}
+
+.main__proximosEscaneos__sitio {
+
+}
+
 .footer__copy {
     text-align: center;
 }

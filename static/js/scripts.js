@@ -113,6 +113,8 @@ document.addEventListener("DOMContentLoaded", function() {
 		console.log(peticion);
 
 		send_json_fetch(server_url+"/exploits-crear", peticion);
+
+		reload_site();
 	});
 
 	// Loading info
@@ -171,6 +173,8 @@ document.addEventListener("DOMContentLoaded", function() {
 		}
 
 		send_json_fetch(server_url+"/ejecucion", peticion);
+
+		reload_site();
 	});
 
 	// ************************************************************************************************
@@ -731,4 +735,8 @@ async function send_json(url, json) {
 	}
 	//return response;
 	return true;
+}
+
+function reload_site(){
+	window.location.reload()
 }
