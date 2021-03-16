@@ -255,7 +255,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		//alert("iniciando scan");
 
 		let sitio = document.querySelector(".scan__url").value;
-		let file = document.querySelector(".scan__file").value;
+		let file = document.querySelector(".scan__file");
 		let fecha = document.querySelector("#next_scan").value
 		let puertos = document.querySelector("#modulos_puertos").value;
 		let cookie = document.querySelector("#modulos_cookie").value;
@@ -280,6 +280,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		let peticion = {
 			"sitio":sitio,
 			"fecha":fecha,
+			"file":file,
 			"puertos":{
 				"inicio":1,
 				"final":puertos
