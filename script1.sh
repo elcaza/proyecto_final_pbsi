@@ -1,4 +1,18 @@
-sudo apt update && apt upgrade -y
+#!/bin/bash
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit
+fi
+
+if ! command -v sudos &> /dev/null
+then
+    echo "Instalando sudo"
+    apt update
+    apt install sudo
+fi
+
+sudo apt update
+
 sudo apt install -y build-essential
 sudo apt install gnupg
 wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
