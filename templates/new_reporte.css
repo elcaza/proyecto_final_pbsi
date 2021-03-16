@@ -55,6 +55,41 @@ START CSS
 body {
 	margin: 0;
 	padding: 0;
+	margin-top: 96px;
+}
+
+nav {
+    background-color: #054767;
+	position: fixed;
+	top: 0px;
+}
+
+nav ul {
+
+}
+
+nav li {
+	display: inline-block;
+    box-sizing: border-box;
+    padding: 10px;
+    border: 1px solid whitesmoke;
+    margin: 5px;
+}
+
+nav li:hover {
+	background-color: #1478a9;
+}
+
+
+
+nav li a {
+	color: whitesmoke;
+	text-decoration: none;
+}
+
+nav li a:hover {
+	color: whitesmoke;
+	text-decoration: underline;
 }
 
 div{
