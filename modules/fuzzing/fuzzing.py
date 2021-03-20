@@ -59,10 +59,7 @@ class Singleton_Diccionarios_ataque(metaclass=SingletonMeta):
    
    def get_diccionarios(self):
       return self.diccionarios
-
-   def get_diccionario_tipo(self, numero_diccionario):
-      return True
-
+      
 class Singleton_Diccionarios_validacion(metaclass=SingletonMeta):
    def __init__(self, diccionario_validar_sqli, diccionario_validar_lfi, manejador = "", sistema = ""):
       self.manejador = manejador
@@ -369,19 +366,20 @@ def enviar_peticiones(driver, url, diccionario, tipo, json_fuzzing, json_forms, 
          i = len(json_fuzzing["forms"][form_utilizar])-1
          json_fuzzing["forms"][form_utilizar][i]["inputs"] = formulario.get_peticion()
 
-         if vulnerabilidad_tiempo:
-            if tipo == "xss":
-               json_fuzzing["forms"][form_utilizar][i]["xss"] = True
-            elif tipo == "sqli":
-               json_fuzzing["forms"][form_utilizar][i]["sqli"] = True
-            elif tipo == "lfi":
-               json_fuzzing["forms"][form_utilizar][i]["lfi"] = True
-            continue
+         if bloqueo(driver.page_source) == False:
+            if vulnerabilidad_tiempo:
+               if tipo == "xss":
+                  json_fuzzing["forms"][form_utilizar][i]["xss"] = True
+               elif tipo == "sqli":
+                  json_fuzzing["forms"][form_utilizar][i]["sqli"] = True
+               elif tipo == "lfi":
+                  json_fuzzing["forms"][form_utilizar][i]["lfi"] = True
+               continue
 
-         time.sleep(0.1)
-         json_fuzzing["forms"][form_utilizar][i]["xss"] = validarXSS(driver)
-         json_fuzzing["forms"][form_utilizar][i]["sqli"] = validarSQLi(driver)
-         json_fuzzing["forms"][form_utilizar][i]["lfi"] = validarLFI(driver)
+            time.sleep(0.1)
+            json_fuzzing["forms"][form_utilizar][i]["xss"] = validarXSS(driver)
+            json_fuzzing["forms"][form_utilizar][i]["sqli"] = validarSQLi(driver)
+            json_fuzzing["forms"][form_utilizar][i]["lfi"] = validarLFI(driver)
          del formulario
    return True
 
@@ -441,13 +439,6 @@ def crear_hijos_fuzzing(url, cookie=[]):
    del diccionarios
    return json_fuzzing
    
-def obtener_valores_iniciales(parametros):
-   url = parametros["url"]
-   cookie = parametros["cookie"]
-   Singleton_Diccionarios_ataque(strings.DICCIONARIO_ATAQUE_XSS,strings.DICCIONARIO_ATAQUE_SQLI,strings.DICCIONARIO_ATAQUE_LFI)
-   Singleton_Diccionarios_validacion(strings.DICCIONARIO_VALIDACION_SQLI,strings.DICCIONARIO_VALIDACION_LFI)
-   cookie = convertir_cookie(cookie)
-   return url, cookie
 
 def convertir_cookie(cookie):
    cookies_individuales = []
@@ -483,37 +474,38 @@ def pre_enviar_peticiones(forms, diccionario, tipo, json_fuzzing, cookie=[]):
                   payload += input_individual+"="+valor
                
                peticion = sesion.get(url+payload, headers=headers, cookies=cookies)
-               codigo = validarPreCodigo(peticion)
+               if bloqueo(peticion.content.decode("ISO-8859-1")) == False:
+                  codigo,codigo_resultado = validarPreCodigo(peticion)
 
-               if codigo:
-                  if tipo == "xss":
-                     json_fuzzing["forms"][form][i]["xss"] = True
-                  elif tipo == "sqli":
-                     json_fuzzing["forms"][form][i]["sqli"] = True
-                  elif tipo == "lfi":
-                     json_fuzzing["forms"][form][i]["lfi"] = True
+                  if codigo_resultado:
+                     if tipo == "xss":
+                        json_fuzzing["forms"][form][i]["xss"] = True
+                     elif tipo == "sqli":
+                        json_fuzzing["forms"][form][i]["sqli"] = True
+                     elif tipo == "lfi":
+                        json_fuzzing["forms"][form][i]["lfi"] = True
+                     
+                     json_fuzzing["forms"][form][i]["codigo"] = codigo
+                     continue
+
+                  if peticion.elapsed.seconds > 5:
+                     if tipo == "xss":
+                        json_fuzzing["forms"][form][i]["xss"] = True
+                     elif tipo == "sqli":
+                        json_fuzzing["forms"][form][i]["sqli"] = True
+                     elif tipo == "lfi":
+                        json_fuzzing["forms"][form][i]["lfi"] = True
+                     continue
                   
-                  json_fuzzing["forms"][form][i]["codigo"] = codigo
-                  continue
-
-               if peticion.elapsed.seconds > 5:
                   if tipo == "xss":
-                     json_fuzzing["forms"][form][i]["xss"] = True
-                  elif tipo == "sqli":
-                     json_fuzzing["forms"][form][i]["sqli"] = True
-                  elif tipo == "lfi":
-                     json_fuzzing["forms"][form][i]["lfi"] = True
-                  continue
-               
-               if tipo == "xss":
-                  payload_xss = urllib.parse.unquote(valor)
-                  if json_fuzzing["forms"][form][i]["xss"] == False:
-                     json_fuzzing["forms"][form][i]["xss"] = validarPreXSS(peticion, payload_xss)
-               if json_fuzzing["forms"][form][i]["sqli"] == False:
-                  json_fuzzing["forms"][form][i]["sqli"] = validarPreSQLi(peticion)
-               if json_fuzzing["forms"][form][i]["lfi"] == False:
-                  json_fuzzing["forms"][form][i]["lfi"] = validarPreLFI(peticion)
-               i += 1
+                     payload_xss = urllib.parse.unquote(valor)
+                     if json_fuzzing["forms"][form][i]["xss"] == False:
+                        json_fuzzing["forms"][form][i]["xss"] = validarPreXSS(peticion, payload_xss)
+                  if json_fuzzing["forms"][form][i]["sqli"] == False:
+                     json_fuzzing["forms"][form][i]["sqli"] = validarPreSQLi(peticion)
+                  if json_fuzzing["forms"][form][i]["lfi"] == False:
+                     json_fuzzing["forms"][form][i]["lfi"] = validarPreLFI(peticion)
+                  i += 1
                
          if metodo.lower() == "post":
             for valor in diccionario:
@@ -522,38 +514,39 @@ def pre_enviar_peticiones(forms, diccionario, tipo, json_fuzzing, cookie=[]):
                   payload[input_individual] = valor
 
                peticion = sesion.post(url, headers=headers, cookies=cookies, data=json.dumps(payload))
-               codigo = validarPreCodigo(peticion)
+               if bloqueo(peticion.content.decode("ISO-8859-1")) == False:
+                  codigo, codigo_resultado = validarPreCodigo(peticion)
 
-               if codigo:
-                  if tipo == "xss":
-                     json_fuzzing["forms"][form][i]["xss"] = True
-                  elif tipo == "sqli":
-                     json_fuzzing["forms"][form][i]["sqli"] = True
-                  elif tipo == "lfi":
-                     json_fuzzing["forms"][form][i]["lfi"] = True
-                     
-                  json_fuzzing["forms"][form][i]["codigo"] = codigo
-                  continue
+                  if codigo_resultado:
+                     if tipo == "xss":
+                        json_fuzzing["forms"][form][i]["xss"] = True
+                     elif tipo == "sqli":
+                        json_fuzzing["forms"][form][i]["sqli"] = True
+                     elif tipo == "lfi":
+                        json_fuzzing["forms"][form][i]["lfi"] = True
+                        
+                     json_fuzzing["forms"][form][i]["codigo"] = codigo
+                     continue
 
-               if peticion.elapsed.seconds > 5:
+                  if peticion.elapsed.seconds > 5:
+                     if tipo == "xss":
+                        json_fuzzing["forms"][form][i]["xss"] = True
+                     elif tipo == "sqli":
+                        json_fuzzing["forms"][form][i]["sqli"] = True
+                     elif tipo == "lfi":
+                        json_fuzzing["forms"][form][i]["lfi"] = True
+                     continue
+                  
                   if tipo == "xss":
-                     json_fuzzing["forms"][form][i]["xss"] = True
-                  elif tipo == "sqli":
-                     json_fuzzing["forms"][form][i]["sqli"] = True
-                  elif tipo == "lfi":
-                     json_fuzzing["forms"][form][i]["lfi"] = True
-                  continue
-               
-               if tipo == "xss":
-                  payload_xss = urllib.parse.unquote(valor)
-                  if json_fuzzing["forms"][form][i]["xss"] == False:
-                     json_fuzzing["forms"][form][i]["xss"] = validarPreXSS(peticion, payload_xss)
-               # Index out
-               if json_fuzzing["forms"][form][i]["sqli"] == False:
-                  json_fuzzing["forms"][form][i]["sqli"] = validarPreSQLi(peticion)
-               if json_fuzzing["forms"][form][i]["lfi"] == False:
-                  json_fuzzing["forms"][form][i]["lfi"] = validarPreLFI(peticion)
-               i += 1
+                     payload_xss = urllib.parse.unquote(valor)
+                     if json_fuzzing["forms"][form][i]["xss"] == False:
+                        json_fuzzing["forms"][form][i]["xss"] = validarPreXSS(peticion, payload_xss)
+                  # Index out
+                  if json_fuzzing["forms"][form][i]["sqli"] == False:
+                     json_fuzzing["forms"][form][i]["sqli"] = validarPreSQLi(peticion)
+                  if json_fuzzing["forms"][form][i]["lfi"] == False:
+                     json_fuzzing["forms"][form][i]["lfi"] = validarPreLFI(peticion)
+                  i += 1
  
 def validarPreXSS(peticion, payload):
    existe = re.search(re.compile(re.escape(payload)), peticion.content.decode("ISO-8859-1"))
@@ -582,8 +575,19 @@ def validarPreLFI(peticion):
    
 def validarPreCodigo(peticion):
    codigo = peticion.status_code
-   if codigo >= 500 or codigo <= 599:
-      return True
+   if codigo >= 500 and codigo <= 599:
+      return codigo, True
+   return 0, False
+
+def bloqueo(peticion):
+   lista_bloqueo = ["Sorry, you have been blocked"]
+   print("Blocks")
+   for palabra in lista_bloqueo:
+      if re.search(palabra, peticion):
+         print("Esto bloeuqo")
+         return True
+      print("NO Estoy bloqueado")
+   return False
 
 def execute(parametros):
    url, cookie = obtener_valores_iniciales(parametros)
@@ -593,3 +597,10 @@ def execute(parametros):
 '''
 
 '''
+def obtener_valores_iniciales(parametros):
+   url = parametros["url"]
+   cookie = parametros["cookie"]
+   Singleton_Diccionarios_ataque(strings.DICCIONARIO_ATAQUE_XSS,strings.DICCIONARIO_ATAQUE_SQLI,strings.DICCIONARIO_ATAQUE_LFI)
+   Singleton_Diccionarios_validacion(strings.DICCIONARIO_VALIDACION_SQLI,strings.DICCIONARIO_VALIDACION_LFI)
+   cookie = convertir_cookie(cookie)
+   return url, cookie

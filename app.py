@@ -9,7 +9,7 @@ from flask_cors import CORS
 
 ## Utileria
 from base64 import decode, encode
-from os import path, remove
+from os import path, remove, mkdir
 import plotly.express as px
 from datetime import datetime
 import plotly.graph_objects as go
@@ -24,7 +24,7 @@ from modules.alertas import alertas
 from modules.analisis import analisis
 from modules.exploits import exploits as exp
 from modules.explotacion import explotacion
-from modules.fuzzing import fuzzing
+from modules.fuzzing2 import fuzzing
 from modules.modelo.conector import Conector
 from modules.reportes import reportes
 from modules.ejecucion import ejecucion as programacion
@@ -90,7 +90,12 @@ def ejecucion_analisis(peticion):
         execute_analisis(peticion_proceso, peticion_reporte)
 
         print("Iniciando Fuzzing")
-        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://www.seguridad.unam.mx/","forms":{}}]
+        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/drupal7/","forms":{}}]
+        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://seguridad.unam.mx/","forms":{}}]
+        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/DVWA-master/logout.php","forms":{}}]
+        peticion_proceso["analisis"]["paginas"] = [
+            {'pagina': 'http://localhost/DVWA-master/'},{'pagina': 'http://localhost/DVWA-master/instructions.php'}, {'pagina': 'http://localhost/DVWA-master/setup.php'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/brute/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csrf/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/fi/.?page=include.php'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/upload/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/captcha/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli_blind/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/weak_id/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_d/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_r/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_s/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csp/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/javascript/'}, {'pagina': 'http://localhost/DVWA-master/security.php'}, {'pagina': 'http://localhost/DVWA-master/phpinfo.php'}, {'pagina': 'http://localhost/DVWA-master/about.php'}
+        ]
         execute_fuzzing(peticion_proceso, peticion_alerta, peticion_reporte)
 
         print("Iniciando Explotacion")
@@ -123,7 +128,6 @@ def consulta_peticion_volcado():
 def consulta_peticion_reporte(peticion):
     con = Conector()
     analisis = con.obtener_analisis(peticion)
-    0
     if analisis is not None:
         peticion_reporte = {
             "sitio":analisis["sitio"],
@@ -135,7 +139,7 @@ def consulta_peticion_reporte(peticion):
         reporte_analisis(analisis, peticion_reporte)
         reporte_fuzzing(analisis, peticion_reporte)
         reporte_explotacion(analisis, peticion_reporte)
-        execute_reporte(peticion_reporte)
+        execute_reporte(analisis, peticion_reporte)
         return json.dumps({"estado":"ok"})
     return json.dumps({"estado":"error"})
 
@@ -176,13 +180,14 @@ def exploits_peticion_eliminar(peticion_json):
     return json.dumps({"estado":"ok"})
 
 def proximos_peticion_escaneos():
-    peticiones = cola.get_peticiones()
     pendientes = []
-    if len(peticiones) != 0:
-        peticion_actual = cola.get_peticion_actual()
+    peticion_actual = cola.get_peticion_actual()
+    if len(peticion_actual) != 0:
         pendientes.append({"sitio":peticion_actual["sitio"],"fecha":peticion_actual["fecha"],"estado":"Actual"})
-        for peticion in peticiones:
-            pendientes.append({"sitio":peticion["sitio"],"fecha":peticion["fecha"],"estado":"Pendiente"})
+        peticiones = cola.get_peticiones()
+        if len(peticiones) != 0:
+            for peticion in peticiones:
+                pendientes.append({"sitio":peticion["sitio"],"fecha":peticion["fecha"],"estado":"Pendiente"})
     else:
         pendientes.append({})
     return json.dumps(pendientes)
@@ -285,10 +290,17 @@ def execute_alerta(peticion_alerta):
     resultado = enviar_alertas(peticion_alerta)
     return resultado
 
-def execute_reporte(peticion_reporte):
-    print(peticion_reporte)
+def execute_reporte(analisis, peticion_reporte):
     reportes.execute(peticion_reporte)
-    reportes_csv_crear(peticion_reporte)
+    sitio = peticion_reporte["sitio"].replace(",","_").replace("/","_").replace(":","_")
+    fecha = peticion_reporte["fecha"].replace(",","_").replace(" ","_").replace("/","_").replace(":","_")
+    ruta_previa = "{0}_{1}".format(sitio,fecha)
+    try:
+        mkdir(ruta_previa)
+    except FileExistsError:
+        pass
+    reportes_csv_crear(peticion_reporte,ruta_previa)
+    reportes_json_crear(analisis,ruta_previa)
 '''
     Funciones de lanzamiento
 '''
@@ -296,9 +308,9 @@ def fuzzing_lanzar_fuzz(peticion_proceso):
     for posicion_pagina in range(len(peticion_proceso["analisis"]["paginas"])):
         json_fuzzing = {
             "url":peticion_proceso["analisis"]["paginas"][posicion_pagina]["pagina"],
-            "hilos":4,
             "cookie":peticion_proceso["cookie"]
         }
+        print(json_fuzzing["url"])
         forms = fuzzing.execute(json_fuzzing)
         if forms != False:
             peticion_proceso["analisis"]["paginas"][posicion_pagina].update(forms)
@@ -320,9 +332,14 @@ def enviar_alertas(peticion_alerta):
 
 def alertas_fuzzing(peticion_proceso, peticion_alerta):
     for posicion_pagina in range(len(peticion_proceso["analisis"]["paginas"])):
-        fuzzing_alertas = fuzzing_obtener_alertas(peticion_proceso["analisis"]["paginas"][posicion_pagina])
-        if len(fuzzing_alertas) != 0:
-            peticion_alerta["paginas"].append(fuzzing_alertas)    
+        fuzzing_alertas_vulnerables, fuzzing_alertas_posibles_vulnerables = fuzzing_obtener_alertas_vulnerables(peticion_proceso["analisis"]["paginas"][posicion_pagina])
+        if "motivo" in fuzzing_alertas_vulnerables:
+            peticion_alerta["paginas"].append(fuzzing_alertas_vulnerables)    
+        else:
+            peticion_alerta["paginas"].append({"pagina":"","motivo":"Fuzzing","estado":"Sin vulnerabilidades"})
+        
+        if "motivo" in fuzzing_alertas_posibles_vulnerables:
+            peticion_alerta["paginas"].append(fuzzing_alertas_posibles_vulnerables)    
         else:
             peticion_alerta["paginas"].append({"pagina":"","motivo":"Fuzzing","estado":"Sin posibles vulnerabilidades"})
 
@@ -337,38 +354,79 @@ def alertas_explotacion(peticion_proceso, peticion_alerta):
     Funciones de estructuras de las alertas
 '''
 
-def fuzzing_obtener_alertas(forms):
-    forms_alertas = {}
-    forms_alertas["pagina"] = forms["pagina"]
-    motivo = ""
-    for form in forms["forms"]:
-        vulnerable = 0
-        xss = 0
-        sqli = 0
-        lfi = 0
-        for pagina in forms["forms"][form]:
-            if pagina["xss"] == True:
-                xss += 1
-                vulnerable = 1
-            if pagina["sqli"] == True:
-                sqli += 1
-                vulnerable = 1
-            if pagina["lfi"] == True:
-                lfi += 1
-                vulnerable = 1
-        if vulnerable == 1:
-            motivo += '''
-            Form: {0}
-            {1} XSS Vulnerables
-            {2} SQLi Posiblemente Vulnerables
-            {3} LFI Vulnerables
-            '''.format(form, xss, sqli, lfi)
-        vulnerable = 0
-    if motivo != "":
-        forms_alertas["motivo"] = motivo
-        forms_alertas["estado"] = "Posiblemente vulnerable"
-        return forms_alertas
-    return {}
+def fuzzing_obtener_alertas_vulnerables(forms):
+    forms_alertas_vulnerabilidades = {}
+    forms_alertas_vulnerabilidades["pagina"] = forms["pagina"]
+    forms_alertas_posibles_vulnerabilidades = {}
+    forms_alertas_posibles_vulnerabilidades["pagina"] = forms["pagina"]
+    motivo_vulnerabilidad = ""
+    motivo_posible_vulnerabilidad = ""
+    posible = 0
+    posible_lfi = 0
+    for tipo_form in forms:
+        if tipo_form == "forms":
+            for form_unico in forms[tipo_form]:
+                xss = 0
+                sqli = 0
+                sqli_blind = 0
+                sqli_blind_time = 0
+                
+                for datos_form in forms[tipo_form][form_unico]:
+                    if datos_form["xss"] == True:
+                        xss += 1
+                    
+                    if datos_form["sqli"] == True:
+                        sqli += 1
+                    
+                    if datos_form["sqli_blind"] == True:
+                        sqli_blind += 1
+                    
+                    if datos_form["sqli_blind_time"] == True:
+                        sqli_blind_time += 1
+                    
+                    if datos_form["posible_vulnerabilidad_comun"] == True:
+                        posible += 1
+
+                if xss != 0:
+                    motivo_vulnerabilidad += "Form \"{0}\": {1} vulnerabilidades XSS\n".format(form_unico, xss)
+                if sqli != 0:
+                    motivo_vulnerabilidad += "Form \"{0}\": {1} vulnerabilidades SQLi\n".format(form_unico, sqli)
+                if sqli_blind != 0:
+                    motivo_vulnerabilidad += "Form \"{0}\": {1} vulnerabilidades SQLi Blind\n".format(form_unico, sqli_blind)
+                if sqli_blind_time != 0:
+                    motivo_vulnerabilidad += "Form \"{0}\": {1} vulnerabilidades SQLi Blind Time\n".format(form_unico, sqli_blind_time)
+
+        elif tipo_form == "vulnerabilidades":
+            for vulnerabilidad in forms[tipo_form]:
+                lfi = 0
+
+                for datos_vulnerabilidades in forms[tipo_form][vulnerabilidad]:
+                    if datos_vulnerabilidades["lfi"] == True:
+                        lfi += 1
+
+                    if datos_vulnerabilidades["posible_vulnerabilidad"] == True:
+                        posible_lfi += 1
+
+                if lfi != 0:
+                    motivo_vulnerabilidad += "{0} vulnerabilidades LFI\n".format(lfi)
+
+    if posible != 0:
+        motivo_posible_vulnerabilidad += "{0} posibles vulnerabilidades SQLi\n".format(posible)
+
+    if posible_lfi != 0:
+        motivo_posible_vulnerabilidad += "{0} posibles vulnerabilidades LFI\n".format(posible_lfi)
+
+    if motivo_posible_vulnerabilidad != "":
+        forms_alertas_posibles_vulnerabilidades["motivo"] = motivo_posible_vulnerabilidad
+        forms_alertas_posibles_vulnerabilidades["estado"] = "Posibles vulnerables"
+
+    if motivo_vulnerabilidad != "":
+        forms_alertas_vulnerabilidades["motivo"] = motivo_vulnerabilidad
+        forms_alertas_vulnerabilidades["estado"] = "Vulnerable"
+    
+    
+    return forms_alertas_vulnerabilidades, forms_alertas_posibles_vulnerabilidades
+
 
 def explotacion_obtener_alertas(explotaciones):
     explotacion_alertas = {}
@@ -395,6 +453,7 @@ def reporte_informacion(peticion_proceso, peticion_reporte):
     informacion["robtex"] = informacion_obtener_robtex(peticion_proceso["informacion"]["robtex"])
     informacion["puertos_generales"] = informacion_obtener_puertos_generales(peticion_proceso["informacion"]["puertos"])
     informacion["puertos_individuales"] = informacion_obtener_puertos_individuales(peticion_proceso["informacion"]["puertos"])
+    informacion["google"] = informacion_obtener_google(peticion_proceso["informacion"]["google"]) # Listado
     reportes_informacion_crear(informacion, peticion_reporte)
 
 def reporte_analisis(peticion_proceso, peticion_reporte):
@@ -419,20 +478,39 @@ def reporte_analisis(peticion_proceso, peticion_reporte):
 def reporte_fuzzing(peticion_proceso, peticion_reporte):
     fuzzing_estadistica_general = []
     fuzzing_estadistica_individual = []
+    fuzzing_estadistica_general_posibles = []
+    xss = 0
+    sqli = 0
+    sqli_blind = 0
+    sqli_blind_time = 0
+    lfi = 0
+    posible_sqli = 0
+    posible_lfi = 0
     paginas = len(peticion_proceso["analisis"]["paginas"])
+    
     for posicion_pagina in range(paginas):
-        fuzzing_estadistica_individual.append(estaditisticas_fuzzing(peticion_proceso["analisis"]["paginas"][posicion_pagina]))
+        fuzzing_estadistica_individual.append(fuzzing_obtener_ataques(peticion_proceso["analisis"]["paginas"][posicion_pagina]))
+    
     for individual in fuzzing_estadistica_individual:
-        xss =+ individual[1]
-        sqli =+ individual[2]
-        lfi =+ individual[3]
+        xss += individual[1]
+        sqli += individual[2]
+        sqli_blind += individual[3]
+        sqli_blind_time += individual[4]
+        lfi += individual[5]
+        posible_sqli += individual[6]
+        posible_lfi += individual[7]
 
     fuzzing_estadistica_general.append(peticion_proceso["sitio"])
     fuzzing_estadistica_general.append(xss)
     fuzzing_estadistica_general.append(sqli)
+    fuzzing_estadistica_general.append(sqli_blind)
+    fuzzing_estadistica_general.append(sqli_blind_time)
     fuzzing_estadistica_general.append(lfi)
-    #print(fuzzing_estadistica_general)
-    reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte)
+    print(xss,sqli,sqli_blind,sqli_blind_time,lfi,posible_sqli,posible_lfi)
+    fuzzing_estadistica_general_posibles.append(peticion_proceso["sitio"])
+    fuzzing_estadistica_general_posibles.append(posible_sqli)
+    fuzzing_estadistica_general_posibles.append(posible_lfi)
+    reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, fuzzing_estadistica_general_posibles, peticion_reporte)
         
 def reporte_explotacion(peticion_proceso, peticion_reporte):
     explotacion_estadisticas = estadisticas_explotacion(peticion_proceso)
@@ -467,7 +545,7 @@ def reportes_analisis_crear(datos_analisis, grafica_cifrados, peticion_reporte):
     for valor in analisis:
         peticion_reporte["analisis"].append(valor)
 
-def reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, peticion_reporte):
+def reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_individual, fuzzing_estadistica_general_posibles, peticion_reporte):
     reporte = root + "/templates/ifram_grafica_fuzzing.html"
     reporte_relativo = "/reporte-fuzzing"
 
@@ -476,6 +554,9 @@ def reportes_fuzzing_crear(fuzzing_estadistica_general, fuzzing_estadistica_indi
     peticion_reporte["analisis"].append(analisis)
     
     analisis = reportes_fuzzing_crear_individual(fuzzing_estadistica_individual)
+    peticion_reporte["analisis"].append(analisis)
+
+    analisis = reportes_fuzzing_crear_general_posibles(fuzzing_estadistica_general_posibles)
     peticion_reporte["analisis"].append(analisis)
 
 def reportes_explotacion_crear(explotacion_estadisticas, peticion_reporte):
@@ -564,6 +645,11 @@ def informacion_obtener_puertos_individuales(datos):
         puertos_individuales.append(["NA","NA","NA","NA"])
     return puertos_individuales
 
+def informacion_obtener_google(datos): 
+    if len(datos) != 0:
+        return [[dato] for dato in datos]
+    return [["No se encontraron archivos"]]
+
 # Análisis
 def analisis_obtener_servidor(datos, tipo):
     nombre = "No se encontró {0}".format(tipo)
@@ -615,20 +701,35 @@ def analisis_obtener_cifrados(datos):
 def analisis_obtener_paginas(datos): return [[len(datos)]]
 
 # Fuzzing
-def estaditisticas_fuzzing(forms):
-    forms_estadisticas = ["",0,0,0]
+def fuzzing_obtener_ataques(forms):
+    forms_estadisticas = ["",0,0,0,0,0,0,0]
     forms_estadisticas[0] = (forms["pagina"])
-    for form in forms["forms"]:
-        for resultados in forms["forms"][form]:
-            for ataque in ["xss","sqli","lfi"]:
-                resultado_ataque = resultados[ataque]
-                if resultado_ataque == True:
-                    if ataque == "xss":
-                        forms_estadisticas[1] += 1
-                    elif ataque == "sqli":
-                        forms_estadisticas[2] += 1
-                    elif ataque == "lfi":
-                        forms_estadisticas[3] += 1
+    for tipo_form in forms:
+        if tipo_form == "forms":
+            for form in forms[tipo_form]:
+                for resultados in forms[tipo_form][form]:
+                    for ataque in ["xss","sqli","sqli_blind","sqli_blind_time","posible_vulnerabilidad_comun"]:
+                        resultado_ataque = resultados[ataque]
+                        if resultado_ataque == True:
+                            if ataque == "xss":
+                                forms_estadisticas[1] += 1
+                            elif ataque == "sqli":
+                                forms_estadisticas[2] += 1
+                            elif ataque == "sqli_blind":
+                                forms_estadisticas[3] += 1
+                            elif ataque == "sqli_blind_time":
+                                forms_estadisticas[4] += 1
+                            elif ataque == "posible_vulnerabilidad_comun":
+                                forms_estadisticas[6] += 1
+
+        elif tipo_form == "vulnerabilidades":
+            for tipo_vulnerabilidad in forms[tipo_form]:
+                for vulnerabilidad in forms[tipo_form][tipo_vulnerabilidad]:
+                    if vulnerabilidad["lfi"] == True:
+                        forms_estadisticas[5] += 1
+                    if vulnerabilidad["posible_vulnerabilidad"] == True:
+                        forms_estadisticas[7] += 1
+
                     
     return forms_estadisticas
 
@@ -683,11 +784,15 @@ def reportes_analisis_crear_cifrados_grafica(grafica_cifrados,reporte):
 def reportes_fuzzing_crear_general_grafica(fuzzing_estadisticas,reporte):
     xss = fuzzing_estadisticas[1]
     sqli = fuzzing_estadisticas[2]
-    lfi = fuzzing_estadisticas[3]
-    ataques = ["XSS","SQLi","LFI"]
+    sqli_blind = fuzzing_estadisticas[3]
+    sqli_blind_time = fuzzing_estadisticas[4]
+    lfi = fuzzing_estadisticas[5]
 
-    colors = ['#024C81', '#E7A44C', '#538A6B']
-    fuzzing_diagrama = go.Figure(data=[go.Pie(labels=ataques, values=[xss,sqli,lfi])])
+    ataques = ["XSS","SQLi","SQLi Blind","SQLi Blind Time","LFI"]
+    ataques_valores = [xss,sqli,sqli_blind,sqli_blind_time,lfi]
+
+    colors = ['#233D53', '#064B73', '#F9F3E6', "#737574", "FA532E"]
+    fuzzing_diagrama = go.Figure(data=[go.Pie(labels=ataques, values=ataques_valores)])
     fuzzing_diagrama.update_traces(hoverinfo='label+percent', textinfo='value', textfont_size=20,
                   marker=dict(colors=colors, line=dict(color='#000000', width=1)))
     fuzzing_diagrama.update_layout(title_text="Resultados del módulo de fuzzing")
@@ -707,7 +812,7 @@ def reportes_explotacion_crear_general_grafica(explotacion_estadisticas,reporte)
             if explotacion[1] == "Inconcluso":
                 inconcluso += 1
     ataques_resultado = [exito, fracaso, inconcluso]
-    colors = ['#024C81', '#9e2424', '#adadad']
+    colors = ['#024C81', '#E7A44C', '#538A6B']
     explotacion_diagrama = go.Figure(data=[go.Pie(labels=ataques, values=ataques_resultado)])
     explotacion_diagrama.update_traces(hoverinfo='label+percent', textinfo='value', textfont_size=20,
                   marker=dict(colors=colors, line=dict(color='#000000', width=1)))
@@ -744,6 +849,7 @@ def reportes_informacion_crear_subgeneral(informacion):
     datos["puertos_individuales"] = informacion["puertos_individuales"]
     datos["dns_dumpster"] = informacion["dns_dumpster"]
     datos["robtex"] = informacion["robtex"]
+    datos["google"] = informacion["google"]
 
     for dato in datos:
         if dato == "puertos_individuales":
@@ -768,6 +874,14 @@ def reportes_informacion_crear_subgeneral(informacion):
                         "titulo":"Robtex",
                         "grafica":"",
                         "cabecera":["Tipo","Dominio","IP"],
+                        "datos":datos[dato]
+            }
+        elif dato == "google":
+            analisis_individual = {
+                        "categoria":"",
+                        "titulo":"Google",
+                        "grafica":"",
+                        "cabecera":["Archivos"],
                         "datos":datos[dato]
             }
         analisis.append(analisis_individual)
@@ -837,8 +951,18 @@ def reportes_fuzzing_crear_general(fuzzing_estadistica_general, reporte):
                 "categoria":"Fuzzing",
                 "titulo":"Resultados generales",
                 "grafica":reporte,
-                "cabecera":["Sitio","XSS","SQLi","LFI"],
+                "cabecera":["Sitio","XSS","SQLi","SQLi Blind","SQLi Blind Time","LFI"],
                 "datos":[fuzzing_estadistica_general]
+    }
+    return analisis
+
+def reportes_fuzzing_crear_general_posibles(fuzzing_estadistica_general_posibles):
+    analisis = {
+                "categoria":"Fuzzing",
+                "titulo":"Resultados de posibles vulnerabilidades",
+                "grafica":"",
+                "cabecera":["Sitio","SQLi","LFI"],
+                "datos":[fuzzing_estadistica_general_posibles]
     }
     return analisis
 
@@ -847,7 +971,7 @@ def reportes_fuzzing_crear_individual(fuzzing_estadistica_individual):
                 "categoria":"",
                 "titulo":"Resultados individuales",
                 "grafica":"",
-                "cabecera":["Página","XSS","SQLi","LFI"],
+                "cabecera":["Sitio","XSS","SQLi","SQLi Blind","SQLi Blind Time","LFI"],
                 "datos":fuzzing_estadistica_individual
     }
     return analisis
@@ -1028,15 +1152,28 @@ def obtener_software_version_unica_puertos(peticion_proceso):
 
 # Reportes
 ## Crear archivo CSV
-def reportes_csv_crear(peticion_reporte):
-    sitio = peticion_reporte["sitio"].replace(",","_").replace("/","_").replace(":","_")
-    fecha = peticion_reporte["fecha"].replace(",","_").replace(" ","_").replace("/","_").replace(":","_")
-    archivos = "cvs_{0}_{1}_".format(sitio, fecha)
+def reportes_csv_crear(peticion_reporte, ruta_previa):
+    ruta = "{0}/cvs".format(ruta_previa)
+    try:
+        mkdir(ruta)
+    except FileExistsError:
+        pass
     for cvs in peticion_reporte["analisis"]:
-        categoria = cvs["categoria"].replace(" ","")
-        titulo = cvs["titulo"].replace(" ","")
+        categoria = cvs["categoria"].replace(" ","_")
+        titulo = cvs["titulo"].replace(" ","_").replace(",","_")
+        if titulo == "":
+            titulo = cvs["cabecera"][0].replace(" ","_")
+        titulo = titulo.strip()
+        if titulo == "Interés":
+            titulo = "Plugins"
+        if titulo in ["Archivos","Headers","Plugins","Librerías__Frameworks__Lenguajes","Vulnerabilidades"]:
+            categoria = "Analisis"
+        if titulo in ["Robtex","Cifrados","DNS_Dumpster","Google"]:
+            categoria = "Informacion"
+        if titulo in ["Resultados_individuales"]:
+            categoria = "Fuzzing"
         valores_cabecera = ""
-        archivo_particular = "{0}_{1}_{2}.cvs".format(archivos,categoria,titulo)
+        archivo_particular = "{0}/{1}_{2}.cvs".format(ruta,categoria,titulo)
 
         for cabecera in cvs["cabecera"]:
             valores_cabecera += cabecera + ","
@@ -1050,6 +1187,16 @@ def reportes_csv_crear(peticion_reporte):
                     valores_datos += str(dato).replace(",","_") + ","
                 valores_datos = valores_datos[:-1]
                 archivo_cvs.write(valores_datos + "\n")
+
+def reportes_json_crear(peticion, ruta_previa):
+    ruta = "{0}/json".format(ruta_previa)
+    try:
+        mkdir(ruta)
+    except FileExistsError:
+        pass
+    archivo = "{0}/analisis.json".format(ruta)
+    with open(archivo, "w") as reporte_archivo:
+        reporte_archivo.write(json.dumps(peticion))
 
 '''
     Rutas

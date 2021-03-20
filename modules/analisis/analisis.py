@@ -16,6 +16,7 @@ from jsmin import jsmin
 from xml.etree.ElementTree import fromstring, ElementTree
 from Wappalyzer import Wappalyzer, WebPage
 import ssl
+import os
 
 class Utilerias():
 	def __init__(self, cookies):
@@ -136,18 +137,19 @@ class Utilerias():
 		return self.cookie
 
 	def set_cookies(self, cookie):
-		cookies_tmp = []
 		cookies = {}
-		c_tmp = []
-		cookies_data = cookie
-		if "," in cookies_data:
-			cookies_tmp = cookies_data.split(",")
-			for cookie in cookies_tmp:
-				c_tmp = cookie.split(":")
-				cookies[c_tmp[0]] = c_tmp[-1]
-		else:
-			cookies_tmp = cookies_data.split(":")
-			cookies[cookies_tmp[0]] = cookies_tmp[1]
+		if len(cookie) != 0:
+			cookies_tmp = []
+			c_tmp = []
+			cookies_data = cookie
+			if "," in cookies_data:
+				cookies_tmp = cookies_data.split(",")
+				for cookie in cookies_tmp:
+					c_tmp = cookie.split(":")
+					cookies[c_tmp[0]] = c_tmp[-1]
+			else:
+				cookies_tmp = cookies_data.split(":")
+				cookies[cookies_tmp[0]] = cookies_tmp[1]
 		self.cookie = cookies
 
 class Wordpress():
@@ -741,6 +743,8 @@ class Obtencion_informacion():
 	def get_cifrados(self):
 		cifrados = {}
 		tmp_cifrado = []
+		if os.path.exists("salida_ssl.json"):
+			subprocess.run(["rm","salida_ssl.json"])
 		if self.sitio.startswith("https"):
 			ruta = path.abspath(path.dirname(__file__)) + "/config/config_general.json"
 			with open(ruta,"r") as cg:

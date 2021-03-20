@@ -229,7 +229,7 @@ class Reporte():
 
     def get_body_titulo_grafica(self, titulo):
         body_titulo = '''
-            <h3 class="subtitulo">
+            <h3 class="subtitulo" id="subtitulo_id">
                 {0}
             </h3>
         '''.format(titulo)

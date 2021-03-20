@@ -1,0 +1,18 @@
+[
+    "APPLICABLE_ROLES",
+    "TABLESPACES",
+    "ENABLED_ROLES",
+    "INNODB_TABLESPACES_ENCRYPTION",
+    "INNODB_MUTEXES",
+    "pg_stat_xact_user_functions",
+    "pg_stat_progress_vacuum",
+    "pg_shdescription",
+    "pg_available_extensions",
+    "pg_indexes",
+    "ORDDCM_CT_ACTION_TMP",
+    "EDITIONING_TYPES$",
+    "SQLOBJ$DATA",
+    "SVCOBJ_ACCESS$",
+    "SYS_MFBA_TRACKED_TXN",
+    "Microsoft SQL Server"
+]

@@ -1,0 +1,16 @@
+[
+    "include\\(\\)",
+    "Warning: ",
+    "\\[function.include\\]",
+    "URL file-access is disabled",
+    "failed to open stream",
+    "wrapper could be found",
+    "on line \\d+",
+    "include_once\\(\\)",
+    "require\\(\\)",
+    "fopen\\(\\)",
+    "require_once\\(\\)",
+    "\\$_FILES",
+    "file\\(\\)",
+    "unlink\\(\\)"
+]

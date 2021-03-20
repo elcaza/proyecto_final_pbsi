@@ -189,12 +189,15 @@ class Obtener_informacion():
 			"pais": "",
 			"cabecera": ""
 			}]
+			
 			}
 			self.json_informacion["robtex"] = {"informacion": {"ip": self.ip_address,
 			"ciudad": "NA",
 			"pais": "NA",
 			"red": "NA"},
 			"dns_forward": [], "host_forward": [], "mx_forward": [], "host_reverse": []}
+
+			self.json_informacion["google"] = []
 		self.scanner_puertos()
 		
 
