@@ -254,7 +254,7 @@ def ciclo_primera_peticion():
     server_abajo = True
     while server_abajo:
         try:
-            peticion = requests.get("http://127.0.0.1:3000/")
+            peticion = requests.get("http://0.0.0.0:3000/")
             if peticion.status_code == 200:
                 server_abajo = False
         except:
@@ -1337,4 +1337,4 @@ cola = Encolamiento()
 # Ejecucion de Flask
 if __name__ == "__main__":
     iniciar_ciclo_primera_peticion()
-    app.run(host='127.0.0.1', port=3000, debug=True)
+    app.run(host='0.0.0.0', port=3000, debug=True)
