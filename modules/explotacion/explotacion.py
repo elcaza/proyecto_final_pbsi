@@ -109,6 +109,7 @@ def cargar_parametros(sitio, puerto, exploit, exploit_temporal):
     modificar_exploit_puerto(puerto,exploit, exploit_temporal)
 
 def validar_resulado(resultado):
+    print(resultado)
     if b"Exito" in resultado:
         return 1
     elif b"Fracaso" in resultado:

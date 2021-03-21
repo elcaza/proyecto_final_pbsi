@@ -1,6 +1,7 @@
 // Variable global
 let json_consultas;
 let json_proximos_escaneos;
+let json_consultas_exploits;
 // Main actions
 document.addEventListener("DOMContentLoaded", function() {
 	// Buttons

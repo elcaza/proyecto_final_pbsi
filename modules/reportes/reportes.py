@@ -66,136 +66,32 @@ class Reporte():
 
     def get_css(self):
         css = '''
-            <style type="text/css">
-
-            body {
-                margin: 0;
-                padding: 0;
-            }
-            
-            div{
-                text-align: center;
-            }
-
-            table{
-                margin: 0 auto;
-            }
-
-            .contenedor-grafica {
-                width: 600px;
-                margin-left: auto;
-                margin-right: auto;
-            }
-
-            .contenedor-titulo {
-                background-color: #044767;
-                width: auto;
-                margin: auto;
-            }
-
-            .titulo {
-                line-height: 80px;
-                font-size: 36px;
-                font-family: sans-serif;
-                color: #FFFFFF;
-                margin: 0;
-                padding: 0;
-            }
-
-            .subtitulo {
-                text-align: center;
-            }
-
-            .grafica {
-                width: inherit;
-            }
-
-            .categoria {
-                margin-left: 20;
-            }
-
-            .fracaso {
-                background-color: #9e2424;
-            }
-
-            .exito {
-                background-color: #024C81;
-            }
-
-            .inconcluso {
-                background-color: #adadad;
-            }
-
-            .tabla-descripcion-grafica {
-                table-layout: fixed;
-                width: 90%;
-                border-collapse: collapse;
-                margin: auto;
-            }
-
-            .tabla-descripcion-renglon-grafica {
-                padding: 20px;
-            }
-
-            .tabla-descripcion-renglon {
-                padding: 10px;
-            }
-
-            .contenedor-grafica{
-                margin-top:40px;
-            }
-
-            .linea-divisora {
-                margin-left: 20px;
-                margin-right: 20px;
-                margin-bottom: 30px;
-                margin-top: 25px;
-            }
-
-            .linea-doble-divisora {
-                margin-left: 20px;
-                margin-right: 20px;
-                margin-bottom: 30px;
-                margin-top: 25px;
-                border-top: double;
-            }
-
-            thead th:nth-child(1) {
-                width: 10%;
-            }
-
-            thead th:nth-child(2) {
-                width: 40%;
-            }
-
-            thead th:nth-child(3) {
-                width: 10%;
-            }
-
-            th,
-            td {
-                letter-spacing: 1px;
-            }
-
-            tbody td {
-                text-align: center;
-            }
-
-            tbody tr:nth-child(odd) {
-                background-color: #027fb99b;
-            }
-
-            tbody tr:nth-child(even) {
-                background-color: #ececec;
-            }
-
-        </style>
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/new_reporte.css') }}">
         '''
         return css
 
     def get_body_titulo(self):
         body_titulo = '''
             <body>
+
+                <nav>
+                    <ul>
+                        <li><a href="#información_general">Información general </a></li>
+                        <li><a href="#puertos">Puertos </a></li>
+                        <li><a href="#dns_dumpster">DNS Dumpster </a></li>
+                        <li><a href="#robtex">Robtex </a></li>
+                        <li><a href="#bibliotecas,_frameworks,_lenguajes">Bibliotecas, Frameworks, Lenguajes </a></li>
+                        <li><a href="#cifrados">Cifrados </a></li>
+                        <li><a href="#plugins">Plugins </a></li>
+                        <li><a href="#archivos">Archivos </a></li>
+                        <li><a href="#headers">Headers </a></li>
+                        <li><a href="#cve">CVE </a></li>
+                        <li><a href="#vulnerabilidades">Vulnerabilidades </a></li>
+                        <li><a href="#vulnerabilidades_por_página">Vulnerabilidades por página </a></li>
+                        <li><a href="#posibles_vulnerabilidades">Posibles Vulnerabilidades </a></li>
+                        <li><a href="#explotación">Explotación </a></li>
+                    </ul>
+                </nav>
                 <!-- Header -->
                 <div class="contenedor-titulo">
                     <h1 class="titulo">
@@ -207,11 +103,11 @@ class Reporte():
 
     def get_body_subtitulo_reporte(self):
         body_subtitulo_reporte = '''
-            <h2 class="subtitulo">
+            <h2 class="subtitulo" style="text-align: center;">
                 REPORTE DEL SITIO {0}
             </h2>
             <!-- Fecha del analisis-->
-            <h4 class="subtitulo">
+            <h4 class="subtitulo" style="text-align: center;">
                 {1}
             </h4>
             <hr class="linea-doble-divisora">
@@ -229,10 +125,10 @@ class Reporte():
 
     def get_body_titulo_grafica(self, titulo):
         body_titulo = '''
-            <h3 class="subtitulo" id="subtitulo_id">
-                {0}
+            <h3 class="subtitulo" id="{0}">
+                {1}
             </h3>
-        '''.format(titulo)
+        '''.format(titulo.replace(" ","_").lower(),titulo)
         return body_titulo
 
     def get_body_grafica(self, grafica):
@@ -246,68 +142,34 @@ class Reporte():
         return body_categoria
 
     def get_body_descripcion(self, grafica, cabeceras, datos):
-        if grafica == 1:
-            tabla_grafica = '''
-            <div>
-                <table class="tabla-descripcion-grafica" cellspacing="0">
-                    <thead>
-                        <tr>
-            '''
-            for cabecera in cabeceras:
-                tabla_grafica += '''<th class="tabla-descripcion-renglon-grafica" scope="col">{0}</th> '''.format(cabecera)
-            tabla_grafica += ''' 
-                        </tr>
-                    </thead>
-                    <tbody>
-                    '''
-            for dato in datos:
-                tabla_grafica += "<tr>"
-                for posicion_dato in range(len(dato)):
-                    if posicion_dato == 0:
-                        tabla_grafica += '''<th class="tabla-descripcion-renglon-grafica" scope="row">{0}</th>'''.format(dato[posicion_dato])
-                    elif str(dato[posicion_dato]) in "Exitoso":
-                        tabla_grafica += '''<td class="exito tabla-descripcion-renglon-grafica">{0}</td>'''.format(dato[posicion_dato])
-                    elif str(dato[posicion_dato]) in "Fracaso":
-                        tabla_grafica += '''<td class="fracaso tabla-descripcion-renglon-grafica">{0}</td>'''.format(dato[posicion_dato])
-                    elif str(dato[posicion_dato]) in "Inconcluso":
-                        tabla_grafica += '''<td class="inconcluso tabla-descripcion-renglon-grafica">{0}</td>'''.format(dato[posicion_dato])
-                    else:
-                        tabla_grafica += '''<td class="tabla-descripcion-renglon-grafica">{0}</td>'''.format(dato[posicion_dato])
-                tabla_grafica += "</tr>"
-            tabla_grafica += ''' 
-                        </tbody>
-                    </table>
-                </div>
+        print(datos)
+        tabla = '''
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        '''
+        for cabecera in cabeceras:
+            tabla += '''<th class="tabla-descripcion-renglon" scope="col">{0}</th> '''.format(cabecera)
+        tabla += ''' 
+                    </tr>
+                </thead>
+                <tbody>
                 '''
-            return tabla_grafica
-        else:
-            tabla = '''
-            <div>
-                <table cellspacing="0">
-                    <thead>
-                        <tr>
+        for dato in datos:
+            tabla += "<tr>"
+            for posicion_dato in range(len(dato)):
+                if posicion_dato == 0:
+                    tabla += '''<th class="tabla-descripcion-renglon" scope="row">{0}</th>'''.format(dato[posicion_dato])
+                else:
+                    tabla += '''<td class="tabla-descripcion-renglon">{0}</td>'''.format(dato[posicion_dato])
+            tabla += "</tr>"
+        tabla += ''' 
+                    </tbody>
+                </table>
+            </div>
             '''
-            for cabecera in cabeceras:
-                tabla += '''<th class="tabla-descripcion-renglon" scope="col">{0}</th> '''.format(cabecera)
-            tabla += ''' 
-                        </tr>
-                    </thead>
-                    <tbody>
-                    '''
-            for dato in datos:
-                tabla += "<tr>"
-                for posicion_dato in range(len(dato)):
-                    if posicion_dato == 0:
-                        tabla += '''<th class="tabla-descripcion-renglon" scope="row">{0}</th>'''.format(dato[posicion_dato])
-                    else:
-                        tabla += '''<td class="tabla-descripcion-renglon">{0}</td>'''.format(dato[posicion_dato])
-                tabla += "</tr>"
-            tabla += ''' 
-                        </tbody>
-                    </table>
-                </div>
-                '''
-            return tabla
+        return tabla
 
     def get_body_analisis(self):
         body_analisis = ""

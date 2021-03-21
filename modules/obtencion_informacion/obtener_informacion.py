@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from app import informacion_obtener_datos, informacion_obtener_dnsdumpster
 import json
 import random
 # from googlesearch import search
