@@ -2,10 +2,14 @@ import re, requests, json
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from fake_useragent import UserAgent
-from os import path
+from os import path, listdir
+from random import choice
+from string import ascii_letters
 import concurrent.futures
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from selenium import webdriver
+from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, ElementNotInteractableException, WebDriverException, JavascriptException, InvalidCookieDomainException
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -28,6 +32,13 @@ class Validaciones():
                 return False
         return False
 
+    def validar_tamanio_input_selenium(self, tamanio):
+        altura = tamanio["height"]
+        anchura = tamanio["width"]
+        if altura > 0 and anchura > 0:
+            return True
+        return False
+
     def validar_xss(self, resultado, payload):
         texto = resultado.text
         payload = re.escape(payload)
@@ -35,6 +46,44 @@ class Validaciones():
         if resultado:
             return True
         return False
+
+    def validar_xss_selenium(self, driver):
+        try:
+            alerta = driver.switch_to.alert
+            if alerta.text == "XSS DETECTADO":
+                alerta.accept()
+                return True
+            return False
+        except NoAlertPresentException:
+            return False
+
+    def validar_upload(self, driver):
+        try:
+            ruta = "{0}{1}".format(self.ruta,"/validacion_upload.json")
+            with open(ruta,"r") as errores:
+                self.errores_comunes = json.load(errores)
+        except FileNotFoundError:
+            self.errores_comunes = []
+
+        texto = driver.page_source
+        for error in self.errores_comunes:
+            if re.search(re.escape(error),texto):
+                return True
+        return False
+
+    def validar_upload_error(self, driver):
+        try:
+            ruta = "{0}{1}".format(self.ruta,"/validacion_errores_upload.json")
+            with open(ruta,"r") as errores:
+                self.errores_comunes = json.load(errores)
+        except FileNotFoundError:
+            self.errores_comunes = []
+
+        texto = driver.page_source
+        for error in self.errores_comunes:
+            if re.search(re.escape(error),texto):
+                return False
+        return True
 
     def validar_sqli(self, resultado, payload):
         try:
@@ -100,7 +149,20 @@ class Validaciones():
         texto = resultado.text
         for error in self.errores_comunes:
             if re.search(re.escape(error),texto):
-                print("SQLi",error)
+                return True
+        return False
+
+    def validar_errores_comunes_selenium(self, driver):
+        try:
+            ruta = "{0}{1}".format(self.ruta,"/validacion_errores_comunes.json")
+            with open(ruta,"r") as errores:
+                self.errores_comunes = json.load(errores)
+        except FileNotFoundError:
+            self.errores_comunes = []
+
+        texto = driver.page_source
+        for error in self.errores_comunes:
+            if re.search(re.escape(error),texto):
                 return True
         return False
 
@@ -131,12 +193,17 @@ class Pagina():
         self.convertir_cookie(parametros["cookie"])
         self.set_headers()
         self.set_formularios()
+        self.set_opciones_selenium()
         self.combinaciones_xss()
         self.combinaciones_lfi()
         self.combinaciones_sqli()
         self.combinaciones_sqli_blind()
         self.combinaciones_sqli_blind_time()
+        self.combinaciones_upload()
         
+    def cadena_aleatoria(self):
+        return ''.join(choice(ascii_letters) for i in range(8))
+
     def enviar_validacion_comun(self, resultado, json_temporal={}, form={}, posicion=0, lfi=False):
         codigo, codigo_bool = self.validaciones.validar_codigo(resultado)
 
@@ -208,9 +275,16 @@ class Pagina():
         return json_temporal
 
     def obtener_nombre_etiqueta(self, nombre_etiqueta, id_etiqueta, nombre_temporal, tipo = ""):
-        if tipo == "submit" and (id_etiqueta == None or id_etiqueta == "") and (nombre_etiqueta == None or nombre_etiqueta == ""):
+        if tipo == "submit" and (id_etiqueta == None or id_etiqueta == "") and (nombre_etiqueta != ""):
+            return nombre_etiqueta
+
+        elif tipo == "submit" and (id_etiqueta != None or id_etiqueta != ""):
+            return id_etiqueta
+        
+        elif tipo == "submit":
             return "submit"
-        if id_etiqueta == None or id_etiqueta == "":
+
+        elif id_etiqueta == None or id_etiqueta == "":
             if nombre_etiqueta == None or nombre_etiqueta == "":
                 return nombre_temporal
             else:
@@ -318,6 +392,9 @@ class Pagina():
                 self.payload_lista_sqli_blind_time = json.load(sqli_blind_time)
         except FileNotFoundError:
             self.payload_lista_sqli_blind_time = []
+
+    def combinaciones_upload(self):
+        self.lista_archivos = [path.abspath(path.dirname(__file__)) + "/upload_file/" + x for x in listdir("./modules/fuzzing2/upload_file")]
 
     def peticiones_xss(self):
         print("XSS")
@@ -458,6 +535,198 @@ class Pagina():
                 i += 1
         return json_temporal
     
+    def peticiones_selenium_xss(self):
+        self.driver_xss = webdriver.Chrome("/usr/bin/chromedriver",options=self.sin_navegador)
+        self.driver_xss.set_page_load_timeout(30)
+        json_forms_selenium = self.enviar_peticiones_selenium_xss()
+        return json_forms_selenium
+        return {"forms_selenium":{}}
+
+    def peticiones_selenium_upload(self):        
+        self.driver_upload = webdriver.Chrome("/usr/bin/chromedriver",options=self.sin_navegador)
+        self.driver_upload.set_page_load_timeout(30)
+        json_forms_selenium = self.enviar_peticiones_selenium_upload()
+        return json_forms_selenium
+        return {"forms_uploadxs":{}}
+
+    def enviar_peticiones_selenium_upload(self):
+        print("UPLOAD")
+        json_formularios_selenium = {"forms_upload":{}}
+        nombre_temporal = "_temp_"
+        self.driver_upload.get(self.url)
+
+        try:
+            for cookie in self.cookies_selenium:
+                self.driver_upload.add_cookie(cookie)
+        except:
+            print(cookie)
+            print("No cookies plx")
+
+        self.driver_upload.get(self.url)
+        forms_totales = len(self.driver_upload.find_elements_by_xpath("//form"))
+        contador = 0
+
+        for form in range(forms_totales):
+            existe_archivo = 0
+            for archivo in self.lista_archivos:
+                inputs_generales = []
+                
+                try:
+                    for cookie in self.cookies_selenium:
+                        self.driver_upload.add_cookie(cookie)
+                except:
+                    print("No cookies plx")
+
+                self.driver_upload.get(self.url)
+
+                forms = self.driver_upload.find_elements_by_xpath("//form")
+                inputs = forms[form].find_elements_by_xpath(".//input")
+                textareas = forms[form].find_elements_by_xpath(".//textarea")
+
+                nombre_form = forms[form].get_attribute("name")
+                id_form = forms[form].get_attribute("id")
+                nombre_temporal_unico = "{0}_{1}_{2}".format("form",nombre_temporal,contador)
+                nombre_form = self.obtener_nombre_etiqueta(nombre_form, id_form, nombre_temporal_unico)
+
+                for input_unico in inputs:
+                    nombre = input_unico.get_attribute("name")
+                    id_input = input_unico.get_attribute("id")
+                    tipo_input = input_unico.get_attribute("type")
+                    tamanio_input = input_unico.size
+
+                    if tipo_input == "file":
+                        existe_archivo = 1
+                        nombre_temporal_unico = "{0}_{1}_{2}".format("input",nombre_temporal,contador)
+                        nombre_input = self.obtener_nombre_etiqueta(nombre, id_input, nombre_temporal_unico, tipo_input)
+                        inputs_generales.append("{0} : {1}".format(nombre_input, archivo))
+                        input_unico.send_keys(archivo)
+
+                    elif self.validaciones.validar_tipo_input(tipo_input) and self.validaciones.validar_tamanio_input_selenium(tamanio_input) and tipo_input != "hidden":
+                        nombre_temporal_unico = "{0}_{1}_{2}".format("input",nombre_temporal,contador)
+                        nombre_input = self.obtener_nombre_etiqueta(nombre, id_input, nombre_temporal_unico, tipo_input)
+                        if tipo_input.lower() != "submit":
+                            input_unico.send_keys(self.cadena_aleatoria())
+
+                for text_area in textareas:
+                    text_area.send_keys(self.cadena_aleatoria())
+                
+                for input_unico in inputs:
+                    tamanio_input = input_unico.size
+                    if input_unico.get_attribute("type").lower() == "submit" and self.validaciones.validar_tamanio_input_selenium(tamanio_input):
+                        input_unico.click()
+                        break
+                
+                if existe_archivo == 0:
+                    break
+
+                upload = self.validaciones.validar_upload(self.driver_upload)
+                upload_error = self.validaciones.validar_upload_error(self.driver_upload)
+
+                if nombre_form not in json_formularios_selenium["forms_upload"]:
+                    json_formularios_selenium["forms_upload"][nombre_form] = [{
+                        "inputs":inputs_generales,
+                        "upload":upload,
+                        "posible_vulnerabilidad_comun":upload_error
+                    }]
+                else:
+                    json_formularios_selenium["forms_upload"][nombre_form].append({
+                        "inputs":inputs_generales,
+                        "upload":upload,
+                        "posible_vulnerabilidad_comun":upload_error
+                    })
+            contador += 1
+                
+        return json_formularios_selenium
+
+    def enviar_peticiones_selenium_xss(self):
+        print("XSS SELENIUM")
+        json_formularios_selenium = {"forms_selenium":{}}
+        nombre_temporal = "_temp_"
+        self.driver_xss.get(self.url)
+
+        try:
+            for cookie in self.cookies_selenium:
+                self.driver_xss.add_cookie(cookie)
+        except:
+            print(cookie)
+            print("No cookies plx")
+
+        self.driver_xss.get(self.url)
+        forms_totales = len(self.driver_xss.find_elements_by_xpath("//form"))
+        contador = 0
+
+        for form in range(forms_totales):
+            for payload in self.payload_lista_xss:
+                inputs_generales = []
+                try:
+                    for cookie in self.cookies_selenium:
+                        self.driver_xss.add_cookie(cookie)
+                except:
+                    print("No cookies plx")
+
+                self.driver_xss.get(self.url)
+                forms = self.driver_xss.find_elements_by_xpath("//form")
+                inputs = forms[form].find_elements_by_xpath(".//input")
+                textareas = forms[form].find_elements_by_xpath(".//textarea")
+
+                nombre_form = forms[form].get_attribute("name")
+                id_form = forms[form].get_attribute("id")
+                nombre_temporal_unico = "{0}_{1}_{2}".format("form",nombre_temporal,contador)
+                nombre_form = self.obtener_nombre_etiqueta(nombre_form, id_form, nombre_temporal_unico)
+
+                for input_unico in inputs:
+                    nombre = input_unico.get_attribute("name")
+                    id_input = input_unico.get_attribute("id")
+                    tipo_input = input_unico.get_attribute("type")
+                    tamanio_input = input_unico.size
+
+                    if self.validaciones.validar_tipo_input(tipo_input) and self.validaciones.validar_tamanio_input_selenium(tamanio_input) and tipo_input != "hidden":
+                        nombre_temporal_unico = "{0}_{1}_{2}".format("input",nombre_temporal,contador)
+                        nombre_input = self.obtener_nombre_etiqueta(nombre, id_input, nombre_temporal_unico, tipo_input)
+
+                        if tipo_input.lower() != "submit":
+                            inputs_generales.append("{0} : {1}".format(nombre_input, payload))
+                            input_unico.send_keys(payload)
+
+                for text_area in textareas:
+                    nombre = text_area.get_attribute("name")
+                    id_text_area = text_area.get_attribute("id")
+                    nombre_temporal_unico = "{0}_{1}_{2}".format("input",nombre_temporal,contador)
+                    nombre_text_area = self.obtener_nombre_etiqueta(nombre, id_text_area, nombre_temporal_unico)
+                    inputs_generales.append("{0} : {1}".format(nombre_text_area, payload))
+                    text_area.send_keys(payload)
+
+
+                for input_unico in inputs:
+                    tamanio_input = input_unico.size
+                    if input_unico.get_attribute("type").lower() == "submit" and self.validaciones.validar_tamanio_input_selenium(tamanio_input):
+                        input_unico.click()
+                        break
+                
+                xss = self.validaciones.validar_xss_selenium(self.driver_xss)
+                posible = self.validaciones.validar_errores_comunes_selenium(self.driver_xss)                
+
+                if nombre_form not in json_formularios_selenium["forms_selenium"]:
+                    json_formularios_selenium["forms_selenium"][nombre_form] = [{
+                        "inputs":inputs_generales,
+                        "xss":xss,
+                        "posible_vulnerabilidad_comun":posible
+                    }]
+                else:
+                    json_formularios_selenium["forms_selenium"][nombre_form].append({
+                        "inputs":inputs_generales,
+                        "xss":xss,
+                        "posible_vulnerabilidad_comun":posible
+                    })
+            contador += 1
+        return json_formularios_selenium
+
+    def set_opciones_selenium(self):
+        self.sin_navegador = webdriver.ChromeOptions()
+        self.sin_navegador.add_argument('headless')      
+        self.sin_navegador.add_argument('--no-sandbox')
+        self.sin_navegador.add_argument('--disable-dev-shm-usage')
+
     def set_peticion(self, json_temporal, carga, form, metodo):
         if metodo == "get":
             inputs = [valor for valor in carga.split("&")]
@@ -518,10 +787,11 @@ class Pagina():
                 tipo_input = input_unico.get("type")
                 tamanio_input = input_unico.get("size")
 
-                if self.validaciones.validar_tipo_input(tipo_input) or self.validaciones.validar_tamanio_input(tamanio_input):
+                if self.validaciones.validar_tipo_input(tipo_input) or (self.validaciones.validar_tamanio_input(tamanio_input) and tipo_input != "hidden"):
                     nombre_temporal_unico = "{0}_{1}_{2}".format("input",nombre_temporal,contador)
                     nombre_input = self.obtener_nombre_etiqueta(nombre, id_input, nombre_temporal_unico, tipo_input)
-                    inputs_generales.append(nombre_input)
+                    if nombre_input is not None:
+                        inputs_generales.append(nombre_input)
                     contador += 1
 
             text_areas = form_unico.find_all("textarea")
@@ -545,6 +815,8 @@ class Pagina():
                 }
                 self.json_fuzzing["forms"][nombre_form] = []
         self.json_fuzzing["vulnerabilidades"] = {"lfi":[]}
+        self.json_fuzzing["forms_upload"] = {}
+        self.json_fuzzing["forms_selenium"] = {}
 
     def set_headers(self):
         self.headers = {
@@ -564,19 +836,29 @@ class Pagina():
                 executor.submit(self.peticiones_sqli),
                 executor.submit(self.peticiones_sqli_blind),
                 executor.submit(self.peticiones_sqli_blind_time),
-                executor.submit(self.peticiones_lfi)
+                executor.submit(self.peticiones_lfi),
+                executor.submit(self.peticiones_selenium_xss),
+                executor.submit(self.peticiones_selenium_upload)
             ]
 
             for future in concurrent.futures.as_completed(futures):
                 json_future = future.result()
-
                 if "forms" in json_future:
                     for form in json_future["forms"]:
                         self.json_fuzzing["forms"][form].extend(json_future["forms"][form])
 
+                elif "forms_selenium" in json_future:
+                    for form in json_future["forms_selenium"]:
+                        self.json_fuzzing["forms_selenium"] = json_future["forms_selenium"]
+
+                elif "forms_upload" in json_future:
+                    for form in json_future["forms_upload"]:
+                        self.json_fuzzing["forms_upload"] = json_future["forms_upload"]
+
                 elif "vulnerabilidades" in json_future:
                     self.json_fuzzing["vulnerabilidades"]["lfi"].extend(
                         json_future["vulnerabilidades"]["lfi"])
+
 
 def execute(parametros):
     pagina = Pagina(parametros)

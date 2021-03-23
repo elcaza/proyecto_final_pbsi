@@ -16,12 +16,11 @@ from jsmin import jsmin
 from xml.etree.ElementTree import fromstring, ElementTree
 from Wappalyzer import Wappalyzer, WebPage
 import ssl
-import os
+import re
 
 class Utilerias():
-	def __init__(self, cookies):
+	def __init__(self):
 		self.user_agent = UserAgent()
-		self.set_cookies(cookies)
 
 	def get_fake_user_agent(self):
 		return {'User-Agent': self.user_agent.random}
@@ -30,10 +29,10 @@ class Utilerias():
 	def get_peticion(self,sitio):
 		try:
 			if sitio.startswith("https"):
-				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),verify=False,cookies=self.cookie)
+				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),verify=False,cookies=self.get_cookies())
 			else:
-				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),cookies=self.cookie)
-		except Exception as e:
+				respuesta = requests.get(sitio,headers=self.get_fake_user_agent(),cookies=self.get_cookies())
+		except:
 			respuesta = ""
 		return respuesta
 
@@ -134,30 +133,29 @@ class Utilerias():
 		return vulnes_cms
 
 	def get_cookies(self):
-		return self.cookie
-
-	def set_cookies(self, cookie):
+		cookies_tmp = []
 		cookies = {}
-		if len(cookie) != 0:
-			cookies_tmp = []
-			c_tmp = []
-			cookies_data = cookie
-			if "," in cookies_data:
-				cookies_tmp = cookies_data.split(",")
-				for cookie in cookies_tmp:
-					c_tmp = cookie.split(":")
-					cookies[c_tmp[0]] = c_tmp[-1]
-			else:
-				cookies_tmp = cookies_data.split(":")
-				cookies[cookies_tmp[0]] = cookies_tmp[1]
-		self.cookie = cookies
+		c_tmp = []
+		config_file = self.obtener_path_file("config/","config_general",".json")
+		with open(config_file) as configuracion:
+			datos = json.load(configuracion)
+		cookies_data = datos["cookie"]
+		if "," in cookies_data:
+			cookies_tmp = cookies_data.split(",")
+			for cookie in cookies_tmp:
+				c_tmp = cookie.split(":")
+				cookies[c_tmp[0]] = c_tmp[-1]
+		else:
+			cookies_tmp = cookies_data.split(":")
+			cookies[cookies_tmp[0]] = cookies_tmp[1]
+
+		return cookies
 
 class Wordpress():
 
-	def __init__(self,sitio, cookie):
-		self.util = Utilerias(cookie)
+	def __init__(self,sitio):
+		self.util = Utilerias()
 		self.sitio = sitio
-		self.cookie = cookie
 
 	def inicio_wordpress(self,deteccion_cms,tmp_diccionario):
 		info = self.carga_configuracion()
@@ -239,6 +237,7 @@ class Wordpress():
 		except requests.exceptions.ConnectionError:
 			return enlaces
 
+
 	def expresion_regular(self,expresion,contenido):
 		match = re.search(expresion,contenido)
 		if(match != None):
@@ -301,9 +300,9 @@ class Wordpress():
 		return lista_vulnerabilidades
 
 class Moodle():
-	def __init__(self,sitio,cookie):
+	def __init__(self,sitio):
 		self.url = sitio
-		self.util = Utilerias(cookie)
+		self.util = Utilerias()
 
 	def inicio_moodle(self,deteccion_cms,tmp_diccionario):
 		info = self.carga_configuracion()
@@ -440,9 +439,9 @@ class Moodle():
 		return lista_vulnerabilidades
 
 class Drupal():
-	def __init__(self,sitio, cookie):
+	def __init__(self,sitio):
 		self.url = sitio
-		self.util = Utilerias(cookie)
+		self.util = Utilerias()
 
 	def inicio_drupal(self,deteccion_cms,tmp_diccionario):
 		tmp_cms = {}
@@ -576,9 +575,9 @@ class Drupal():
 			return []
 
 class Joomla():
-	def __init__(self,sitio, cookie):
+	def __init__(self,sitio):
 		self.sitio = sitio
-		self.util = Utilerias(cookie)
+		self.util = Utilerias()
 
 	def inicio_joomla(self,deteccion_cms,tmp_diccionario):
 		tmp_cms = {}
@@ -664,6 +663,8 @@ class Joomla():
 				lista_vulnerabilidades.append(element.get("cve"))
 				#lista_vulnerabilidades.append(element.get("description"))
 			return lista_vulnerabilidades
+
+
 
 class Obtener_IOC():
 	def __init__(self,sitio):
@@ -759,15 +760,15 @@ class Obtener_IOC():
 
 class Obtencion_informacion():
 
-	def __init__(self, sitio, cookie):
+	def __init__(self, sitio):
 		self.sitio = sitio
 		self.url_without_file()
 		self.tmp_diccionario = {}
 		self.json_informacion = {}
 		self.paginas = []
 		self.paginas.append(self.sitio)
-		self.util = Utilerias(cookie)
-		self.cookie = cookie
+		self.util = Utilerias()
+		self.util.get_cookies()
 		self.menu()
 
 	def url_without_file(self):
@@ -777,6 +778,7 @@ class Obtencion_informacion():
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path[:parsed.path.rfind("/")+1]
 		else:
 			self.sitio = parsed.scheme + "://" + parsed.netloc + parsed.path
+		print(self.sitio)
 
 	def carga_configuracion(self):
 		ruta = path.abspath(path.dirname(__file__))
@@ -789,30 +791,23 @@ class Obtencion_informacion():
 		self.librerias_configuracion = datos["librerias"]
 		
 	def get_version_server(self):
+		f = Utilerias()
 		tmp_dic = {}
 		wappalyzer = Wappalyzer.latest()
-		error = 0
-		while True:
-			try:
-				webpage = WebPage.new_from_url(self.sitio,verify=False)
-				print("Wap Falló :CCC")
-				break
-			except:
-				if error < 5:
-					error += 1
-				else:
-					error = 0
-					break
-
-		tmp = wappalyzer.analyze_with_versions_and_categories(webpage)
-		for llave,valor in tmp.items():
-			for llave2,valor2 in valor.items():
-				if llave2 == "categories" and valor2[0] == "Web servers":
-					tmp_dic["nombre"] = llave
-					try:
-						tmp_dic["version"] = valor["versions"][0]
-					except:
-						tmp_dic["version"] = ""
+		try:
+			webpage = WebPage.new_from_url(self.sitio,verify=False)
+			tmp = wappalyzer.analyze_with_versions_and_categories(webpage)
+		except:
+			tmp = ""
+		if tmp != "":
+			for llave,valor in tmp.items():
+				for llave2,valor2 in valor.items():
+					if llave2 == "categories" and valor2[0] == "Web servers":
+						tmp_dic["nombre"] = llave
+						try:
+							tmp_dic["version"] = valor["versions"][0]
+						except:
+							tmp_dic["version"] = ""
 		self.tmp_diccionario['servidor'] = tmp_dic
 		return self.tmp_diccionario
 
@@ -843,8 +838,6 @@ class Obtencion_informacion():
 	def get_cifrados(self):
 		cifrados = {}
 		tmp_cifrado = []
-		if os.path.exists("salida_ssl.json"):
-			subprocess.run(["rm","salida_ssl.json"])
 		if self.sitio.startswith("https"):
 			ruta = path.abspath(path.dirname(__file__)) + "/config/config_general.json"
 			with open(ruta,"r") as cg:
@@ -865,19 +858,12 @@ class Obtencion_informacion():
 									if cifrado in valor:
 										tmp_cifrado = valor.split()
 										if "TLS" in tmp_cifrado[0]:
-											nombre_cifrado = tmp_cifrado[0] + tmp_cifrado[1] + " - " + tmp_cifrado[-1]
-											nombre_cifrado = nombre_cifrado.replace(".","_")
-											cifrados[nombre_cifrado] = interprete
-											
+											cifrados[tmp_cifrado[0] + tmp_cifrado[1] + " - " + tmp_cifrado[-1]] = interprete
 										else:
-											nombre_cifrado = tmp_cifrado[0] + tmp_cifrado[1] + " - " + tmp_cifrado[-1]
-											nombre_cifrado = nombre_cifrado.replace(".","_")
 											cifrados[tmp_cifrado[0] + " - " + tmp_cifrado[-1]] = interprete
 				self.tmp_diccionario["cifrados"] = cifrados
 			except:
 				self.tmp_diccionario["cifrados"] = {}
-		else:
-			self.tmp_diccionario["cifrados"] = {}
 		return self.tmp_diccionario
 
 
@@ -1059,6 +1045,7 @@ class Obtencion_informacion():
 
 	def menu(self):
 		self.ioc = Obtener_IOC(self.sitio)
+		exit()
 		self.carga_configuracion()
 		self.get_version_server()
 		self.get_headers()
@@ -1099,6 +1086,7 @@ class Obtencion_informacion():
 			self.tmp_diccionario["vulnerabilidades"] = []
 		self.get_librerias()
 		self.json_informacion = self.tmp_diccionario
+		print(self.json_informacion)
 
 	def get_json_informacion(self):
 		return self.json_informacion
@@ -1108,6 +1096,6 @@ def main():
 
 #main()
 
-def execute(sitio, cookie, lista_negra, redireccionamiento):
-	analisis = Obtencion_informacion(sitio, cookie)
+def execute(sitio):
+	analisis = Obtencion_informacion(sitio)
 	return analisis.get_json_informacion()

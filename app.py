@@ -19,7 +19,7 @@ import requests
 import threading
 
 ## Modulos
-from modules.obtencion_informacion import obtener_informacion
+from modules.obtencion_informacion import obtener_informacion as obtener_informacion
 from modules.alertas import alertas
 from modules.analisis import analisis
 from modules.exploits import exploits as exp
@@ -68,7 +68,7 @@ def ejecucion_analisis(peticion):
             "profundidad":peticion["profundidad"],
             "redireccionamiento":peticion["redireccionamiento"],
             "lista_negra":peticion["lista_negra"],
-            #"analisis":{"paginas":[]}
+            "analisis":{"paginas":[]}
         }
 
         peticion_reporte = {
@@ -84,23 +84,26 @@ def ejecucion_analisis(peticion):
         }
 
         
-        print("Iniciando Información")
-        execute_informacion(peticion, peticion_proceso)
+        # print("Iniciando Información")
+        # execute_informacion(peticion, peticion_proceso)
 
-        print("Iniciando Análisis")
-        execute_analisis(peticion_proceso)
+        # print("Iniciando Análisis")
+        # execute_analisis(peticion_proceso)
 
         print("Iniciando Fuzzing")
-        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/drupal7/","forms":{}}]
-        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://seguridad.unam.mx/","forms":{}}]
-        #peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/DVWA-master/logout.php","forms":{}}]
+        # peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/drupal7/","forms":{}}]
+        # peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://seguridad.unam.mx/","forms":{}}]
+        # peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/DVWA-master/logout.php","forms":{}}]
         peticion_proceso["analisis"]["paginas"] = [
-            {'pagina': 'http://localhost/DVWA-master/'},{'pagina': 'http://localhost/DVWA-master/instructions.php'}, {'pagina': 'http://localhost/DVWA-master/setup.php'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/brute/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csrf/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/fi/.?page=include.php'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/upload/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/captcha/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli_blind/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/weak_id/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_d/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_r/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_s/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csp/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/javascript/'}, {'pagina': 'http://localhost/DVWA-master/security.php'}, {'pagina': 'http://localhost/DVWA-master/phpinfo.php'}, {'pagina': 'http://localhost/DVWA-master/about.php'}
+        {'pagina': 'http://localhost/DVWA-master/vulnerabilities/brute/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csrf/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/fi/.?page=include.php'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/upload/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/captcha/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli_blind/'},  {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_d/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_r/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_s/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csp/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/javascript/'}
         ]
+        # peticion_proceso["analisis"]["paginas"] = [
+        #    {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_d/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli_blind/'}
+        # ]
         execute_fuzzing(peticion_proceso, peticion_alerta)
 
-        print("Iniciando Explotacion")
-        execute_explotacion(con, peticion_proceso, peticion_alerta)
+        # print("Iniciando Explotacion")
+        # execute_explotacion(con, peticion_proceso, peticion_alerta)
 
         # print("Iniciando Reporte")
         # execute_reporte(peticion_reporte)
@@ -264,7 +267,7 @@ def execute_informacion(peticion, peticion_proceso):
     peticion_proceso["informacion"] = respuesta_obtener_informacion
 
 def execute_analisis(peticion_proceso):
-    respuesta_analisis = analisis.execute(peticion_proceso["sitio"], peticion_proceso["cookie"])
+    respuesta_analisis = analisis.execute(peticion_proceso["sitio"], peticion_proceso["cookie"], peticion_proceso["lista_negra"],peticion_proceso["redireccionamiento"])
     peticion_proceso["analisis"] = respuesta_analisis
 
 # Puede que truene en fuzzing_lanzar_fuzz
@@ -283,20 +286,20 @@ def execute_alerta(peticion_alerta):
     return resultado
 
 def execute_reporte(peticion_proceso, peticion_reporte):
-    reporte_informacion_general(peticion_proceso, peticion_reporte)
-    reporte_puertos(peticion_proceso, peticion_reporte)
-    reporte_dns_dumpster(peticion_proceso, peticion_reporte)
-    reporte_robtex(peticion_proceso, peticion_reporte)
-    reporte_b_f_l(peticion_proceso, peticion_reporte)
-    reporte_cifrados(peticion_proceso, peticion_reporte)
-    reporte_plugins(peticion_proceso, peticion_reporte)
-    reporte_archivos(peticion_proceso, peticion_reporte)
-    reporte_cve(peticion_proceso, peticion_reporte)
-    reporte_headers(peticion_proceso, peticion_reporte)
+    # reporte_informacion_general(peticion_proceso, peticion_reporte)
+    # reporte_puertos(peticion_proceso, peticion_reporte)
+    # reporte_dns_dumpster(peticion_proceso, peticion_reporte)
+    # reporte_robtex(peticion_proceso, peticion_reporte)
+    # reporte_b_f_l(peticion_proceso, peticion_reporte)
+    # reporte_cifrados(peticion_proceso, peticion_reporte)
+    # reporte_plugins(peticion_proceso, peticion_reporte)
+    # reporte_archivos(peticion_proceso, peticion_reporte)
+    # reporte_cve(peticion_proceso, peticion_reporte)
+    # reporte_headers(peticion_proceso, peticion_reporte)
     reporte_vulnerabilidades(peticion_proceso, peticion_reporte)
     reporte_vulnerabilidades_por_pagina(peticion_proceso, peticion_reporte)
     reporte_posibles_vulnerabilidades(peticion_proceso, peticion_reporte)
-    reporte_explotacion(peticion_proceso, peticion_reporte)
+    # reporte_explotacion(peticion_proceso, peticion_reporte)
 
     reportes.execute(peticion_reporte)
     sitio = peticion_reporte["sitio"].replace(",","_").replace("/","_").replace(":","_")
@@ -668,11 +671,12 @@ def crear_grafica_vulnerabilidades(grafica, reporte):
     sqli_blind = grafica[2]
     sqli_blind_time = grafica[3]
     lfi = grafica[4]
+    upload = grafica[5]
 
-    ataques = ["XSS","SQLi","SQLi Blind","SQLi Blind Time","LFI"]
-    ataques_valores = [xss,sqli,sqli_blind,sqli_blind_time,lfi]
+    ataques = ["XSS","SQLi","SQLi Blind","SQLi Blind Time","LFI", "Upload"]
+    ataques_valores = [xss,sqli,sqli_blind,sqli_blind_time,lfi,upload]
 
-    colors = ['#233D53', '#064B73', '#F9F3E6', "#737574", "FA532E"]
+    colors = ['#233D53', '#064B73', '#F9F3E6', "#737574", "FA532E","fab62e"]
     fuzzing_diagrama = go.Figure(data=[go.Pie(labels=ataques, values=ataques_valores)])
     fuzzing_diagrama.update_traces(hoverinfo='label+percent', textinfo='value', textfont_size=20,
                   marker=dict(colors=colors, line=dict(color='#000000', width=1)))
@@ -684,7 +688,7 @@ def crear_vulnerabilidades(vulnerabilidades, reporte_relativo):
                 "categoria":"",
                 "titulo":"Vulnerabilidades",
                 "grafica":reporte_relativo,
-                "cabecera":["XSS","SQLi","SQLi Blind","SQLi Blind Time","LFI"],
+                "cabecera":["XSS","SQLi","SQLi Blind","SQLi Blind Time","LFI","Upload"],
                 "datos":vulnerabilidades
     }
     return analisis
@@ -694,7 +698,7 @@ def crear_vulnerabilidades_pagina(vulnerabilidades):
                 "categoria":"",
                 "titulo":"Vulnerabilidades por página",
                 "grafica":"",
-                "cabecera":["Página","XSS","SQLi","SQLi Blind","SQLi Blind Time","LFI"],
+                "cabecera":["Página","XSS","SQLi","SQLi Blind","SQLi Blind Time","LFI","Upload"],
                 "datos":vulnerabilidades
     }
     return analisis
@@ -704,7 +708,7 @@ def crear_posibles_vulnerabilidades(vulnerabilidades):
                 "categoria":"",
                 "titulo":"Posibles Vulnerabilidades",
                 "grafica":"",
-                "cabecera":["SQLi", "LFI"],
+                "cabecera":["SQLi", "LFI","Upload"],
                 "datos":vulnerabilidades
     }
     return analisis
@@ -917,8 +921,8 @@ def reporte_headers(peticion_proceso, peticion_reporte):
 def reporte_vulnerabilidades(peticion_proceso, peticion_reporte):
     reporte = root + "/templates/ifram_grafica_fuzzing.html"
     reporte_relativo = "/reporte-fuzzing"
-    vulnerabilidades = [[0,0,0,0,0]]
-    grafica = [0,0,0,0,0]
+    vulnerabilidades = [[0,0,0,0,0,0]]
+    grafica = [0,0,0,0,0,0]
     for pagina in peticion_proceso["analisis"]["paginas"]:
         for tipo in pagina:
             if tipo == "forms":
@@ -941,12 +945,25 @@ def reporte_vulnerabilidades(peticion_proceso, peticion_reporte):
                     for vulnerabilidad in pagina[tipo][tipo_vulnerabilidad]:
                         if vulnerabilidad["lfi"] == True:
                             vulnerabilidades[0][4] += 1
-    
+
+            elif tipo == "forms_upload":
+                for form in pagina[tipo]:
+                    for vulnerabilidad in pagina[tipo][form]:
+                        if vulnerabilidad["upload"] == True:
+                            vulnerabilidades[0][5] += 1
+
+            elif tipo == "forms_selenium":
+                for form in pagina[tipo]:
+                    for vulnerabilidad in pagina[tipo][form]:
+                        if vulnerabilidad["xss"] == True:
+                            vulnerabilidades[0][1] += 1
+
     grafica[0] = vulnerabilidades[0][0]
     grafica[1] = vulnerabilidades[0][1]
     grafica[2] = vulnerabilidades[0][2]
     grafica[3] = vulnerabilidades[0][3]
     grafica[4] = vulnerabilidades[0][4]
+    grafica[5] = vulnerabilidades[0][5]
 
     crear_grafica_vulnerabilidades(grafica, reporte)
     analisis = crear_vulnerabilidades(vulnerabilidades, reporte_relativo)
@@ -956,7 +973,7 @@ def reporte_vulnerabilidades_por_pagina(peticion_proceso, peticion_reporte):
     vulnerabilidades = []
     
     for pagina in peticion_proceso["analisis"]["paginas"]:
-        vulnerabilidades_tmp = ["",0,0,0,0,0]
+        vulnerabilidades_tmp = ["",0,0,0,0,0,0]
         vulnerabilidades_tmp[0] = pagina["pagina"]
         for tipo in pagina:
             if tipo == "forms":
@@ -979,13 +996,26 @@ def reporte_vulnerabilidades_por_pagina(peticion_proceso, peticion_reporte):
                     for vulnerabilidad in pagina[tipo][tipo_vulnerabilidad]:
                         if vulnerabilidad["lfi"] == True:
                             vulnerabilidades_tmp[5] += 1
+
+            elif tipo == "forms_upload":
+                for form in pagina[tipo]:
+                    for vulnerabilidad in pagina[tipo][form]:
+                        if vulnerabilidad["upload"] == True:
+                            vulnerabilidades_tmp[6] += 1
+            
+            elif tipo == "forms_selenium":
+                for form in pagina[tipo]:
+                    for vulnerabilidad in pagina[tipo][form]:
+                        if vulnerabilidad["xss"] == True:
+                            vulnerabilidades_tmp[1] += 1
+
         vulnerabilidades.append(vulnerabilidades_tmp.copy())
 
     analisis = crear_vulnerabilidades_pagina(vulnerabilidades)
     peticion_reporte["analisis"].append(analisis)
     
 def reporte_posibles_vulnerabilidades(peticion_proceso, peticion_reporte):
-    vulnerabilidades = [[0,0]]
+    vulnerabilidades = [[0,0,0]]
     for pagina in peticion_proceso["analisis"]["paginas"]:
         for tipo in pagina:
             if tipo == "forms":
@@ -1001,6 +1031,18 @@ def reporte_posibles_vulnerabilidades(peticion_proceso, peticion_reporte):
                 for tipo_vulnerabilidad in pagina[tipo]:
                     for vulnerabilidad in pagina[tipo][tipo_vulnerabilidad]:
                         if vulnerabilidad["posible_vulnerabilidad"] == True:
+                            vulnerabilidades[0][1] += 1
+            
+            elif tipo == "forms_upload":
+                for form in pagina[tipo]:
+                    for vulnerabilidad in pagina[tipo][form]:
+                        if vulnerabilidad["posible_vulnerabilidad_comun"] == True:
+                            vulnerabilidades[0][2] += 1
+
+            elif tipo == "forms_selenium":
+                for form in pagina[tipo]:
+                    for vulnerabilidad in pagina[tipo][form]:
+                        if vulnerabilidad["posible_vulnerabilidad_comun"] == True:
                             vulnerabilidades[0][1] += 1
 
     analisis = crear_posibles_vulnerabilidades(vulnerabilidades)
