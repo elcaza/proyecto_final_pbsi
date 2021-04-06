@@ -1,4 +1,5 @@
 import re, requests, json
+from socket import timeout
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from fake_useragent import UserAgent
@@ -7,6 +8,7 @@ from random import choice
 from string import ascii_letters
 import concurrent.futures
 import requests
+from time import sleep
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from selenium import webdriver
 from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, ElementNotInteractableException, WebDriverException, JavascriptException, InvalidCookieDomainException
@@ -53,6 +55,7 @@ class Validaciones():
             if alerta.text == "XSS DETECTADO":
                 alerta.accept()
                 return True
+            alerta.accept()
             return False
         except NoAlertPresentException:
             return False
@@ -189,7 +192,7 @@ class Pagina():
         self.user_agent = UserAgent()
         self.ruta = path.abspath(path.dirname(__file__))
         self.validaciones = Validaciones()
-        self.json_fuzzing = {"forms":{}}
+        self.json_fuzzing = {"forms":{}, "url":self.url}
         self.convertir_cookie(parametros["cookie"])
         self.set_headers()
         self.set_formularios()
@@ -201,6 +204,41 @@ class Pagina():
         self.combinaciones_sqli_blind_time()
         self.combinaciones_upload()
         
+    def enviar_peticion_selenium(self, inputs):
+        for input_unico in inputs:
+            tamanio_input = input_unico.size
+            if input_unico.get_attribute("type").lower() == "submit" and self.validaciones.validar_tamanio_input_selenium(tamanio_input):
+                input_unico.click()
+                break
+
+    def enviar_peticion_get(self, url_cargada):
+        try:
+            resultado = self.sesion.get(url_cargada,cookies=self.cookies_requests,headers=self.headers,verify=False, timeout=15)
+            return resultado
+        except:
+            return None
+
+    def cargar_cookies_selenium(self, driver):
+        try:
+            for cookie in self.cookies_selenium:
+                driver.add_cookie(cookie)
+        except:
+            print("No cookies plx")
+
+    def obtener_etiquetas_selenium(self, driver, form):
+        driver.get(self.url)
+        forms = driver.find_elements_by_xpath("//form")
+        inputs = forms[form].find_elements_by_xpath(".//input")
+        textareas = forms[form].find_elements_by_xpath(".//textarea")
+        return forms, inputs, textareas
+
+    def enviar_peticion_post(self, url_cargada, data):
+        try:
+            resultado = self.sesion.post(url_cargada,cookies=self.cookies_requests,data=data,verify=False, timeout=15)
+            return resultado
+        except:
+            return None
+
     def cadena_aleatoria(self):
         return ''.join(choice(ascii_letters) for i in range(8))
 
@@ -243,7 +281,10 @@ class Pagina():
                         carga = carga[:-1]
                     url_cargada = "{0}?{1}".format(self.formularios[form_unico]["accion"],carga)
                     self.set_peticion(json_temporal, carga, form_unico, metodo)
-                    resultado = self.sesion.get(url_cargada,cookies=self.cookies_requests,headers=self.headers,verify=False)
+                    resultado = self.enviar_peticion_get(url_cargada)
+                    
+                    if resultado is None:
+                        continue
 
                     if funcion_validadora(resultado, payload):
                         json_temporal["forms"][form_unico][i][tipo] = True
@@ -265,7 +306,10 @@ class Pagina():
                     url_cargada = self.formularios[form_unico]["accion"]
 
                     self.set_peticion(json_temporal, data, form_unico, metodo)
-                    resultado = self.sesion.post(url_cargada,cookies=self.cookies_requests,data=data,verify=False)
+                    resultado = self.enviar_peticion_post(url_cargada, data)
+
+                    if resultado is None:
+                        continue
 
                     if funcion_validadora(resultado, payload):
                         json_temporal["forms"][form_unico][i][tipo] = True
@@ -438,13 +482,19 @@ class Pagina():
                         carga_payload = carga_payload[:-1]
                         
                     url_cargada = "{0}?{1}".format(self.formularios[form_unico]["accion"],carga_correcta)
-                    resultado_correcto = self.sesion.get(url_cargada,cookies=self.cookies_requests,headers=self.headers,verify=False)
+                    resultado_correcto = self.enviar_peticion_get(url_cargada)
                     url_cargada = "{0}?{1}".format(self.formularios[form_unico]["accion"],carga_incorrecta)
-                    resultado_incorrecto = self.sesion.get(url_cargada,cookies=self.cookies_requests,headers=self.headers,verify=False)
+                    resultado_incorrecto = self.enviar_peticion_get(url_cargada)
                     url_cargada = "{0}?{1}".format(self.formularios[form_unico]["accion"],carga_payload)
-                    resultado_payload = self.sesion.get(url_cargada,cookies=self.cookies_requests,headers=self.headers,verify=False)
+                    resultado_payload = self.enviar_peticion_get(url_cargada)
+
+
 
                     self.set_peticion(json_temporal, "[{0}{1}] = {2}".format(carga_correcta,carga_incorrecta,carga_payload),form_unico,metodo)
+
+                    if resultado_correcto is None or resultado_payload is None or resultado_incorrecto is None:
+                        continue
+
                     if self.validaciones.validar_sqli_blind(resultado_correcto,resultado_incorrecto,resultado_payload, payload):
                         json_temporal["forms"][form_unico][i]["sqli_blind"] = True
 
@@ -464,19 +514,22 @@ class Pagina():
                         if input_unico.lower() == "submit":
                             bandera_submit = input_unico
                         else:
-                            data_correcta[input_unico] = payload["correcto"]
-                            data_incorrecta[input_unico] = payload["incorrecto"]
-                            data_payload[input_unico] = payload["payload"]
+                            data_correcta["Correcto " + input_unico] = payload["correcto"]
+                            data_incorrecta["Incorrecto " + input_unico] = payload["incorrecto"]
+                            data_payload["Payload " + input_unico] = payload["payload"]
                     if bandera_submit != "":
-                        data_correcta[bandera_submit] = "Submit"
-                        data_incorrecta[bandera_submit] = "Submit"
-                        data_payload[bandera_submit] = "Submit"
+                        data_correcta["Correcto " + bandera_submit] = "Submit"
+                        data_incorrecta["Incorrecto " + bandera_submit] = "Submit"
+                        data_payload["Payload " + bandera_submit] = "Submit"
 
                     url_cargada = self.formularios[form_unico]["accion"]
-                    resultado_correcto = self.sesion.post(url_cargada,cookies=self.cookies_requests,data=data_correcta,verify=False)
-                    resultado_incorrecto = self.sesion.post(url_cargada,cookies=self.cookies_requests,data=data_incorrecta,verify=False)
-                    resultado_payload = self.sesion.post(url_cargada,cookies=self.cookies_requests,data=data_payload,verify=False)
+                    resultado_correcto = self.enviar_peticion_post(url_cargada, data_correcta)
+                    resultado_incorrecto = self.enviar_peticion_post(url_cargada, data_incorrecta)
+                    resultado_payload = self.enviar_peticion_post(url_cargada, data_payload)
                     self.set_peticion(json_temporal, data_correcta | data_incorrecta | data_payload,form_unico,metodo)
+
+                    if resultado_correcto is None or resultado_payload is None or resultado_incorrecto is None:
+                        continue
 
                     if self.validaciones.validar_sqli_blind(resultado_correcto,resultado_incorrecto,resultado_payload, payload):
                         json_temporal["forms"][form_unico][i]["sqli_blind"] = True
@@ -503,7 +556,10 @@ class Pagina():
             for payload in self.payload_lista_lfi:
                 url_cargada = "{0}{1}".format(archivo.group(),payload)
                 self.set_peticion_lfi(json_temporal, url_cargada, payload, "get")
-                resultado = self.sesion.get(url_cargada,cookies=self.cookies_requests,headers=self.headers,verify=False)
+                resultado = self.enviar_peticion_get(url_cargada)
+
+                if resultado is None:
+                        continue
 
                 if self.validaciones.validar_lfi(resultado):
                     json_temporal["vulnerabilidades"]["lfi"][i]["lfi"] = True
@@ -516,7 +572,12 @@ class Pagina():
                 for payload in self.payload_lista_lfi:
                     url_cargada = "{0}?{1}={2}".format(self.url,tipo,payload)
                     self.set_peticion_lfi(json_temporal, url_cargada, payload,"get")
-                    resultado = self.sesion.get(url_cargada,cookies=self.cookies_requests,headers=self.headers,verify=False)
+
+                    resultado = self.enviar_peticion_get(url_cargada)
+
+                    if resultado is None:
+                        continue
+
                     if self.validaciones.validar_lfi(resultado):
                         json_temporal["vulnerabilidades"]["lfi"][i]["lfi"] = True
                     self.enviar_validacion_comun(resultado,json_temporal,posicion=i,lfi=True)
@@ -528,7 +589,11 @@ class Pagina():
                 data[tipo] = payload
                 url_cargada = self.url
                 self.set_peticion_lfi(json_temporal, url_cargada, data, "post")
-                resultado = self.sesion.post(url_cargada,cookies=self.cookies_requests,data=data,headers=self.headers,verify=False)
+                resultado = self.enviar_peticion_post(url_cargada, data)
+
+                if resultado is None:
+                        continue
+
                 if self.validaciones.validar_lfi(resultado):
                     json_temporal["vulnerabilidades"]["lfi"][i]["lfi"] = True
                 self.enviar_validacion_comun(resultado,json_temporal,posicion=i,lfi=True)
@@ -555,12 +620,7 @@ class Pagina():
         nombre_temporal = "_temp_"
         self.driver_upload.get(self.url)
 
-        try:
-            for cookie in self.cookies_selenium:
-                self.driver_upload.add_cookie(cookie)
-        except:
-            print(cookie)
-            print("No cookies plx")
+        self.cargar_cookies_selenium(self.driver_upload)
 
         self.driver_upload.get(self.url)
         forms_totales = len(self.driver_upload.find_elements_by_xpath("//form"))
@@ -571,17 +631,9 @@ class Pagina():
             for archivo in self.lista_archivos:
                 inputs_generales = []
                 
-                try:
-                    for cookie in self.cookies_selenium:
-                        self.driver_upload.add_cookie(cookie)
-                except:
-                    print("No cookies plx")
+                self.cargar_cookies_selenium(self.driver_upload)
 
-                self.driver_upload.get(self.url)
-
-                forms = self.driver_upload.find_elements_by_xpath("//form")
-                inputs = forms[form].find_elements_by_xpath(".//input")
-                textareas = forms[form].find_elements_by_xpath(".//textarea")
+                forms, inputs, textareas = forms, inputs, textareas = self.obtener_etiquetas_selenium(self.driver_upload, form)
 
                 nombre_form = forms[form].get_attribute("name")
                 id_form = forms[form].get_attribute("id")
@@ -610,11 +662,7 @@ class Pagina():
                 for text_area in textareas:
                     text_area.send_keys(self.cadena_aleatoria())
                 
-                for input_unico in inputs:
-                    tamanio_input = input_unico.size
-                    if input_unico.get_attribute("type").lower() == "submit" and self.validaciones.validar_tamanio_input_selenium(tamanio_input):
-                        input_unico.click()
-                        break
+                self.enviar_peticion_selenium(inputs)
                 
                 if existe_archivo == 0:
                     break
@@ -628,6 +676,7 @@ class Pagina():
                         "upload":upload,
                         "posible_vulnerabilidad_comun":upload_error
                     }]
+
                 else:
                     json_formularios_selenium["forms_upload"][nombre_form].append({
                         "inputs":inputs_generales,
@@ -644,12 +693,7 @@ class Pagina():
         nombre_temporal = "_temp_"
         self.driver_xss.get(self.url)
 
-        try:
-            for cookie in self.cookies_selenium:
-                self.driver_xss.add_cookie(cookie)
-        except:
-            print(cookie)
-            print("No cookies plx")
+        self.cargar_cookies_selenium(self.driver_xss)
 
         self.driver_xss.get(self.url)
         forms_totales = len(self.driver_xss.find_elements_by_xpath("//form"))
@@ -658,16 +702,10 @@ class Pagina():
         for form in range(forms_totales):
             for payload in self.payload_lista_xss:
                 inputs_generales = []
-                try:
-                    for cookie in self.cookies_selenium:
-                        self.driver_xss.add_cookie(cookie)
-                except:
-                    print("No cookies plx")
 
-                self.driver_xss.get(self.url)
-                forms = self.driver_xss.find_elements_by_xpath("//form")
-                inputs = forms[form].find_elements_by_xpath(".//input")
-                textareas = forms[form].find_elements_by_xpath(".//textarea")
+                self.cargar_cookies_selenium(self.driver_xss)
+
+                forms, inputs, textareas = forms, inputs, textareas = self.obtener_etiquetas_selenium(self.driver_xss, form)
 
                 nombre_form = forms[form].get_attribute("name")
                 id_form = forms[form].get_attribute("id")
@@ -697,12 +735,11 @@ class Pagina():
                     text_area.send_keys(payload)
 
 
-                for input_unico in inputs:
-                    tamanio_input = input_unico.size
-                    if input_unico.get_attribute("type").lower() == "submit" and self.validaciones.validar_tamanio_input_selenium(tamanio_input):
-                        input_unico.click()
-                        break
-                
+                self.enviar_peticion_selenium(inputs)
+
+                if len(inputs_generales) == 0:
+                    break
+
                 xss = self.validaciones.validar_xss_selenium(self.driver_xss)
                 posible = self.validaciones.validar_errores_comunes_selenium(self.driver_xss)                
 
@@ -712,12 +749,14 @@ class Pagina():
                         "xss":xss,
                         "posible_vulnerabilidad_comun":posible
                     }]
+
                 else:
                     json_formularios_selenium["forms_selenium"][nombre_form].append({
                         "inputs":inputs_generales,
                         "xss":xss,
                         "posible_vulnerabilidad_comun":posible
                     })
+
             contador += 1
         return json_formularios_selenium
 
@@ -830,7 +869,7 @@ class Pagina():
         return self.json_fuzzing
 
     def execute(self):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             futures = [
                 executor.submit(self.peticiones_xss),
                 executor.submit(self.peticiones_sqli),
@@ -843,9 +882,11 @@ class Pagina():
 
             for future in concurrent.futures.as_completed(futures):
                 json_future = future.result()
+
                 if "forms" in json_future:
                     for form in json_future["forms"]:
                         self.json_fuzzing["forms"][form].extend(json_future["forms"][form])
+
 
                 elif "forms_selenium" in json_future:
                     for form in json_future["forms_selenium"]:

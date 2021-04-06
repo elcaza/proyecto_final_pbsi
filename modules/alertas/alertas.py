@@ -5,19 +5,27 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from modules import strings
+from os import path, pardir
+import json
 
 class Correo():
     def __init__(self, parametros):
         self.set_subject(parametros)
         self.set_paginas(parametros)
         self.set_fecha(parametros)
-        self.correo_contrasena = strings.CORREO_CONTRASENA
-        self.correo_remitente = strings.CORREO_REMITENTE
-        self.correo_destinatario = strings.CORREO_DESTINATARIO
+        self.set_datos_correo()
         self.correo_mensaje_texto = ""
         self.correo_mensaje = MIMEMultipart()
         self.contexto = ssl.create_default_context()
+
+    def set_datos_correo(self):
+        ruta = path.abspath(path.join(path.dirname(__file__), pardir)) + "/strings.json"
+        with open (ruta, "r") as json_strings:
+            strings = json.load(json_strings)
+            
+        self.correo_contrasena = strings["CORREO_CONTRASENA"]
+        self.correo_remitente = strings["CORREO_REMITENTE"]
+        self.correo_destinatario = strings["CORREO_DESTINATARIO"]
 
     def set_subject(self, parametros):
         if "subject" in parametros:

@@ -1,22 +1,21 @@
 # Importaciones
 ## Flask
-from weakref import ProxyTypes
-from flask_cors.core import serialize_option
-from modules.strings import COLECCION_ANALISIS
+import base64
 import re
 from flask import Flask, render_template, request
 from flask_cors import CORS
 
 ## Utileria
-from base64 import decode, encode
 from os import path, remove, mkdir
-import plotly.express as px
 from datetime import datetime
 import plotly.graph_objects as go
 import json
-from time import sleep, time
+from time import sleep
 import requests
 import threading
+import concurrent.futures
+import socket
+from base64 import b64decode
 
 ## Modulos
 from modules.obtencion_informacion import obtener_informacion as obtener_informacion
@@ -61,55 +60,61 @@ def ejecucion_analisis(peticion):
         programacion.execute(peticion)
         return "Análisis programado"
     else:
-        peticion_proceso = {
-            "sitio":peticion["sitio"],
-            "cookie":peticion["cookie"],
-            "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-            "profundidad":peticion["profundidad"],
-            "redireccionamiento":peticion["redireccionamiento"],
-            "lista_negra":peticion["lista_negra"],
-            "analisis":{"paginas":[]}
-        }
+        if validar_json_sitio(peticion):
+            peticion_proceso = {
+                "sitio":peticion["sitio"],
+                "cookie":peticion["cookie"],
+                "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                "profundidad":peticion["profundidad"],
+                "redireccionamiento":peticion["redireccionamiento"],
+                "lista_negra":peticion["lista_negra"],
+                "analisis":{"paginas":[]}
+            }
 
-        peticion_reporte = {
-            "sitio":peticion_proceso["sitio"],
-            "fecha":peticion_proceso["fecha"],
-            "analisis":[],
-        }
+            peticion_reporte = {
+                "sitio":peticion_proceso["sitio"],
+                "fecha":peticion_proceso["fecha"],
+                "analisis":[],
+            }
 
-        peticion_alerta = {
-            "subject":"Análisis del sitio \"{0}\" finalizado".format(peticion_proceso["sitio"]),
-            "paginas":[],
-            "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-        }
+            peticion_alerta = {
+                "subject":"Análisis del sitio \"{0}\" finalizado".format(peticion_proceso["sitio"]),
+                "paginas":[],
+                "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            }
 
+        else:
+            return json.dumps({"estado":"error"})
         
-        # print("Iniciando Información")
-        # execute_informacion(peticion, peticion_proceso)
+        print("Iniciando Información")
+        execute_informacion(peticion, peticion_proceso)
 
-        # print("Iniciando Análisis")
-        # execute_analisis(peticion_proceso)
+        print("Iniciando Análisis")
+        execute_analisis(peticion_proceso)
 
         print("Iniciando Fuzzing")
         # peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/drupal7/","forms":{}}]
         # peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://seguridad.unam.mx/","forms":{}}]
         # peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/DVWA-master/logout.php","forms":{}}]
-        peticion_proceso["analisis"]["paginas"] = [
-        {'pagina': 'http://localhost/DVWA-master/vulnerabilities/brute/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csrf/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/fi/.?page=include.php'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/upload/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/captcha/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli_blind/'},  {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_d/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_r/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_s/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csp/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/javascript/'}
-        ]
         # peticion_proceso["analisis"]["paginas"] = [
-        #    {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_d/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli_blind/'}
+        # {'pagina': 'http://localhost/DVWA-master/vulnerabilities/brute/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csrf/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/fi/.?page=include.php'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/upload/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/captcha/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli_blind/'},  {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_d/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_r/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_s/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csp/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/javascript/'}
+        # ]
+        # peticion_proceso["analisis"]["paginas"] = [
+        #    {'pagina': 'http://altoromutual.com:8080/login.jsp'},
+        #    #{'pagina': 'http://altoromutual.com:8080/feedback.jsp'},#, {'pagina': 'http://altoromutual.com:8080/login.jsp'},
+        #    #{'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'},{'pagina': 'http://altoromutual.com:8080/status_check.jsp'},
+        #    #{'pagina': 'http://altoromutual.com:8080/subscribe.jsp'},#{'pagina': 'http://altoromutual.com:8080/swagger/index.html'}
         # ]
         execute_fuzzing(peticion_proceso, peticion_alerta)
 
-        # print("Iniciando Explotacion")
-        # execute_explotacion(con, peticion_proceso, peticion_alerta)
+        print("Iniciando Explotacion")
+        execute_explotacion(con, peticion_proceso, peticion_alerta)
 
-        # print("Iniciando Reporte")
-        # execute_reporte(peticion_reporte)
-
-        # print("Enviando alertas")
-        # execute_alerta(peticion_alerta)
+        print("Iniciando Reporte")
+        execute_reporte(peticion_reporte)
+ 
+        print("Enviando alertas")
+        execute_alerta(peticion_alerta)
         
         print("Guardando analisis")
         con.guardar_analisis(peticion_proceso)
@@ -294,6 +299,8 @@ def execute_reporte(peticion_proceso, peticion_reporte):
     # reporte_cifrados(peticion_proceso, peticion_reporte)
     # reporte_plugins(peticion_proceso, peticion_reporte)
     # reporte_archivos(peticion_proceso, peticion_reporte)
+    # reporte_google(peticion_proceso, peticion_reporte)
+    # reporte_bing(peticion_proceso, peticion_reporte)
     # reporte_cve(peticion_proceso, peticion_reporte)
     # reporte_headers(peticion_proceso, peticion_reporte)
     reporte_vulnerabilidades(peticion_proceso, peticion_reporte)
@@ -315,15 +322,21 @@ def execute_reporte(peticion_proceso, peticion_reporte):
     Funciones de lanzamiento
 '''
 def fuzzing_lanzar_fuzz(peticion_proceso):
-    for posicion_pagina in range(len(peticion_proceso["analisis"]["paginas"])):
-        json_fuzzing = {
-            "url":peticion_proceso["analisis"]["paginas"][posicion_pagina]["pagina"],
-            "cookie":peticion_proceso["cookie"]
-        }
-        print(json_fuzzing["url"])
-        forms = fuzzing.execute(json_fuzzing)
-        if forms != False:
-            peticion_proceso["analisis"]["paginas"][posicion_pagina].update(forms)
+    futures = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        for posicion_pagina in range(len(peticion_proceso["analisis"]["paginas"])):
+            json_fuzzing = {
+                "url":peticion_proceso["analisis"]["paginas"][posicion_pagina]["pagina"],
+                "cookie":peticion_proceso["cookie"]
+            }
+                        
+            futures.append(executor.submit(fuzzing.execute,json_fuzzing))
+        for future in concurrent.futures.as_completed(futures):
+            forms = future.result()
+            if forms != False:
+                for posicion_pagina in range(len(peticion_proceso["analisis"]["paginas"])): 
+                    if peticion_proceso["analisis"]["paginas"][posicion_pagina]["pagina"] == forms["url"]:
+                        peticion_proceso["analisis"]["paginas"][posicion_pagina].update(forms)
 
 def explotacion_lanzar_exploit(con, datos_identificados, datos_explotacion, peticion_proceso):
     exploits = buscar_exploits(datos_identificados, con)
@@ -621,6 +634,26 @@ def crear_archivos(archivos):
     }
     return analisis
 
+def crear_google(enlaces):
+    analisis = {
+                "categoria":"",
+                "titulo":"Google",
+                "grafica":"",
+                "cabecera":["Tipo","Nombre"],
+                "datos":enlaces
+    }
+    return analisis
+
+def crear_bing(enlaces):
+    analisis = {
+                "categoria":"",
+                "titulo":"Bing",
+                "grafica":"",
+                "cabecera":["Tipo","Nombre"],
+                "datos":enlaces
+    }
+    return analisis
+
 def crear_cve(cve):
     analisis = {
                 "categoria":"",
@@ -896,6 +929,36 @@ def reporte_archivos(peticion_proceso, peticion_reporte):
     analisis = crear_archivos(archivos)
     peticion_reporte["analisis"].append(analisis)
 
+def reporte_google(peticion_proceso, peticion_reporte):
+    enlaces = []
+    if len(peticion_proceso["informacion"]["google"]) != 0:
+        for tipo in peticion_proceso["informacion"]["google"]:
+            for dato in peticion_proceso["informacion"]["google"][tipo]:
+                enlaces.append([tipo.replace("_"," ").capitalize(), dato])
+    else: 
+        enlaces = [["NA", "No se encontraron {0}".format("enlaces")]]
+
+    if len(enlaces) == 0:
+        enlaces = [["NA", "No se encontraron {0}".format("enlaces")]]
+
+    analisis = crear_google(enlaces)
+    peticion_reporte["analisis"].append(analisis)
+
+def reporte_bing(peticion_proceso, peticion_reporte):
+    enlaces = []
+    if len(peticion_proceso["informacion"]["bing"]) != 0:
+        for tipo in peticion_proceso["informacion"]["bing"]:
+            for dato in peticion_proceso["informacion"]["bing"][tipo]:
+                enlaces.append([tipo.replace("_"," ").capitalize(), dato])
+    else: 
+        enlaces = [["NA", "No se encontraron {0}".format("enlaces")]]
+
+    if len(enlaces) == 0:
+        enlaces = [["NA", "No se encontraron {0}".format("enlaces")]]
+
+    analisis = crear_bing(enlaces)
+    peticion_reporte["analisis"].append(analisis)
+
 def reporte_cve(peticion_proceso, peticion_reporte):
     vulnerabilidades = []
     if len(peticion_proceso["analisis"]["vulnerabilidades"]) != 0:
@@ -956,7 +1019,7 @@ def reporte_vulnerabilidades(peticion_proceso, peticion_reporte):
                 for form in pagina[tipo]:
                     for vulnerabilidad in pagina[tipo][form]:
                         if vulnerabilidad["xss"] == True:
-                            vulnerabilidades[0][1] += 1
+                            vulnerabilidades[0][0] += 1
 
     grafica[0] = vulnerabilidades[0][0]
     grafica[1] = vulnerabilidades[0][1]
@@ -1043,7 +1106,7 @@ def reporte_posibles_vulnerabilidades(peticion_proceso, peticion_reporte):
                 for form in pagina[tipo]:
                     for vulnerabilidad in pagina[tipo][form]:
                         if vulnerabilidad["posible_vulnerabilidad_comun"] == True:
-                            vulnerabilidades[0][1] += 1
+                            vulnerabilidades[0][0] += 1
 
     analisis = crear_posibles_vulnerabilidades(vulnerabilidades)
     peticion_reporte["analisis"].append(analisis)
@@ -1292,6 +1355,34 @@ def reportes_json_crear(peticion, ruta_previa):
     with open(archivo, "w") as reporte_archivo:
         reporte_archivo.write(json.dumps(peticion))
 
+# Ejecucion
+## Validar JSON
+def validar_json_ejecucion(peticion):
+    if "sitio" in peticion and "cookie" in peticion and "profundidad" in peticion and "redireccionamiento" in peticion and "lista_negra" in peticion and "puertos" in peticion:
+        return True
+    return False
+
+def validar_json_sitio(peticion):
+    try:
+        sitio = peticion["sitio"]
+        requests.get(sitio)
+        int(peticion["profundidad"])
+        int(peticion["puertos"]["final"])
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+def validar_json_archivo(peticion):
+    if "sitio" in peticion:
+        sitios = peticion["sitio"]
+        try:
+            a = b64decode(sitios)
+            if a == b"":
+                return False
+            return True
+        except:
+            return False
 '''
     Rutas
 '''
@@ -1331,10 +1422,20 @@ def proximos_escaneos():
 def ejecucion():
     if request.method == "POST":
         peticion_json = request.json
-        if peticion_json["fecha"] == "":
-            respuesta = cola.add_peticion(peticion_json)
-            #respuesta = ejecucion_analisis(peticion_json)
-        return respuesta
+        if validar_json_ejecucion(peticion_json):
+            if validar_json_archivo(peticion_json):
+                print("DENTRO")
+                sitios_decodificados = base64.decode(peticion_json["sitio"]).decode("ISO-8859-1").strip()
+                for sitio in sitios_decodificados.split("\n"):
+                    peticion_temp = peticion_json.copy()
+                    peticion_temp["sitio"] = sitio
+                    respuesta = cola.add_peticion(peticion_temp)
+            else:
+                respuesta = cola.add_peticion(peticion_json)
+            return respuesta
+
+        else:
+            return json.loads({"estatus":"error"})
     if request.method == "GET":
         return "GET no"
 

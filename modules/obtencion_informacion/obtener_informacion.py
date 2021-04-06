@@ -133,6 +133,7 @@ class Obtener_informacion():
         self.json_informacion = {}
         self.sitio = sitio
         self.user_agent = UserAgent()
+        self.set_parametros_json()
         self.set_dorks_google()
         self.set_dorks_bing()
         self.set_robtex(parametros)
@@ -142,6 +143,34 @@ class Obtener_informacion():
 
     def get_fake_user_agent(self):
         return {'User-Agent': self.user_agent.random}
+
+    def set_parametros_json(self):
+        try:
+            self.ip_address = socket.gethostbyname(self.sitio)
+        except socket.gaierror:
+            self.ip_address = ""
+        self.json_informacion["dnsdumpster"] = {"txt": [], "mx": [], "dns": [], "host": [{
+            "dominio": "",
+            "ip": "",
+            "dns_inverso": "",
+            "pais": "",
+            "cabecera": ""
+        }]
+        }
+
+        self.json_informacion["robtex"] = {"informacion": {"ip": self.ip_address,
+                                                           "ciudad": "NA",
+                                                           "pais": "NA",
+                                                           "red": "NA"},
+                                           "dns_forward": [], "host_forward": [], "mx_forward": [], "host_reverse": []}
+
+        self.json_informacion["google"] = {}
+        self.json_informacion["bing"] = {}
+        self.informacion_ipv4 = {"inicio_bloque": "", "final_bloque": "", "nombre_bloque": "",
+                                 "region": "", "pais": "", "fecha_registro": "", "nombre_bloque": "",
+                                 "numero_as": "", "bloque_padre": "", "tamaño_bloque": "", "organizacion": "",
+                                 "servidor_web": "", "ciudad": "", 'dominios': []
+                                 }
 
     def set_robtex(self, parametros):
         self.opciones_robtex = {}
@@ -184,40 +213,12 @@ class Obtener_informacion():
         return self.opciones_puertos
 
     def ejecutar(self):
-        try:
-            self.ip_address = socket.gethostbyname(self.sitio)
-        except socket.gaierror:
-            self.ip_address = ""
         if self.ip_address != "" and IP(self.ip_address).iptype() == "PUBLIC":
             self.busqueda_dnsdumpster()
             self.busqueda_robtex()
             self.google()
             self.busqueda_ipvinfo()
             self.bing()
-        else:
-            self.json_informacion["dnsdumpster"] = {"txt": [], "mx": [], "dns": [], "host": [{
-                "dominio": "",
-                "ip": "",
-                "dns_inverso": "",
-                "pais": "",
-                "cabecera": ""
-            }]
-
-            }
-            self.json_informacion["robtex"] = {"informacion": {"ip": self.ip_address,
-                                                               "ciudad": "NA",
-                                                               "pais": "NA",
-                                                               "red": "NA"},
-                                               "dns_forward": [], "host_forward": [], "mx_forward": [], "host_reverse": []}
-
-            self.json_informacion["google"] = {}
-            self.json_informacion["bing"] = {}
-            self.informacion_ipv4 = {"inicio_bloque": "", "final_bloque": "", "nombre_bloque": "",
-                                 "region": "", "pais": "", "fecha_registro": "", "nombre_bloque": "",
-                                 "numero_as": "", "bloque_padre": "", "tamaño_bloque": "", "organizacion": "",
-                                 "servidor_web": "", "ciudad": "", 'dominios': []
-                                 }
-
         self.scanner_puertos()
 
     def google(self):
@@ -237,7 +238,7 @@ class Obtener_informacion():
             except:
                 resultados_query = []
             resultados_finales[etiqueta] = resultados_query
-            time.sleep(60)
+            #time.sleep(60)
         self.json_informacion["google"] = resultados_finales
 
     def busqueda_g(self, query):
@@ -270,12 +271,12 @@ class Obtener_informacion():
         results = engine.search(query)
         links = results.links()
         return links
+
     def busqueda_ipvinfo(self):
         ipv4info = "http://ipv4info.com/?act=check&ip=" + self.sitio
         self.ipv_dominio(ipv4info)
 
     def ipv_dominio(self, url):
-
         tmp_titulo = ""
         titulo_convert = ""
         tmp_diccionario = {}

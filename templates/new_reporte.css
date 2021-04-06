@@ -132,15 +132,12 @@ h2.subtitulo {
 }
 
 h3.subtitulo {
-	background-color: #064766;
+	background-color: #34af0e;
     color: #fee;
     padding: 40px 20px;
     font-weight: bold;
     font-size: 2em;
-}
-
-h3.categoria {
-
+	margin: 10em 0em;
 }
 
 h4.subtitulo {

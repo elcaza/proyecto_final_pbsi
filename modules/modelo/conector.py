@@ -1,30 +1,31 @@
-from bson.py3compat import reraise
 from pymongo import MongoClient, errors
-from modules import strings
-from os import path
+from os import path, pardir
 import base64
 import json
 
 class Conector():
-    def __init__(self):        
-        self.conexion = MongoClient(strings.MONGO_URI)
-        self.base_datos = self.conexion[strings.BASE_DATOS]
+    def __init__(self):       
+        self.set_conexion() 
+        
         if self.conexion_estado() == False:
             print("Error: No se logró conectar a la Base de datos")
         self.crear_exploits_unicos()
 
     def set_conexion(self):
-        self.conexion = MongoClient(strings.MONGO_URI)
+        ruta = path.abspath(path.join(path.dirname(__file__), pardir)) + "/strings.json"
+        with open (ruta, "r") as json_strings:
+            self.strings = json.load(json_strings)
+
+        self.conexion = MongoClient(self.strings["MONGO_URI"])
+        self.base_datos = self.conexion[self.strings["BASE_DATOS"]]
     
-    def set_base_datos(self):
-        self.base_datos = self.conexion[strings.BASE_DATOS]
 
     def get_conexion(self):
         return self.conexion_base_datos
 
 ########################################################## CREAR EXPLOITS ##########################################################
     def exploit_insertar_datos(self,json_cargar_datos):
-        coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
+        coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
         try:
             coleccion_exploits.insert_one(json_cargar_datos)
         except errors.DuplicateKeyError:
@@ -34,7 +35,7 @@ class Conector():
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
                 nombres_iterados = {"exploits":[]}
-                coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
+                coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
                 nombres = coleccion_exploits.find({},{"exploit":1,"_id":0})
                 for nombre in nombres:
                     nombres_iterados["exploits"].append(nombre)
@@ -43,7 +44,7 @@ class Conector():
     def exploit_consulta_registro(self,json_nombre):
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
-                coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
+                coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
                 registro = coleccion_exploits.find_one({"exploit":json_nombre["exploit"]},{"_id":0})
                 ruta_total = registro["ruta"] + "/" + registro["exploit"]
                 with open(ruta_total,"rb") as archivo:
@@ -65,13 +66,13 @@ class Conector():
     def exploit_actualizar_registro(self,json_cargar_datos):
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
-                coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
+                coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
                 coleccion_exploits.update({"exploit":json_cargar_datos["exploit"]},json_cargar_datos)
 
     def exploit_eliminar_registro(self,json_cargar_datos):
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
-                coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
+                coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
                 coleccion_exploits.delete_one({"exploit":json_cargar_datos["exploit"]})
 
     def exploit_buscar_existencia(self, ruta):
@@ -87,7 +88,7 @@ class Conector():
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
                 softwares_iterados = {"exploits":[]}
-                coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
+                coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
                 if profundidad == 1:
                     softwares = coleccion_exploits.find({
                                                         "software_nombre":{"$regex":json_software["software_nombre"],"$options":"i"},
@@ -118,7 +119,7 @@ class Conector():
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
                 cmss_iterados = {"exploits":[]}
-                coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
+                coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
                 if profundidad == 1:
                     cmss = coleccion_exploits.find({
                                                         "cms_nombre":{"$regex":json_cms["cms_nombre"],"$options":"i"},
@@ -156,7 +157,7 @@ class Conector():
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
                 cves_iterados = {"exploits":[]}
-                coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
+                coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
                 cves = coleccion_exploits.find({"cve":{"$regex":cve,"$options":"i"}})
                 
                 for cve_exploit in cves:
@@ -183,8 +184,8 @@ class Conector():
         
     def conexion_reinicio(self):
         try:
-            self.conexion = MongoClient(strings.MONGO_URI)
-            self.base_datos = self.conexion[strings.BASE_DATOS]
+            self.conexion = MongoClient(self.strings["MONGO_URI"])
+            self.base_datos = self.conexion[self.strings["BASE_DATOS"]]
             return True
         except errors.ServerSelectionTimeoutError:
             print("Error: No se logró conectar a la Base de datos")
@@ -195,36 +196,36 @@ class Conector():
     def exploit_eliminar_base_total(self):
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
-                coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
+                coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
                 coleccion_exploits.delete_many({})
 
     def crear_exploits_unicos(self):
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
-                coleccion_exploits = self.base_datos[strings.COLECCION_EXPLOITS]
+                coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
                 coleccion_exploits.create_index("exploit", unique = True)
 
 
 ########################################################## PERSISTENCIA ##########################################################
     
     def guardar_analisis(self, json_recibido):
-        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        coleccion_analisis = self.base_datos[self.strings["COLECCION_ANALISIS"]]
         coleccion_analisis.insert_one(json_recibido)
 
 ########################################################## CONSULTAS ##########################################################
 
     def obtener_analisis_totales(self):
-        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        coleccion_analisis = self.base_datos[self.strings["COLECCION_ANALISIS"]]
         return coleccion_analisis.count_documents({})
 
     def obtener_ultima_fecha(self):
-        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        coleccion_analisis = self.base_datos[self.strings["COLECCION_ANALISIS"]]
         resultados = coleccion_analisis.find({},{"fecha":1,"_id":0}).sort("_id",1).limit(1)
         for resultado in resultados:
             return resultado["fecha"]
 
     def obtener_analisis_generales(self):
-        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        coleccion_analisis = self.base_datos[self.strings["COLECCION_ANALISIS"]]
         resultados = coleccion_analisis.find({},{"sitio":1,"fecha":1,"_id":0})
         analisis = []
         for resultado in resultados:
@@ -234,31 +235,31 @@ class Conector():
     def obtener_analisis(self, peticion):
         sitio = peticion["sitio"]
         fecha = peticion["fecha"]
-        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        coleccion_analisis = self.base_datos[self.strings["COLECCION_ANALISIS"]]
         resultados = coleccion_analisis.find({"sitio":sitio,"fecha":fecha},{"_id":0})
         for resultado in resultados:
             return resultado
 
     def informacion_sitio(self, sitio):
-        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        coleccion_analisis = self.base_datos[self.strings["COLECCION_ANALISIS"]]
         sitio = coleccion_analisis.find_one({"sitio":sitio})
         informacion = sitio["informacion"]
         return informacion
 
     def analisis_sitio(self, sitio):
-        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        coleccion_analisis = self.base_datos[self.strings["COLECCION_ANALISIS"]]
         sitio = coleccion_analisis.find_one({"sitio":sitio})
         analisis = sitio["analisis"]
         return analisis
 
     def fuzzing_sitio(self, sitio):
-        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        coleccion_analisis = self.base_datos[self.strings["COLECCION_ANALISIS"]]
         sitio = coleccion_analisis.find_one({"sitio":sitio})
         fuzzing = sitio["paginas"]
         return fuzzing
 
     def explotacion_sitio(self, sitio):
-        coleccion_analisis = self.base_datos[strings.COLECCION_ANALISIS]
+        coleccion_analisis = self.base_datos[self.strings["COLECCION_ANALISIS"]]
         sitio = coleccion_analisis.find_one({"sitio":sitio})
         explotacion = sitio["explotaciones"]
         return explotacion

@@ -19,7 +19,8 @@ import ssl
 import os
 
 class Utilerias():
-	def __init__(self, cookies):
+	def __init__(self, cookies, redireccionamiento):
+		self.redireccionamiento = redireccionamiento
 		self.user_agent = UserAgent()
 		self.set_cookies(cookies)
 
@@ -154,8 +155,9 @@ class Utilerias():
 
 class Wordpress():
 
-	def __init__(self,sitio, cookie):
-		self.util = Utilerias(cookie)
+	def __init__(self,sitio, cookie, redireccionamiento):
+		self.redireccionamiento = redireccionamiento
+		self.util = Utilerias(cookie, self.redireccionamiento)
 		self.sitio = sitio
 		self.cookie = cookie
 
@@ -191,15 +193,14 @@ class Wordpress():
 			if info["type"] == "file":
 				archivos_expuestos = []
 				for archivo in info["dir_files"]:
-					#print(self.sitio + archivo)
 					respuesta = self.util.get_peticion(path.join(self.sitio,archivo))
 					status_code_redirect = -1
-					if len(respuesta.history) > 0:
-						status_code_redirect = respuesta.history[0].status_code
-					if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):
+					#if len(respuesta.history) > 0:
+						#status_code_redirect = respuesta.history[0].status_code
+					if respuesta.status_code == 200:
 						archivos_expuestos.append(archivo)
 					else:
-						respuesta = requests.post(path.join(self.sitio,archivo),headers=self.util.get_fake_user_agent(),verify=False,cookies=self.util.get_cookies())
+						respuesta = requests.post(path.join(self.sitio,archivo),headers=self.util.get_fake_user_agent(),verify=False,cookies=self.util.get_cookies(),allow_redirects=self.redireccionamiento)
 						if len(respuesta.history) > 0:
 							status_code_redirect = respuesta.history[0].status_code
 						if respuesta.status_code == 200 and not (status_code_redirect > 301 and status_code_redirect <= 310):
@@ -233,7 +234,7 @@ class Wordpress():
 	def obtener_enlaces(self,url_sitio,filter=""):
 		enlaces = None
 		try:
-			r = requests.get(url_sitio,headers=self.util.get_fake_user_agent())
+			r = requests.get(url_sitio,headers=self.util.get_fake_user_agent(),allow_redirects=self.redireccionamiento)
 			enlaces = re.findall("https?://"+filter+"[\w|/|\.|\?|=|-]*",r.text)
 			return enlaces
 		except requests.exceptions.ConnectionError:
@@ -301,9 +302,12 @@ class Wordpress():
 		return lista_vulnerabilidades
 
 class Moodle():
-	def __init__(self,sitio,cookie):
+	
+	def __init__(self,sitio, cookie, redireccionamiento):
 		self.url = sitio
-		self.util = Utilerias(cookie)
+		self.redireccionamiento = redireccionamiento
+		self.util = Utilerias(cookie, self.redireccionamiento)
+
 
 	def inicio_moodle(self,deteccion_cms,tmp_diccionario):
 		info = self.carga_configuracion()
@@ -440,9 +444,10 @@ class Moodle():
 		return lista_vulnerabilidades
 
 class Drupal():
-	def __init__(self,sitio, cookie):
+	def __init__(self,sitio, cookie, redireccionamiento):
 		self.url = sitio
-		self.util = Utilerias(cookie)
+		self.redireccionamiento = redireccionamiento
+		self.util = Utilerias(cookie, self.redireccionamiento)
 
 	def inicio_drupal(self,deteccion_cms,tmp_diccionario):
 		tmp_cms = {}
@@ -576,9 +581,10 @@ class Drupal():
 			return []
 
 class Joomla():
-	def __init__(self,sitio, cookie):
-		self.sitio = sitio
-		self.util = Utilerias(cookie)
+	def __init__(self,sitio, cookie, redireccionamiento):
+		self.url = sitio
+		self.redireccionamiento = redireccionamiento
+		self.util = Utilerias(cookie, self.redireccionamiento)
 
 	def inicio_joomla(self,deteccion_cms,tmp_diccionario):
 		tmp_cms = {}
@@ -591,7 +597,7 @@ class Joomla():
 		tmp_diccionario["vulnerabilidades"] = self.obtener_vulnerabilidades(tmp_cms["version"])
 
 	def obtener_version_joomla(self):
-		soup = self.util.obtener_contenido_html(self.sitio+"README.txt")
+		soup = self.util.obtener_contenido_html(self.url+"README.txt")
 		for linea in (soup.text).splitlines():
 			regex = re.compile("([Jj]oomla!)*\d*\.\d\s([Vv]ersion)")
 			if regex.search(linea):
@@ -618,17 +624,17 @@ class Joomla():
 		return ("joomla") if joomla_encontrado else (None)
 
 	def checar_meta_joomla(self):
-		soup = self.util.obtener_contenido_html(self.sitio)
+		soup = self.util.obtener_contenido_html(self.url)
 		if soup != "":
 			return self.buscar_joomla(soup, "meta",{'name':'generator'},"joomla")
 
 	def checar_dom_elements(self):
-		soup = self.util.obtener_contenido_html(self.sitio)
+		soup = self.util.obtener_contenido_html(self.url)
 		if soup != "":
 			return self.buscar_joomla(soup, "script", {'class':re.compile('(joomla*)')},"joomla")
 
 	def checar_administrador_pagina(self):
-		soup = self.util.obtener_contenido_html(self.sitio+"/administrator")
+		soup = self.util.obtener_contenido_html(self.url+"/administrator")
 		if soup != "":
 			if (self.buscar_joomla(soup, "img", {'src':re.compile('(joomla*)')}, "joomla") | self.buscar_joomla(soup, "a", {'class':re.compile('(joomla*)')}, "joomla")):
 				return True
@@ -666,11 +672,20 @@ class Joomla():
 			return lista_vulnerabilidades
 
 class Obtener_IOC():
-	def __init__(self,sitio):
+	def __init__(self,sitio, cookie, tmp_diccionario,redireccionamiento):
+		self.redireccionamiento = redireccionamiento
+		self.cookie = cookie
+		self.tmp_diccionario = tmp_diccionario
 		self.sitio = sitio
 		self.ioc_anomalo = False
 		self.ioc_miner = False
-		self.util = Utilerias()
+		self.webshell_ioc = False
+		self.ejecutable_ioc = False
+		self.tmp_diccionario["ioc_anomalo"] = self.ioc_anomalo
+		self.tmp_diccionario["ioc_webshell"] = self.webshell_ioc
+		self.tmp_diccionario["ioc_cryptominer"] = self.ioc_miner
+		self.tmp_diccionario["ioc_ejecutables"] = self.ejecutable_ioc
+		self.util = Utilerias(self.cookie, self.redireccionamiento)
 		self.ejecutar_ioc()
 
 	def ejecutar_ioc(self):
@@ -689,19 +704,20 @@ class Obtener_IOC():
 		contador_venta = 0
 		contador_anomalo = 0
 		for palabra_v in venta:
-			palabra_v = " " + palabra_v
+			palabra_v = " " + palabra_v + " "
 			if palabra_v.lower() in str(contenido_a).lower():
 				print("venta " + palabra_v)
 				contador_venta += 1
 
 		for palabra_a in anomalo:
-			palabra_a = " " + palabra_a
+			palabra_a = " " + palabra_a + " "
 			if palabra_a.lower() in str(contenido_a).lower():
 				print("anomalo " + palabra_a)
 				contador_anomalo += 1
 
 		if contador_venta >= 3 and contador_anomalo >= 2:
 			self.ioc_anomalo = True
+			self.tmp_diccionario["ioc_anomalo"] = self.ioc_anomalo
 
 	def ioc_cryptominer(self):
 		contenido_analisis = self.util.obtener_contenido_html(self.sitio)
@@ -719,6 +735,7 @@ class Obtener_IOC():
 						contador_miner += 1
 		if contador_miner > 0: 
 			self.ioc_miner = True
+			self.tmp_diccionario["ioc_cryptominer"] = self.ioc_miner
 
 	def ioc_webshell(self):
 		ruta = path.abspath(path.dirname(__file__)) + "/config/config_ioc.json"
@@ -736,13 +753,29 @@ class Obtener_IOC():
 				respuesta = self.util.get_peticion(url)
 				if respuesta.status_code == 200:
 					contenido_analizar = self.util.obtener_contenido_html(url)
-					regex = "*:*:*:*:*:*:*\\n"
-					if re.search(regex,contenido_analizar):
-						print(url)
+					regex = ".*:.*:[0-9]*:[0-9]*:.*:.*:.*"
+					if re.search(regex,str(contenido_analizar)) != None:
+						contador_webshell += 1
+		if contador_webshell > 0:
+			self.webshell_ioc = True
+			self.tmp_diccionario["ioc_webshell"] = self.webshell_ioc
 
-					
+	def ioc_ejecutables(self):
+		ruta = path.abspath(path.dirname(__file__)) + "/config/config_ioc.json"
+		with open(ruta,"r") as ci:
+			diccionario = json.load(ci)
+		ci.close()
+		ejecutables = diccionario["ejecutables"]
+		contador_ejecutable = 0
+		contenido = self.util.obtener_contenido_html(self.sitio)
+		for exe in ejecutables:
+			if exe in contenido:
+				contador_ejecutable += 1
+		if contador_ejecutable > 0:
+			self.ejecutable_ioc = True
+			self.tmp_diccionario["ioc_ejecutables"] = self.ejecutable_ioc
+
 				
-
 	def completa_url(self,linea,url):
 		link = ""
 		if url.endswith("/") and linea.startswith("/"):
@@ -759,14 +792,16 @@ class Obtener_IOC():
 
 class Obtencion_informacion():
 
-	def __init__(self, sitio, cookie):
+	def __init__(self, sitio, cookie, lista_negra,redireccionamiento):
+		self.redireccionamiento  = redireccionamiento
+		self.lista_negra = lista_negra
 		self.sitio = sitio
 		self.url_without_file()
 		self.tmp_diccionario = {}
 		self.json_informacion = {}
 		self.paginas = []
 		self.paginas.append(self.sitio)
-		self.util = Utilerias(cookie)
+		self.util = Utilerias(cookie, self.redireccionamiento)
 		self.cookie = cookie
 		self.menu()
 
@@ -970,12 +1005,13 @@ class Obtencion_informacion():
 			for linea in str(self.robot_parser).split("\n"):
 				if not("%2A" in linea) and not("User" in linea):
 					link = self.valida_link(linea,tmp_url)
-					if not(link in self.paginas):
+					if not(link in self.paginas) and not(link in self.lista_negra):
 						self.paginas.append(link)
 		for pagina in self.paginas:
-			self.web_href(pagina)
-			self.web_frame(pagina)
-			self.tmp_diccionario["paginas"] = [ {"pagina":page} for page in self.paginas]
+			if not(pagina in self.lista_negra):
+				self.web_href(pagina)
+				self.web_frame(pagina)
+				self.tmp_diccionario["paginas"] = [ {"pagina":page} for page in self.paginas]
 		return self.tmp_diccionario
 
 
@@ -1058,7 +1094,6 @@ class Obtencion_informacion():
 			return ""
 
 	def menu(self):
-		self.ioc = Obtener_IOC(self.sitio)
 		self.carga_configuracion()
 		self.get_version_server()
 		self.get_headers()
@@ -1073,13 +1108,13 @@ class Obtencion_informacion():
 
 		for cms_key in detect_list:
 			if "Drupal" == cms_key:
-				r_objeto = Drupal(self.sitio)
+				r_objeto = Drupal(self.sitio,self.cookie, self.redireccionamiento)
 			elif "Moodle" == cms_key:
-				r_objeto = Moodle(self.sitio)
+				r_objeto = Moodle(self.sitio,self.cookie, self.redireccionamiento)
 			elif "Joomla" == cms_key:
-				r_objeto = Joomla(self.sitio)
+				r_objeto = Joomla(self.sitio,self.cookie, self.redireccionamiento)
 			elif "Wordpress" == cms_key:
-				r_objeto = Wordpress(self.sitio)
+				r_objeto = Wordpress(self.sitio,self.cookie, self.redireccionamiento)
 			deteccion_cms = r_objeto.detect_cms()
 			if deteccion_cms:
 				break
@@ -1098,7 +1133,9 @@ class Obtencion_informacion():
 			self.tmp_diccionario["archivos"] = []
 			self.tmp_diccionario["vulnerabilidades"] = []
 		self.get_librerias()
+		Obtener_IOC(self.sitio,self.cookie, self.tmp_diccionario,self.redireccionamiento)
 		self.json_informacion = self.tmp_diccionario
+		print(self.json_informacion)
 
 	def get_json_informacion(self):
 		return self.json_informacion
@@ -1109,5 +1146,5 @@ def main():
 #main()
 
 def execute(sitio, cookie, lista_negra, redireccionamiento):
-	analisis = Obtencion_informacion(sitio, cookie)
+	analisis = Obtencion_informacion(sitio, cookie, lista_negra, redireccionamiento)
 	return analisis.get_json_informacion()

