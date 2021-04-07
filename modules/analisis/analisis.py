@@ -673,6 +673,7 @@ class Joomla():
 
 class Obtener_IOC():
 	def __init__(self,sitio, cookie, tmp_diccionario,redireccionamiento):
+		print("IOC")
 		self.redireccionamiento = redireccionamiento
 		self.cookie = cookie
 		self.tmp_diccionario = tmp_diccionario
@@ -694,6 +695,7 @@ class Obtener_IOC():
 		self.ioc_webshell()
 
 	def ioc_contenido_anomalo(self):
+		print("IOC Anomalo")
 		contenido_a = self.util.obtener_contenido_html(self.sitio)
 		ruta = path.abspath(path.dirname(__file__)) + "/config/config_ioc.json"
 		with open(ruta,"r") as ci:
@@ -720,6 +722,7 @@ class Obtener_IOC():
 			self.tmp_diccionario["ioc_anomalo"] = self.ioc_anomalo
 
 	def ioc_cryptominer(self):
+		print("IOC Cripto")
 		contenido_analisis = self.util.obtener_contenido_html(self.sitio)
 		ruta = path.abspath(path.dirname(__file__)) + "/config/config_ioc.json"
 		with open(ruta,"r") as ci:
@@ -738,6 +741,7 @@ class Obtener_IOC():
 			self.tmp_diccionario["ioc_cryptominer"] = self.ioc_miner
 
 	def ioc_webshell(self):
+		print("IOC Web shell")
 		ruta = path.abspath(path.dirname(__file__)) + "/config/config_ioc.json"
 		with open(ruta,"r") as ci:
 			diccionario = json.load(ci)
@@ -761,6 +765,7 @@ class Obtener_IOC():
 			self.tmp_diccionario["ioc_webshell"] = self.webshell_ioc
 
 	def ioc_ejecutables(self):
+		print("IOC Ejecutable")
 		ruta = path.abspath(path.dirname(__file__)) + "/config/config_ioc.json"
 		with open(ruta,"r") as ci:
 			diccionario = json.load(ci)
@@ -788,8 +793,6 @@ class Obtener_IOC():
 			link = url + "/" + linea
 		return link
 				
-
-
 class Obtencion_informacion():
 
 	def __init__(self, sitio, cookie, lista_negra,redireccionamiento):
@@ -824,6 +827,7 @@ class Obtencion_informacion():
 		self.librerias_configuracion = datos["librerias"]
 		
 	def get_version_server(self):
+		print("Wap")
 		tmp_dic = {}
 		wappalyzer = Wappalyzer.latest()
 		error = 0
@@ -852,6 +856,7 @@ class Obtencion_informacion():
 		return self.tmp_diccionario
 
 	def get_headers(self):
+		print("Headers")
 		json_headers = {}
 		self.headers = []
 		ruta = path.abspath(path.dirname(__file__)) + "/shcheck.py"
@@ -876,6 +881,7 @@ class Obtencion_informacion():
 		return self.tmp_diccionario
 
 	def get_cifrados(self):
+		print("Cifrados")
 		cifrados = {}
 		tmp_cifrado = []
 		if os.path.exists("salida_ssl.json"):
@@ -917,6 +923,7 @@ class Obtencion_informacion():
 
 
 	def web_href(self,url):
+		
 		s = self.util.obtener_contenido_html(self.sitio)
 		if s != "":
 			for link in s.findAll('a'):
@@ -998,6 +1005,7 @@ class Obtencion_informacion():
 		return self.robot_parser
 
 	def get_paginas(self):
+		print("Paginas")
 		link = ""
 		tmp_url = self.obtener_root()
 		self.get_robots(tmp_url)
@@ -1016,6 +1024,7 @@ class Obtencion_informacion():
 
 
 	def get_lenguajes(self):
+		print("Lenguajes")
 		lenguajes = []
 		tmp_leng = {}
 		resultado = self.get_peticion_w()
@@ -1037,6 +1046,7 @@ class Obtencion_informacion():
 		return self.tmp_diccionario
 
 	def get_frameworks(self):
+		print("Frameworks")
 		frameworks = []
 		tmp_frame = {}
 		resultado = self.get_peticion_w()
@@ -1058,6 +1068,7 @@ class Obtencion_informacion():
 		return self.tmp_diccionario
 
 	def get_librerias(self):
+		print("Librerías")
 		librerias = []
 		tmp_libreria = {}
 		tmp_total = []
@@ -1120,12 +1131,16 @@ class Obtencion_informacion():
 				break
 		if deteccion_cms:
 			if deteccion_cms == 'drupal':
+				print("Drupal")
 				r_objeto.inicio_drupal(deteccion_cms,self.tmp_diccionario)
 			elif deteccion_cms == 'joomla':
+				print("Joomla")
 				r_objeto.inicio_joomla(deteccion_cms,self.tmp_diccionario)
 			elif deteccion_cms == 'moodle':
+				print("Moodle")
 				r_objeto.inicio_moodle(deteccion_cms,self.tmp_diccionario)
 			elif deteccion_cms == 'wordpress':
+				print("Wordpress")
 				r_objeto.inicio_wordpress(deteccion_cms,self.tmp_diccionario)
 		else:
 			self.tmp_diccionario["cms"] = {}

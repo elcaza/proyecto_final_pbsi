@@ -109,9 +109,6 @@ def ejecucion_analisis(peticion):
 
         print("Iniciando Explotacion")
         execute_explotacion(con, peticion_proceso, peticion_alerta)
-
-        print("Iniciando Reporte")
-        execute_reporte(peticion_reporte)
  
         print("Enviando alertas")
         execute_alerta(peticion_alerta)
@@ -291,22 +288,22 @@ def execute_alerta(peticion_alerta):
     return resultado
 
 def execute_reporte(peticion_proceso, peticion_reporte):
-    # reporte_informacion_general(peticion_proceso, peticion_reporte)
-    # reporte_puertos(peticion_proceso, peticion_reporte)
-    # reporte_dns_dumpster(peticion_proceso, peticion_reporte)
-    # reporte_robtex(peticion_proceso, peticion_reporte)
-    # reporte_b_f_l(peticion_proceso, peticion_reporte)
-    # reporte_cifrados(peticion_proceso, peticion_reporte)
-    # reporte_plugins(peticion_proceso, peticion_reporte)
-    # reporte_archivos(peticion_proceso, peticion_reporte)
-    # reporte_google(peticion_proceso, peticion_reporte)
-    # reporte_bing(peticion_proceso, peticion_reporte)
-    # reporte_cve(peticion_proceso, peticion_reporte)
-    # reporte_headers(peticion_proceso, peticion_reporte)
+    reporte_informacion_general(peticion_proceso, peticion_reporte)
+    reporte_puertos(peticion_proceso, peticion_reporte)
+    reporte_dns_dumpster(peticion_proceso, peticion_reporte)
+    reporte_robtex(peticion_proceso, peticion_reporte)
+    reporte_b_f_l(peticion_proceso, peticion_reporte)
+    reporte_cifrados(peticion_proceso, peticion_reporte)
+    reporte_plugins(peticion_proceso, peticion_reporte)
+    reporte_archivos(peticion_proceso, peticion_reporte)
+    reporte_google(peticion_proceso, peticion_reporte)
+    reporte_bing(peticion_proceso, peticion_reporte)
+    reporte_cve(peticion_proceso, peticion_reporte)
+    reporte_headers(peticion_proceso, peticion_reporte)
     reporte_vulnerabilidades(peticion_proceso, peticion_reporte)
     reporte_vulnerabilidades_por_pagina(peticion_proceso, peticion_reporte)
     reporte_posibles_vulnerabilidades(peticion_proceso, peticion_reporte)
-    # reporte_explotacion(peticion_proceso, peticion_reporte)
+    reporte_explotacion(peticion_proceso, peticion_reporte)
 
     reportes.execute(peticion_reporte)
     sitio = peticion_reporte["sitio"].replace(",","_").replace("/","_").replace(":","_")

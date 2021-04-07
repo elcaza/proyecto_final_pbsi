@@ -1,0 +1,23 @@
+Tipo,Dominio,Sominio - IP
+Dns_forward,altoromutual.com,ns.rackspace.com
+Dns_forward,altoromutual.com,ns2.rackspace.com
+Dns_forward,altoromutual.com,asia3.akam.net
+Dns_forward,altoromutual.com,eur2.akam.net
+Dns_forward,altoromutual.com,eur5.akam.net
+Dns_forward,altoromutual.com,ns1-206.akam.net
+Dns_forward,altoromutual.com,ns1-99.akam.net
+Dns_forward,altoromutual.com,usc2.akam.net
+Dns_forward,altoromutual.com,usc3.akam.net
+Dns_forward,altoromutual.com,usw2.akam.net
+Host_forward,altoromutual.com,65.61.137.117
+Host_reverse,star.indussecure.com,65.61.137.117
+Host_reverse,testfire.net,65.61.137.117
+Host_reverse,pmouth.com,65.61.137.117
+Host_reverse,demo.testfire.net,65.61.137.117
+Host_reverse,szyxjx.com,65.61.137.117
+Host_reverse,altoromutual.com,65.61.137.117
+Host_reverse,acmehackme.com,65.61.137.117
+Host_reverse,acme-hackme.com,65.61.137.117
+Host_reverse,testfire.com,65.61.137.117
+Host_reverse,www.altoromutual.com,65.61.137.117
+Host_reverse,www.testfire.net,65.61.137.117
