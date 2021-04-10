@@ -53,6 +53,7 @@ patron_version = r"^(\d+\.?\d*)"
 '''
     Funciones de controlador
 '''
+
 def ejecucion_analisis(peticion):
     '''
         Funcion principal que realiza todo el procedimiento del analisis
@@ -111,12 +112,12 @@ def ejecucion_analisis(peticion):
         # peticion_proceso["analisis"]["paginas"] = [
         # {'pagina': 'http://localhost/DVWA-master/vulnerabilities/brute/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csrf/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/fi/.?page=include.php'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/upload/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/captcha/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli_blind/'},  {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_d/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_r/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_s/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csp/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/javascript/'}
         # ]
-        # peticion_proceso["analisis"]["paginas"] = [
-        #    {'pagina': 'http://altoromutual.com:8080/login.jsp'},
-        #    #{'pagina': 'http://altoromutual.com:8080/feedback.jsp'},#, {'pagina': 'http://altoromutual.com:8080/login.jsp'},
-        #    #{'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'},{'pagina': 'http://altoromutual.com:8080/status_check.jsp'},
-        #    #{'pagina': 'http://altoromutual.com:8080/subscribe.jsp'},#{'pagina': 'http://altoromutual.com:8080/swagger/index.html'}
-        # ]
+        peticion_proceso["analisis"]["paginas"] = [
+           {'pagina': 'http://altoromutual.com:8080/login.jsp'},
+           {'pagina': 'http://altoromutual.com:8080/feedback.jsp'},#, {'pagina': 'http://altoromutual.com:8080/login.jsp'},
+           #{'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'},{'pagina': 'http://altoromutual.com:8080/status_check.jsp'},
+           #{'pagina': 'http://altoromutual.com:8080/subscribe.jsp'},#{'pagina': 'http://altoromutual.com:8080/swagger/index.html'}
+        ]
         execute_fuzzing(peticion_proceso, peticion_alerta)
 
         print("Iniciando Explotacion")
@@ -433,6 +434,7 @@ def execute_explotacion(con, peticion_proceso, peticion_alerta):
             diccionario que contiene el conjunto de alertas a enviar
     '''
     datos_explotacion, datos_identificados = obtener_datos_consulta_exploits(peticion_proceso)
+
     explotacion_lanzar_exploit(con, datos_identificados, datos_explotacion, peticion_proceso)
     alertas_explotacion(peticion_proceso, peticion_alerta)
     
@@ -1864,9 +1866,9 @@ def obtener_datos_consulta_exploits(peticion_proceso):
 
     # Obtener datos para cargar los exploits
     if peticion_proceso["sitio"].startswith("https"):
-        datos_explotacion = {"sitio":peticion_proceso["sitio"],"puertos":["443"]}
+        datos_explotacion = {"sitio":peticion_proceso["sitio"],"puertos":["443"],"cookie":peticion_proceso["cookie"]}
     else:
-        datos_explotacion = {"sitio":peticion_proceso["sitio"],"puertos":["80"]}
+        datos_explotacion = {"sitio":peticion_proceso["sitio"],"puertos":["80"],"cookie":peticion_proceso["cookie"]}
 
     if "informacion" in peticion_proceso:
         for puerto in peticion_proceso["informacion"]["puertos"]["abiertos"]:

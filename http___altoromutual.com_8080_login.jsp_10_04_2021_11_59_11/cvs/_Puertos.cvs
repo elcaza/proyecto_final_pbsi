@@ -1,0 +1,13 @@
+Tipo,Puerto,Protocolo,Servicio
+Abierto,80,tcp,Http
+Abierto,443,tcp,Ssl/https?
+Filtrado,21,tcp,Ftp
+Filtrado,22,tcp,Ssh
+Filtrado,23,tcp,Telnet
+Filtrado,25,tcp,Smtp
+Filtrado,53,tcp,Domain
+Filtrado,110,tcp,Pop3
+Filtrado,139,tcp,Netbios-ssn
+Filtrado,143,tcp,Imap
+Filtrado,445,tcp,Microsoft-ds
+Filtrado,3389,tcp,Ms-wbt-server
