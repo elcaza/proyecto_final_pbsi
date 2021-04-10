@@ -1,46 +1,130 @@
 from datetime import datetime
 
 class Reporte():
-    def __init__(self, parametros):
-        self.set_sitio(parametros)
-        self.set_fecha(parametros)
-        self.set_analisis(parametros)
+    '''
+        Clase que permite crear los reportes html
 
-    def set_sitio(self, parametros):
-        if "sitio" in parametros:
-            self.sitio = parametros["sitio"]
+        .........
+        Atributos
+        ---------
+            sitio : str
+                nombre del sitio
+
+            fecha : str
+                fecha del analisis
+
+            analisis : array
+                contiene a todos los analisis de cada seccion del reporte para ser iterado
+
+            parametros : dict
+                contiene el conjunto de valores para la creacion del reporte
+
+        Metodos
+        -------
+            set_sitio():
+                obtiene el sitio de los parametros
+
+            set_fecha():
+                obtiene la fecha de los parametros
+
+            set_analisis():
+                obtiene los analisis de los parametros
+
+            get_sitio():
+                regresa el nombre sitio
+
+            get_fecha():
+                regresa la fecha
+
+            get_html():
+                regresa la etiqueta html
+
+            get_head():
+                regresa el header 
+
+            get_css():
+                regresa la referencia al archivo css
+
+            get_body_titulo():
+                regresa la barra de navegacion y banner
+
+            get_body_subtitulo_reporte():
+                regresa el subtitulo del reporte en este caso sitio con su fecha
+
+            get_body_categoria(categoria):
+                agrega la etiqueta categoria
+
+            get_body_titulo_grafica(titulo):
+                agrega la etiqueta de titulo a la grafica
+
+            get_body_grafica(grafica):
+                agrega el espacio para mostrar le iframe de la grafica
+
+            get_body_descripcion(grafica, cabeceras, datos):
+                agrega una tabla que muestra los datos analizados por anteriores modulos
+
+            get_body_analisis():
+                funcion que sirve para iterar los analisis e ir agregando etiquetas
+
+            get_body():
+                funcion integredora de etiquetas que forman el body
+
+            get_footer():
+                regresa el footer
+
+            crear_reporte():
+                crea el documento html con todas las secciones creadas previamente
+
+    '''
+    def __init__(self, parametros):
+        self.parametros = parametros
+        self.set_sitio()
+        self.set_fecha()
+        self.set_analisis()
+
+    def set_sitio(self):
+        '''
+            obtiene el sitio de los parametros
+        '''
+        if "sitio" in self.parametros:
+            self.sitio = self.parametros["sitio"]
         else:
             self.sitio = ""
 
-    def set_fecha(self, parametros):
-        if "fecha" in parametros:
-            self.fecha = parametros["fecha"]
+    def set_fecha(self):
+        '''
+            obtiene la fecha de los parametros
+        '''
+        if "fecha" in self.parametros:
+            self.fecha = self.parametros["fecha"]
         else:
             self.fecha = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
-    def set_analisis(self, parametros):
-        if "analisis" in parametros:
-                self.analisis = parametros["analisis"]
+    def set_analisis(self):
+        '''
+            obtiene los analisis de los parametros
+        '''
+        if "analisis" in self.parametros:
+                self.analisis = self.parametros["analisis"]
         else:
             self.analisis = []
 
     def get_sitio(self):
+        '''
+            regresa el nombre sitio
+        '''
         return self.sitio
 
     def get_fecha(self):
+        '''
+            regresa la fecha
+        '''
         return self.fecha
 
-    def crear_mensaje_sitio(self):
-        self.correo_mensaje_texto = self.get_html()+self.get_head()+self.get_body_inicio()
-        for sitio in self.sitios:
-            sitio_vulnerable = self.get_body_sitio(sitio["sitio"])
-            motivo = self.get_body_motivo(sitio["motivo"])
-            estado = self.get_body_estado(sitio["estado"])
-            salto = self.get_body_salto()
-            self.correo_mensaje_texto += sitio_vulnerable+motivo+estado+salto
-        self.correo_mensaje_texto += self.get_body_fin()
-
     def get_html(self):
+        '''
+            regresa la etiqueta html
+        '''
         html = """
         <html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office"
             style="width: 100% ;font-family: sans-serif; padding: 0; margin: 0;">
@@ -48,6 +132,9 @@ class Reporte():
         return html
 
     def get_head(self):
+        '''
+            regresa el header 
+        '''
         head = """
             <head>
                 <meta http-equiv="Content-Security-Policy"
@@ -63,12 +150,18 @@ class Reporte():
         return head
 
     def get_css(self):
+        '''
+            regresa la referencia al archivo css
+        '''
         css = '''
             <link rel="stylesheet" href="{{ url_for('static', filename='css/new_reporte.css') }}">
         '''
         return css
 
     def get_body_titulo(self):
+        '''
+            regresa la barra de navegacion y banner
+        '''
         body_titulo = '''
             <body>
 
@@ -102,6 +195,9 @@ class Reporte():
         return body_titulo
 
     def get_body_subtitulo_reporte(self):
+        '''
+            regresa el subtitulo del reporte en este caso sitio con su fecha
+        '''
         body_subtitulo_reporte = '''
             <h2 class="subtitulo" style="text-align: center;">
                 REPORTE DEL SITIO {0}
@@ -115,6 +211,14 @@ class Reporte():
         return body_subtitulo_reporte
 
     def get_body_categoria(self, categoria):
+        '''
+            agrega la etiqueta categoria
+
+            Parametros
+            ----------
+            categoria : str
+                nombre de la categoria
+        '''
         body_categoria = '''
             <h3 class="categoria">
                 {0}
@@ -124,6 +228,14 @@ class Reporte():
         return body_categoria
 
     def get_body_titulo_grafica(self, titulo):
+        '''
+            agrega la etiqueta de titulo a la grafica
+
+            Parametros
+            ----------
+            titulo : str
+                titulo de la grafica
+        '''
         body_titulo = '''
             <h3 class="subtitulo" id="{0}">
                 {1}
@@ -132,6 +244,14 @@ class Reporte():
         return body_titulo
 
     def get_body_grafica(self, grafica):
+        '''
+            agrega el espacio para mostrar le iframe de la grafica
+
+            Parametros
+            ----------
+            grafica : str
+                ruta de la grafica
+        '''
         body_categoria = '''
             <div class="contenedor-grafica">                           
                 </iframe>                           
@@ -142,7 +262,19 @@ class Reporte():
         return body_categoria
 
     def get_body_descripcion(self, grafica, cabeceras, datos):
-        print(datos)
+        '''
+            agrega una tabla que muestra los datos analizados por anteriores modulos
+
+            Parametros
+            ----------
+            grafica : int
+                indica si es necesario agregar un formato diferente de tabla (sin uso)
+            cabeceras : array
+                lista de cadenas que forma la cabecera de la tabla
+            datos : array
+                datos que se mostraran debajo de la cabecera
+
+        '''
         tabla = '''
         <div>
             <table cellspacing="0">
@@ -172,6 +304,9 @@ class Reporte():
         return tabla
 
     def get_body_analisis(self):
+        '''
+            funcion que sirve para iterar los analisis e ir agregando etiquetas
+        '''
         body_analisis = ""
         for categoria in self.analisis:
             grafica = 0
@@ -186,10 +321,16 @@ class Reporte():
         return body_analisis
 
     def get_body(self):
+        '''
+            funcion integredora de etiquetas que forman el body
+        '''
         body = self.get_body_titulo()+self.get_body_subtitulo_reporte()+self.get_body_analisis()
         return body
 
     def get_footer(self):
+        '''
+            regresa el footer
+        '''
         footer = '''<hr class="linea-doble-divisora">
             <div class="contenedor-titulo"">
                 <img src=" https://congreso.seguridad.unam.mx/2016/sites/default/themes/theme2016/images/unam_negro.png"
@@ -206,12 +347,18 @@ class Reporte():
         return footer
 
     def crear_reporte(self):
+        '''
+            crea el documento html con todas las secciones creadas previamente
+        '''
         reporte_html = self.get_html()+self.get_head()+self.get_body()+self.get_footer()
         ruta = "./templates/reporte.html"
         with open(ruta,"w") as reporte:
             reporte.write(reporte_html)
             
 def execute(paremetros):
+    '''
+        lanza la ejecucion del reporte
+    '''
     reporte = Reporte(paremetros)
     reporte.crear_reporte()
     print("Reporte creado")
