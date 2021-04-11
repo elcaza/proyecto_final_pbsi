@@ -884,7 +884,7 @@ class Pagina():
 
             itera el directorio donde se encuentran los archivos para el ataque de file upload
         '''
-        self.lista_archivos = [path.abspath(path.dirname(__file__)) + "/upload_file/" + x for x in listdir("./modules/fuzzing2/upload_file")]
+        self.lista_archivos = [path.abspath(path.dirname(__file__)) + "/upload_file/" + x for x in listdir("./modules/fuzzing/upload_file")]
 
     def peticiones_xss(self):
         '''
