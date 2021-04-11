@@ -798,6 +798,7 @@ class Obtencion_informacion():
 	def __init__(self, sitio, cookie, lista_negra,redireccionamiento):
 		self.redireccionamiento  = redireccionamiento
 		self.lista_negra = lista_negra
+		print(lista_negra)
 		self.sitio = sitio
 		self.url_without_file()
 		self.tmp_diccionario = {}
@@ -1016,10 +1017,10 @@ class Obtencion_informacion():
 					if not(link in self.paginas) and not(link in self.lista_negra):
 						self.paginas.append(link)
 		for pagina in self.paginas:
-			if not(pagina in self.lista_negra):
+			if pagina not in self.lista_negra:
 				self.web_href(pagina)
 				self.web_frame(pagina)
-				self.tmp_diccionario["paginas"] = [ {"pagina":page} for page in self.paginas]
+				self.tmp_diccionario["paginas"] = [ {"pagina":page} for page in self.paginas if page not in self.lista_negra]
 		return self.tmp_diccionario
 
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
+  then echo "Por favor corre como root"
   exit
 fi
 
@@ -34,3 +34,4 @@ sudo mv chromedriver /usr/bin/
 sudo apt install -y testssl.sh
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 sudo apt install -y ./google-chrome-stable_current_amd64.deb
+sudo pip3 install -r requeriments.txt

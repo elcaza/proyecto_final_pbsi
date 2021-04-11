@@ -271,18 +271,18 @@ class Masivo():
         self.execute_analisis()
 
         print("Iniciando Fuzzing")
-        # self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/drupal7/","forms":{}}]
+        #self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/drupal7/","forms":{}}]
         # self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://seguridad.unam.mx/","forms":{}}]
         # self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/DVWA-master/logout.php","forms":{}}]
         # self.peticion_proceso["analisis"]["paginas"] = [
         # {'pagina': 'http://localhost/DVWA-master/vulnerabilities/brute/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csrf/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/fi/.?page=include.php'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/upload/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/captcha/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli_blind/'},  {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_d/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_r/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_s/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csp/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/javascript/'}
         # ]
-        self.peticion_proceso["analisis"]["paginas"] = [
-        {'pagina': 'http://altoromutual.com:8080/login.jsp'},
-        {'pagina': 'http://altoromutual.com:8080/feedback.jsp'},#, {'pagina': 'http://altoromutual.com:8080/login.jsp'},
+        # self.peticion_proceso["analisis"]["paginas"] = [
+        # {'pagina': 'http://altoromutual.com:8080/login.jsp'},
+        # {'pagina': 'http://altoromutual.com:8080/feedback.jsp'},#, {'pagina': 'http://altoromutual.com:8080/login.jsp'},
         #{'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'},{'pagina': 'http://altoromutual.com:8080/status_check.jsp'},
         #{'pagina': 'http://altoromutual.com:8080/subscribe.jsp'},#{'pagina': 'http://altoromutual.com:8080/swagger/index.html'}
-        ]
+        #]
         self.execute_fuzzing()
 
         print("Iniciando Explotacion")
@@ -556,17 +556,15 @@ class Masivo():
         cms = self.obtener_software_version_unica(self.peticion_proceso["analisis"], "cms")
         if len(cms) != 0:
             cms_nombre = cms[0]["software_nombre"]
-        else:
-            cms_nombre = ""
+            self.datos_identificados["software"].extend(cms)
+            self.datos_identificados["cms"].extend(self.obtener_cms(self.peticion_proceso["analisis"], "plugins", cms_nombre))
 
-        self.datos_identificados["software"].extend(cms)
         self.datos_identificados["software"].extend(self.obtener_sofware_versiones(self.peticion_proceso["analisis"], "lenguajes"))
         self.datos_identificados["software"].extend(self.obtener_sofware_versiones(self.peticion_proceso["analisis"], "frameworks"))
         self.datos_identificados["software"].extend(self.obtener_sofware_versiones(self.peticion_proceso["analisis"], "librerias"))
 
         self.datos_identificados["software"].extend(self.obtener_software_version_unica_puertos(self.peticion_proceso["informacion"]))
-        # Obtener Características de CMS
-        self.datos_identificados["cms"].extend(self.obtener_cms(self.peticion_proceso["analisis"], "plugins", cms_nombre))
+        
 
         # Obtener CVE
         if "vulnerabilidades" in self.peticion_proceso["analisis"]:
@@ -614,9 +612,11 @@ class Masivo():
                                 version = float(version_regex.group())
                             else:
                                 version = 0
-                            datos_identificados.append({"software_nombre":nombre,"software_version":version})
+                            if nombre != "":
+                                datos_identificados.append({"software_nombre":nombre,"software_version":version})
                     if len(dato["version"]) == 0:
-                        datos_identificados.append({"software_nombre":nombre,"software_version":0})
+                        if nombre != "":
+                            datos_identificados.append({"software_nombre":nombre,"software_version":0})
         return datos_identificados
 
     def obtener_software_version_unica(self, peticion_proceso, caracteristica):
@@ -643,7 +643,8 @@ class Masivo():
                     version = float(version_regex.group())
                 else:
                     version = 0
-            datos_identificados.append({"software_nombre":nombre,"software_version":version})
+            if nombre != "":
+                datos_identificados.append({"software_nombre":nombre,"software_version":version})
         return datos_identificados
 
     def obtener_cms(self, peticion_proceso, caracteristica, cms):
@@ -703,7 +704,8 @@ class Masivo():
                     version = float(version_regex.group())
                 else:
                     version = 0
-            datos_identificados.append({"software_nombre":puerto,"software_version":version})
+            if puerto != "":
+                datos_identificados.append({"software_nombre":puerto,"software_version":version})
         return datos_identificados
 
 class Reportes():
@@ -2309,6 +2311,7 @@ def ejecucion():
     if request.method == "POST":
         utileria = Utileria()
         peticion_json = request.json
+        print(peticion_json)
         if utileria.validar_json_ejecucion(peticion_json):
             if utileria.validar_json_archivo(peticion_json):
                 sitios_decodificados = base64.decode(peticion_json["sitio"]).decode("ISO-8859-1").strip()

@@ -292,10 +292,10 @@ document.addEventListener("DOMContentLoaded", function() {
 			"redireccionamiento":redireccionamiento,
 			"lista_negra":array_lista_negra
 		}
-
+		console.log(peticion)
 		send_json_fetch(server_url+"/ejecucion", peticion);
 
-		reload_site();
+		//reload_site();
 	});
 
 	// ************************************************************************************************
