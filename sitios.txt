@@ -1,2 +1,0 @@
-http://localhost/DVWA-master/index.php
-http://localhost/DVWA-master/
