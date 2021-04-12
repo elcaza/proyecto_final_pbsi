@@ -35,3 +35,5 @@ sudo apt install -y testssl.sh
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 sudo apt install -y ./google-chrome-stable_current_amd64.deb
 sudo pip3 install -r requeriments.txt
+git clone https://github.com/tasos-py/Search-Engines-Scraper.git
+sudo python3 Search-Engines-Scraper/setup.py install
