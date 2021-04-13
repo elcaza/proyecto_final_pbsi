@@ -1,3 +1,4 @@
+
 // Variable global
 let json_consultas;
 let json_proximos_escaneos;
@@ -30,11 +31,6 @@ document.addEventListener("DOMContentLoaded", function() {
 		// @cromos
 		let value_select = document.querySelector(".exploits__select").value;
 
-		let peticion = {
-			"exploit":value_select
-		}
-
-		// let response = send_json_fetch(server_url+"/ejecucion", peticion);
 
 		response = {
 			"exploit":"shell_drupalgeddon2.sh",
@@ -240,7 +236,6 @@ document.addEventListener("DOMContentLoaded", function() {
 	// Loading info
 	set_maxdate();
 	// Función async
-	json_modulos = prepara_envio("load_modules");
 
 	/**
 	 * Peticiones al backend
@@ -252,11 +247,11 @@ document.addEventListener("DOMContentLoaded", function() {
 	// ************************************************************************************************
 
 	// POST - ejecucion
-	scan__start.addEventListener("click", function(){
+	scan__start.addEventListener("click", async function(){
 		//alert("iniciando scan");
 
 		let sitio = document.querySelector(".scan__url").value;
-		let file = document.querySelector(".scan__file");
+		let archivo = document.querySelector(".scan__file");
 		let fecha = document.querySelector("#next_scan").value
 		let puertos = document.querySelector("#modulos_puertos").value;
 		let cookie = document.querySelector("#modulos_cookie").value;
@@ -270,18 +265,19 @@ document.addEventListener("DOMContentLoaded", function() {
 		lista_negra = lista_negra.split('\n');
 		
 		lista_negra.forEach(element => {
-			// corroborar si el elemento es una url
-			// Pendiente
 			array_lista_negra.push(element);
 		});
 
 		// alert(redireccionamiento)
 		// alert(lista_negra)		
 
+
+		archivo = await file_upload(archivo.files[0])
+
 		let peticion = {
 			"sitio":sitio,
 			"fecha":fecha,
-			"file":file,
+			"archivo":archivo,
 			"puertos":{
 				"inicio":1,
 				"final":puertos
@@ -293,7 +289,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			"lista_negra":array_lista_negra
 		}
 		console.log(peticion)
-		send_json_fetch(server_url+"/ejecucion", peticion);
+		send_json_fetch_2(server_url+"/ejecucion", peticion);
 
 		//reload_site();
 	});
@@ -471,33 +467,6 @@ function set_maxdate() {
 	document.querySelector("#next_scan").min = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
 }
 
-async function prepara_envio(action) {
-	switch (action) {
-		case "load_modules":
-			let modulos = send_json_fetch(server_url+"/hola", {"lala":"love"});
-			break;
-		
-		case "load_modules2":
-			break;
-	
-		default:
-			break;
-	}
-}
-
-async function dummy_response(action) {
-	switch (action) {
-		case "load_modules":
-			break;
-		
-		case "load_modules2":
-			break;
-	
-		default:
-			break;
-	}
-}
-
 /**
  * Función que se encarga de hacer las peticiones
  */
@@ -518,6 +487,16 @@ async function send_json_fetch_2(url, json){
 	  return response.json(); // parses JSON response into native JavaScript objects
 }
 
+function file_upload(file) {
+	return new Promise((resolve, reject)=>{
+		var reader = new FileReader();
+		reader.onloadend = function () {
+			resolve(reader.result);
+		}
+		reader.onerror = reject;
+		reader.readAsDataURL(file);	
+	})
+}
 
 function send_json_fetch(url, json){
 	/*

@@ -649,7 +649,7 @@ input:checked + .modulos__slider:before {
 .main__proximosEscaneos__sitio {
     display: inline-block;
     width: 49%;
-    margin-left: -6px;
+    margin-left: 0px;
     border: 1px solid;
     padding: 10px;
     box-sizing: border-box;

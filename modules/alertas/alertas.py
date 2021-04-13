@@ -1,3 +1,4 @@
+from app import exploits
 import smtplib
 import ssl
 from datetime import datetime
@@ -396,10 +397,13 @@ class Correo():
         '''
             envia el correo electronico de la cuenta remitente al destinatario
         '''
-        with smtplib.SMTP_SSL("smtp.gmail.com",context=self.contexto) as correo:
-            correo.login(self.correo_remitente, self.correo_contrasena)
-            correo.sendmail(self.correo_remitente, self.correo_destinatario, self.correo_mensaje.as_string())
-
+        try:
+            with smtplib.SMTP_SSL("smtp.gmail.com",context=self.contexto) as correo:
+                correo.login(self.correo_remitente, self.correo_contrasena)
+                correo.sendmail(self.correo_remitente, self.correo_destinatario, self.correo_mensaje.as_string())
+        except:
+            print("No hay conexion a internet")
+            
 def execute(paremetros):        
     '''
         lanza el envio del correo e imprime en consola el "Mensaje enviado"

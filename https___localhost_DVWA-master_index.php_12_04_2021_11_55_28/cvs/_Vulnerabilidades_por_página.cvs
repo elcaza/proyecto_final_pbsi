@@ -1,0 +1,21 @@
+Página,XSS,SQLi,SQLi Blind,SQLi Blind Time,LFI,Upload
+https://localhost/DVWA-master/,0,0,0,0,0,0
+https://localhost/DVWA-master/.,0,0,0,0,0,0
+https://localhost/DVWA-master/instructions.php,0,0,0,0,0,0
+https://localhost/DVWA-master/vulnerabilities/brute/,0,0,0,0,0,0
+https://localhost/DVWA-master/vulnerabilities/exec/,0,0,0,0,0,0
+https://localhost/DVWA-master/vulnerabilities/csrf/,0,0,0,0,0,0
+https://localhost/DVWA-master/vulnerabilities/fi/.?page=include.php,0,0,0,0,4,0
+https://localhost/DVWA-master/vulnerabilities/upload/,0,0,0,0,0,15
+https://localhost/DVWA-master/vulnerabilities/captcha/,0,0,0,0,0,0
+https://localhost/DVWA-master/vulnerabilities/sqli/,0,4,0,1,0,0
+https://localhost/DVWA-master/vulnerabilities/sqli_blind/,0,0,1,1,0,0
+https://localhost/DVWA-master/vulnerabilities/weak_id/,0,0,0,0,0,0
+https://localhost/DVWA-master/vulnerabilities/xss_d/,0,0,0,0,0,0
+https://localhost/DVWA-master/vulnerabilities/xss_r/,29,0,0,0,0,0
+https://localhost/DVWA-master/vulnerabilities/xss_s/,26,0,0,0,0,0
+https://localhost/DVWA-master/vulnerabilities/csp/,0,0,0,0,0,0
+https://localhost/DVWA-master/vulnerabilities/javascript/,0,0,0,0,0,0
+https://localhost/DVWA-master/security.php,0,0,0,0,0,0
+https://localhost/DVWA-master/phpinfo.php,0,0,0,0,0,0
+https://localhost/DVWA-master/about.php,0,0,0,0,0,0

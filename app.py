@@ -211,10 +211,16 @@ class Masivo():
         self.peticion = peticion
         self.con = Conector()
         self.utileria = Utileria()
+        self.set_error()
         actual = self.peticion_actual()
         valido = self.validar_peticion()
         if actual and valido:
             self.ejecucion_analisis()
+
+    def set_error(self):
+        ruta = root + "/modules/strings.json"
+        with open(ruta, "r") as archivo_strings:
+            self.error = root + "/errores/" + json.load(archivo_strings)["ERROR_LOG"]
 
     def peticion_actual(self):
         '''
@@ -237,7 +243,8 @@ class Masivo():
                 "profundidad":self.peticion["profundidad"],
                 "redireccionamiento":self.peticion["redireccionamiento"],
                 "lista_negra":self.peticion["lista_negra"],
-                "analisis":{"paginas":[]}
+                "analisis":{"paginas":[]},
+                "verificacion":{"informacion":0,"analisis":0,"fuzzing":0,"explotacion":0}
             }
             self.peticion_reporte = {
                 "sitio":self.peticion_proceso["sitio"],
@@ -249,6 +256,11 @@ class Masivo():
                 "paginas":[],
                 "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             }
+            try:
+                if int(self.peticion["puertos"]["final"]) > 65536:
+                    self.peticion["puertos"]["final"] = "65536"
+            except:
+                return False
             return True
         else:
             self.peticion_proceso = {}
@@ -280,9 +292,9 @@ class Masivo():
         # self.peticion_proceso["analisis"]["paginas"] = [
         # {'pagina': 'http://altoromutual.com:8080/login.jsp'},
         # {'pagina': 'http://altoromutual.com:8080/feedback.jsp'},#, {'pagina': 'http://altoromutual.com:8080/login.jsp'},
-        #{'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'},{'pagina': 'http://altoromutual.com:8080/status_check.jsp'},
-        #{'pagina': 'http://altoromutual.com:8080/subscribe.jsp'},#{'pagina': 'http://altoromutual.com:8080/swagger/index.html'}
-        #]
+        # #{'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'},{'pagina': 'http://altoromutual.com:8080/status_check.jsp'},
+        # #{'pagina': 'http://altoromutual.com:8080/subscribe.jsp'},#{'pagina': 'http://altoromutual.com:8080/swagger/index.html'}
+        # ]
         self.execute_fuzzing()
 
         print("Iniciando Explotacion")
@@ -300,8 +312,13 @@ class Masivo():
         '''
             Funcion que ejecuta el modulo de obtener_informacion y guarda el resultado en el diccionario peticion_proceso en la llave "informacion"
         '''
-        respuesta_obtener_informacion = obtener_informacion.execute(self.peticion)
-        self.peticion_proceso["informacion"] = respuesta_obtener_informacion
+        try:
+            respuesta_obtener_informacion = obtener_informacion.execute(self.peticion)
+            self.peticion_proceso["informacion"] = respuesta_obtener_informacion
+            self.peticion_proceso["verificacion"]["informacion"] = 1
+        except Exception as e:
+            with open (self.error, "a") as error:
+                error.write("{0}: {1}{2}".format("El módulo de \"Información\" falló", e,"\n"))
 
     def execute_analisis(self):
         '''
@@ -314,24 +331,40 @@ class Masivo():
             peticion_proceso : dict
                 diccionario que guardara el resultado del analisis
         '''
-        respuesta_analisis = analisis.execute(self.peticion_proceso["sitio"], self.peticion_proceso["cookie"], self.peticion_proceso["lista_negra"],self.peticion_proceso["redireccionamiento"])
-        self.peticion_proceso["analisis"] = respuesta_analisis
+        try:
+            respuesta_analisis = analisis.execute(self.peticion_proceso["sitio"], self.peticion_proceso["cookie"], self.peticion_proceso["lista_negra"],self.peticion_proceso["redireccionamiento"])
+            self.peticion_proceso["analisis"] = respuesta_analisis
+            self.peticion_proceso["verificacion"]["analisis"] = 1
+        except Exception as e:
+            with open (self.error, "a") as error:
+                error.write("{0}: {1}{2}".format("El módulo de \"Análisis\" falló", e, "\n"))
 
     def execute_fuzzing(self):
         '''
             Funcion que ejecuta el modulo de fuzzing, una vez terminado ejecuta el modulo de alertas_fuzzing para guardar las (posibles)vulnerabilidades encontradas
         '''
-        self.fuzzing_lanzar_fuzz()
-        self.alertas_fuzzing()
+        if self.peticion_proceso["verificacion"]["analisis"] == 1:
+            try:
+                self.fuzzing_lanzar_fuzz()
+                self.alertas_fuzzing()
+                self.peticion_proceso["verificacion"]["fuzzing"] = 1
+            except Exception as e:
+                with open (self.error, "a") as error:
+                    error.write("{0}: {1}{2}".format("El módulo de \"Fuzzing\" falló", e, "\n"))
         
     def execute_explotacion(self):
         '''
             Funcion que ejecuta el modulo de identificacion y de explotacion, guarda el resultado en el diccionario peticion_proceso en la llave "explotacion"
         '''
-        self.datos_explotacion, self.datos_identificados = self.obtener_datos_consulta_exploits()
-
-        self.explotacion_lanzar_exploit()
-        self.alertas_explotacion()
+        if self.peticion_proceso["verificacion"]["analisis"] == 1 or self.peticion_proceso["verificacion"]["informacion"] == 1:
+            try:
+                self.datos_explotacion, self.datos_identificados = self.obtener_datos_consulta_exploits()
+                self.explotacion_lanzar_exploit()
+                self.alertas_explotacion()
+                self.peticion_proceso["verificacion"]["explotacion"] = 1
+            except Exception as e:
+                with open (self.error, "a") as error:
+                    error.write("{0}: {1}{2}".format("El módulo de \"Explotación\" falló", e, "\n"))
 
     def fuzzing_lanzar_fuzz(self):
         '''
@@ -345,7 +378,6 @@ class Masivo():
                     "url":self.peticion_proceso["analisis"]["paginas"][posicion_pagina]["pagina"],
                     "cookie":self.peticion_proceso["cookie"]
                 }
-                            
                 futures.append(executor.submit(fuzzing.execute,json_fuzzing))
             for future in concurrent.futures.as_completed(futures):
                 forms = future.result()
@@ -388,13 +420,9 @@ class Masivo():
             fuzzing_alertas_vulnerables, fuzzing_alertas_posibles_vulnerables = self.fuzzing_obtener_alertas_vulnerables(self.peticion_proceso["analisis"]["paginas"][posicion_pagina])
             if "motivo" in fuzzing_alertas_vulnerables:
                 self.peticion_alerta["paginas"].append(fuzzing_alertas_vulnerables)    
-            else:
-                self.peticion_alerta["paginas"].append({"pagina":"","motivo":"Fuzzing","estado":"Sin vulnerabilidades"})
-            
+                        
             if "motivo" in fuzzing_alertas_posibles_vulnerables:
                 self.peticion_alerta["paginas"].append(fuzzing_alertas_posibles_vulnerables)    
-            else:
-                self.peticion_alerta["paginas"].append({"pagina":"","motivo":"Fuzzing","estado":"Sin posibles vulnerabilidades"})
 
     def alertas_explotacion(self):
         '''
@@ -510,37 +538,6 @@ class Masivo():
             return explotacion_alertas
         return {}
 
-    def buscar_exploits(self):
-        '''
-            Funcion que realiza una busqueda de exploits con los datos identificados
-        '''
-        exploits = []
-        for software in self.datos_identificados["software"]:
-            json_software = {
-                "software_nombre":software["software_nombre"].strip(),
-                "software_version":software["software_version"]
-            }
-            exploit_software = self.con.exploit_buscar_software(json_software,self.datos_identificados["profundidad"])
-            for exploit in exploit_software["exploits"]:
-                exploits.append(exploit)
-        
-        for cms in self.datos_identificados["cms"]:
-            json_cms = {
-                "cms_nombre":cms["cms_nombre"].strip(),
-                "cms_categoria":cms["cms_categoria"].strip(),
-                "cms_extension_nombre":cms["cms_extension_nombre"].strip(),
-                "cms_extension_version":cms["cms_extension_version"]
-            }
-            exploit_cms = self.con.exploit_buscar_cms(json_cms,self.datos_identificados["profundidad"])
-            for exploit in exploit_cms["exploits"]:
-                exploits.append(exploit)
-
-        for cve in self.datos_identificados["cve"]:
-            exploit_cve = self.con.exploit_buscar_cve(cve.strip())
-            for exploit in exploit_cve["exploits"]:
-                exploits.append(exploit)
-        return exploits
-
     def obtener_datos_consulta_exploits(self):
         '''
             Funcion que regresa los datos identificados y datos de explotacion a partir del analisis 
@@ -548,29 +545,11 @@ class Masivo():
             busca todos los software con sus versiones y las extensiones de los cms para definir los datos identificados
             para extraer los datos de explotacion usa los puertos y los sitios
         '''
+        informacion = self.peticion_proceso["verificacion"]["informacion"]
+        analisis = self.peticion_proceso["verificacion"]["analisis"]
+
         self.datos_identificados = {"software":[],"cms":[], "cve":[], "profundidad": 2}
         
-        # Obtener Softwares
-        self.datos_identificados["software"].extend(self.obtener_software_version_unica(self.peticion_proceso["analisis"], "servidor"))
-        
-        cms = self.obtener_software_version_unica(self.peticion_proceso["analisis"], "cms")
-        if len(cms) != 0:
-            cms_nombre = cms[0]["software_nombre"]
-            self.datos_identificados["software"].extend(cms)
-            self.datos_identificados["cms"].extend(self.obtener_cms(self.peticion_proceso["analisis"], "plugins", cms_nombre))
-
-        self.datos_identificados["software"].extend(self.obtener_sofware_versiones(self.peticion_proceso["analisis"], "lenguajes"))
-        self.datos_identificados["software"].extend(self.obtener_sofware_versiones(self.peticion_proceso["analisis"], "frameworks"))
-        self.datos_identificados["software"].extend(self.obtener_sofware_versiones(self.peticion_proceso["analisis"], "librerias"))
-
-        self.datos_identificados["software"].extend(self.obtener_software_version_unica_puertos(self.peticion_proceso["informacion"]))
-        
-
-        # Obtener CVE
-        if "vulnerabilidades" in self.peticion_proceso["analisis"]:
-            for cve in self.peticion_proceso["analisis"]["vulnerabilidades"]:
-                self.datos_identificados["cve"].append(cve)
-
         self.datos_identificados["profundidad"] = self.peticion_proceso["profundidad"]
 
         # Obtener datos para cargar los exploits
@@ -579,10 +558,27 @@ class Masivo():
         else:
             self.datos_explotacion = {"sitio":self.peticion_proceso["sitio"],"puertos":["80"],"cookie":self.peticion_proceso["cookie"]}
 
-        if "informacion" in self.peticion_proceso:
+        if informacion == 1:
+            self.datos_identificados["software"].extend(self.obtener_software_version_unica_puertos(self.peticion_proceso["informacion"]))
             for puerto in self.peticion_proceso["informacion"]["puertos"]["abiertos"]:
                 if puerto != "80" or puerto != "443":
                     self.datos_explotacion["puertos"].append(puerto["puerto"])
+
+        if analisis == 1:
+            self.datos_identificados["software"].extend(self.obtener_software_version_unica(self.peticion_proceso["analisis"], "servidor"))
+            self.datos_identificados["software"].extend(self.obtener_sofware_versiones(self.peticion_proceso["analisis"], "lenguajes"))
+            self.datos_identificados["software"].extend(self.obtener_sofware_versiones(self.peticion_proceso["analisis"], "frameworks"))
+            self.datos_identificados["software"].extend(self.obtener_sofware_versiones(self.peticion_proceso["analisis"], "librerias"))
+            cms = self.obtener_software_version_unica(self.peticion_proceso["analisis"], "cms")
+            if len(cms) != 0:
+                cms_nombre = cms[0]["software_nombre"]
+                self.datos_identificados["software"].extend(cms)
+                self.datos_identificados["cms"].extend(self.obtener_cms(self.peticion_proceso["analisis"], "plugins", cms_nombre))
+
+            if "vulnerabilidades" in self.peticion_proceso["analisis"]:
+                for cve in self.peticion_proceso["analisis"]["vulnerabilidades"]:
+                    self.datos_identificados["cve"].append(cve)
+
         return self.datos_explotacion, self.datos_identificados
 
     def obtener_sofware_versiones(self, peticion_proceso, caracteristica):
@@ -707,6 +703,37 @@ class Masivo():
             if puerto != "":
                 datos_identificados.append({"software_nombre":puerto,"software_version":version})
         return datos_identificados
+
+    def buscar_exploits(self):
+        '''
+            Funcion que realiza una busqueda de exploits con los datos identificados
+        '''
+        exploits = []
+        for software in self.datos_identificados["software"]:
+            json_software = {
+                "software_nombre":software["software_nombre"].strip(),
+                "software_version":software["software_version"]
+            }
+            exploit_software = self.con.exploit_buscar_software(json_software,self.datos_identificados["profundidad"])
+            for exploit in exploit_software["exploits"]:
+                exploits.append(exploit)
+        
+        for cms in self.datos_identificados["cms"]:
+            json_cms = {
+                "cms_nombre":cms["cms_nombre"].strip(),
+                "cms_categoria":cms["cms_categoria"].strip(),
+                "cms_extension_nombre":cms["cms_extension_nombre"].strip(),
+                "cms_extension_version":cms["cms_extension_version"]
+            }
+            exploit_cms = self.con.exploit_buscar_cms(json_cms,self.datos_identificados["profundidad"])
+            for exploit in exploit_cms["exploits"]:
+                exploits.append(exploit)
+
+        for cve in self.datos_identificados["cve"]:
+            exploit_cve = self.con.exploit_buscar_cve(cve.strip())
+            for exploit in exploit_cve["exploits"]:
+                exploits.append(exploit)
+        return exploits
 
 class Reportes():
     '''
@@ -891,6 +918,11 @@ class Reportes():
                 "analisis":[],
             }
 
+        self.informacion = self.peticion_proceso["verificacion"]["informacion"]
+        self.analisis = self.peticion_proceso["verificacion"]["analisis"]
+        self.fuzzing = self.peticion_proceso["verificacion"]["fuzzing"]
+        self.explotacion = self.peticion_proceso["verificacion"]["explotacion"]
+
         self.execute_reporte()
         return json.dumps({"estado":"error"})
     
@@ -907,21 +939,29 @@ class Reportes():
                 diccionario que sirve para guardar los datos importantes y ser mostrados en el documento HTML
         '''
         self.reporte_informacion_general()
-        self.reporte_puertos()
-        self.reporte_dns_dumpster()
-        self.reporte_robtex()
-        self.reporte_b_f_l()
-        self.reporte_cifrados()
-        self.reporte_plugins()
-        self.reporte_archivos()
-        self.reporte_google()
-        self.reporte_bing()
-        self.reporte_cve()
-        self.reporte_headers()
-        self.reporte_vulnerabilidades()
-        self.reporte_vulnerabilidades_por_pagina()
-        self.reporte_posibles_vulnerabilidades()
-        self.reporte_explotacion()
+        
+        if self.informacion == 1:
+            self.reporte_puertos()
+            self.reporte_dns_dumpster()
+            self.reporte_robtex()
+            self.reporte_google()
+            self.reporte_bing()
+
+        if self.analisis == 1:
+            self.reporte_b_f_l()
+            self.reporte_cifrados()
+            self.reporte_plugins()
+            self.reporte_archivos()
+            self.reporte_cve()
+            self.reporte_headers()
+
+        if self.fuzzing == 1:
+            self.reporte_vulnerabilidades()
+            self.reporte_vulnerabilidades_por_pagina()
+            self.reporte_posibles_vulnerabilidades()
+
+        if self.explotacion == 1:
+            self.reporte_explotacion()
 
         reportes.execute(self.peticion_reporte)
         sitio = self.peticion_reporte["sitio"].replace(",","_").replace("/","_").replace(":","_")
@@ -948,26 +988,33 @@ class Reportes():
         '''
         datos_generales = []
         sitio = self.peticion_proceso["sitio"]
-        ip = self.peticion_proceso["informacion"]["robtex"]["informacion"]["ip"]
-        pais = self.obtener_pais(self.peticion_proceso)
-        servidor = self.validar_campo(self.peticion_proceso["analisis"]["servidor"], "nombre")
-        cms = self.validar_campo(self.peticion_proceso["analisis"]["cms"], "nombre")
-        puertos = len(self.peticion_proceso["informacion"]["puertos"]["abiertos"])
-        cifrados = self.obtener_cifrados_debiles(self.peticion_proceso)
-        cve = len(self.peticion_proceso["analisis"]["vulnerabilidades"])
-        vulnerabilidad, posibles_vulnerabilidades = self.obtener_vulnerabilidades(self.peticion_proceso)
-        explotacion = self.obtener_explotaciones(self.peticion_proceso)
         datos_generales.append(["Sitio",sitio])
-        datos_generales.append(["IP",ip])
-        datos_generales.append(["País",pais])
-        datos_generales.append(["Servidor",servidor])
-        datos_generales.append(["CMS",cms])
-        datos_generales.append(["CVE",cve])
-        datos_generales.append(["Explotación",explotacion])
-        datos_generales.append(["Vulnerabilidades",vulnerabilidad])
-        datos_generales.append(["Posibles Vulnerabilidades",posibles_vulnerabilidades])
-        datos_generales.append(["Cifrados",cifrados])
-        datos_generales.append(["Puertos",puertos])
+        if self.informacion == 1:
+            ip = self.peticion_proceso["informacion"]["robtex"]["informacion"]["ip"]
+            pais = self.obtener_pais(self.peticion_proceso)
+            puertos = len(self.peticion_proceso["informacion"]["puertos"]["abiertos"])
+            datos_generales.append(["IP",ip])
+            datos_generales.append(["País",pais])
+            datos_generales.append(["Puertos",puertos])
+
+        if self.analisis == 1:
+            servidor = self.validar_campo(self.peticion_proceso["analisis"]["servidor"], "nombre")
+            cms = self.validar_campo(self.peticion_proceso["analisis"]["cms"], "nombre")
+            cifrados = self.obtener_cifrados_debiles(self.peticion_proceso)
+            cve = len(self.peticion_proceso["analisis"]["vulnerabilidades"])
+            datos_generales.append(["Servidor",servidor])
+            datos_generales.append(["CMS",cms])
+            datos_generales.append(["CVE",cve])
+            datos_generales.append(["Cifrados Débiles",cifrados])
+
+        if self.fuzzing == 1:
+            vulnerabilidad, posibles_vulnerabilidades = self.obtener_vulnerabilidades(self.peticion_proceso)
+            datos_generales.append(["Vulnerabilidades",vulnerabilidad])
+            datos_generales.append(["Posibles Vulnerabilidades",posibles_vulnerabilidades])
+
+        if self.explotacion == 1:
+            explotacion = self.obtener_explotaciones(self.peticion_proceso)
+            datos_generales.append(["Explotación",explotacion])
         
         analisis = self.crear_informacion_general(datos_generales)
         self.peticion_reporte["analisis"].append(analisis)
@@ -1495,7 +1542,7 @@ class Reportes():
         cifrados = 0
         if len(peticion_proceso["analisis"]["cifrados"]) != 0:
             for cifrado in peticion_proceso["analisis"]["cifrados"]:
-                if cifrado == "debil":
+                if peticion_proceso["analisis"]["cifrados"][cifrado].lower() == "debil":
                     cifrados += 1
         return cifrados
 
@@ -2073,7 +2120,7 @@ class Reportes():
             pass
         archivo = "{0}/analisis.json".format(ruta)
         with open(archivo, "w") as reporte_archivo:
-            reporte_archivo.write(json.dumps(self.peticion))
+            reporte_archivo.write(json.dumps(self.peticion_proceso))
 
 class Utileria():
     '''
@@ -2181,12 +2228,12 @@ class Utileria():
         '''
         try:
             sitio = peticion["sitio"]
-            requests.get(sitio)
+            requests.get(sitio, verify=False)
             int(peticion["profundidad"])
             int(peticion["puertos"]["final"])
             return True
         except Exception as e:
-            print(e)
+            print("No hay conexion a Internet o el sitio no es valido")
             return False
 
     def validar_json_archivo(self, peticion):
@@ -2198,15 +2245,16 @@ class Utileria():
             peticion : dict
                 contiene la peticion original enviada al servidor
         '''
-        if "sitio" in peticion:
-            sitios = peticion["sitio"]
+        if "archivo" in peticion:
+            sitios = peticion["archivo"]
             try:
-                a = b64decode(sitios)
-                if a == b"":
-                    return False
-                return True
+                sitios = sitios.split("base64,")[1]
+                sitios = b64decode(sitios)
+                if sitios == b"":
+                    return ""
+                return sitios.decode("ISO-8859-1").strip()
             except:
-                return False
+                return ""
 
 class Exploit():
     '''
@@ -2311,13 +2359,13 @@ def ejecucion():
     if request.method == "POST":
         utileria = Utileria()
         peticion_json = request.json
-        print(peticion_json)
         if utileria.validar_json_ejecucion(peticion_json):
-            if utileria.validar_json_archivo(peticion_json):
-                sitios_decodificados = base64.decode(peticion_json["sitio"]).decode("ISO-8859-1").strip()
+            sitios_decodificados = utileria.validar_json_archivo(peticion_json) 
+            if sitios_decodificados != "":
                 for sitio in sitios_decodificados.split("\n"):
                     peticion_temp = peticion_json.copy()
                     peticion_temp["sitio"] = sitio
+                    peticion_temp["archivo"] = ""
                     respuesta = cola.add_peticion(peticion_temp)
             else:
                 respuesta = cola.add_peticion(peticion_json)

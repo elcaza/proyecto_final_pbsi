@@ -593,7 +593,7 @@ class Joomla():
 		tmp_diccionario["cms"] = tmp_cms
 		tmp_diccionario["plugins"] = []
 		tmp_diccionario["librerias"] = []
-		tmp_diccionario["archivos"] = self.obtener_archivos_joomla(self.util.generar_urls(self.sitio,self.cargar_configuracion()))
+		tmp_diccionario["archivos"] = self.obtener_archivos_joomla(self.util.generar_urls(self.url,self.cargar_configuracion()))
 		tmp_diccionario["vulnerabilidades"] = self.obtener_vulnerabilidades(tmp_cms["version"])
 
 	def obtener_version_joomla(self):
