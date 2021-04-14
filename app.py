@@ -15,6 +15,7 @@ import requests
 import threading
 import concurrent.futures
 from base64 import b64decode
+import sys
 
 ## Modulos
 from modules.obtencion_informacion import obtener_informacion as obtener_informacion
@@ -317,8 +318,10 @@ class Masivo():
             self.peticion_proceso["informacion"] = respuesta_obtener_informacion
             self.peticion_proceso["verificacion"]["informacion"] = 1
         except Exception as e:
+            tipo, base, rastro = sys.exc_info()
+            archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
             with open (self.error, "a") as error:
-                error.write("{0}: {1}{2}".format("El módulo de \"Información\" falló", e,"\n"))
+                error.write("{0}: {1}{2}".format("El módulo de \"Información\" falló en:", tipo, archivo, rastro.tb_lineno,"\n"))
 
     def execute_analisis(self):
         '''
@@ -336,8 +339,10 @@ class Masivo():
             self.peticion_proceso["analisis"] = respuesta_analisis
             self.peticion_proceso["verificacion"]["analisis"] = 1
         except Exception as e:
+            tipo, base, rastro = sys.exc_info()
+            archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
             with open (self.error, "a") as error:
-                error.write("{0}: {1}{2}".format("El módulo de \"Análisis\" falló", e, "\n"))
+                error.write("{0}: {1}{2}".format("El módulo de \"Análisis\" falló en:", tipo, archivo, rastro.tb_lineno,"\n"))
 
     def execute_fuzzing(self):
         '''
@@ -349,8 +354,10 @@ class Masivo():
                 self.alertas_fuzzing()
                 self.peticion_proceso["verificacion"]["fuzzing"] = 1
             except Exception as e:
+                tipo, base, rastro = sys.exc_info()
+                archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
                 with open (self.error, "a") as error:
-                    error.write("{0}: {1}{2}".format("El módulo de \"Fuzzing\" falló", e, "\n"))
+                    error.write("{0}: {1}{2}".format("El módulo de \"Fuzzing\" falló en:", tipo, archivo, rastro.tb_lineno,"\n"))
         
     def execute_explotacion(self):
         '''
@@ -363,8 +370,10 @@ class Masivo():
                 self.alertas_explotacion()
                 self.peticion_proceso["verificacion"]["explotacion"] = 1
             except Exception as e:
+                tipo, base, rastro = sys.exc_info()
+                archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
                 with open (self.error, "a") as error:
-                    error.write("{0}: {1}{2}".format("El módulo de \"Explotación\" falló", e, "\n"))
+                    error.write("{0}: {1}{2}".format("El módulo de \"Explotación\" falló en:", tipo, archivo, rastro.tb_lineno,"\n"))
 
     def fuzzing_lanzar_fuzz(self):
         '''
@@ -1002,9 +1011,32 @@ class Reportes():
             cms = self.validar_campo(self.peticion_proceso["analisis"]["cms"], "nombre")
             cifrados = self.obtener_cifrados_debiles(self.peticion_proceso)
             cve = len(self.peticion_proceso["analisis"]["vulnerabilidades"])
+
+            if self.peticion_proceso["analisis"]["ioc_anomalo"]["existe"]:
+                ioc_anomalo = len(self.peticion_proceso["analisis"]["ioc_anomalo"]["valores"])
+            else:
+                ioc_anomalo = 0
+
+            if self.peticion_proceso["analisis"]["ioc_webshell"]["existe"]:
+                ioc_webshell = len(self.peticion_proceso["analisis"]["ioc_webshell"]["valores"])
+            else:
+                ioc_webshell = 0
+
+            if self.peticion_proceso["analisis"]["ioc_ejecutables"]["existe"]:
+                ioc_ejecutable = len(self.peticion_proceso["analisis"]["ioc_ejecutables"]["valores"])
+            else:
+                ioc_ejecutable = 0
+
+            if self.peticion_proceso["analisis"]["ioc_cryptominer"]["existe"]:
+                ioc_cripto = len(self.peticion_proceso["analisis"]["ioc_cryptominer"]["valores"])
+            else:
+                ioc_cripto = 0
+
+            ioc = ioc_anomalo + ioc_webshell + ioc_ejecutable + ioc_cripto
             datos_generales.append(["Servidor",servidor])
             datos_generales.append(["CMS",cms])
             datos_generales.append(["CVE",cve])
+            datos_generales.append(["IOC",ioc])
             datos_generales.append(["Cifrados Débiles",cifrados])
 
         if self.fuzzing == 1:
@@ -2294,7 +2326,7 @@ class Exploit():
             Función que llama a las funciones del modulo "explotacion" para crear el exploit y guardar una referencia en Mongo
         '''
         exploit = exp.execute(self.peticion)
-        self.con.exploit_insertar_datos(exploit)
+        self.con.exploit_insertar_o_actualizar_registro(exploit)
         return json.dumps({"estado":"ok"})
 
     def exploits_peticion_editar(self):
@@ -2311,7 +2343,7 @@ class Exploit():
             Realiza una conexión con Mongo para hacer una actualización de datos a un exploit
         '''
         exploit = exp.execute(self.peticion)
-        self.con.exploit_actualizar_registro(exploit)
+        self.con.exploit_insertar_o_actualizar_registro(exploit)
         return json.dumps({"estado":"ok"})
 
     def exploits_peticion_eliminar(self):

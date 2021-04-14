@@ -682,10 +682,10 @@ class Obtener_IOC():
 		self.ioc_miner = False
 		self.webshell_ioc = False
 		self.ejecutable_ioc = False
-		self.tmp_diccionario["ioc_anomalo"] = self.ioc_anomalo
-		self.tmp_diccionario["ioc_webshell"] = self.webshell_ioc
-		self.tmp_diccionario["ioc_cryptominer"] = self.ioc_miner
-		self.tmp_diccionario["ioc_ejecutables"] = self.ejecutable_ioc
+		self.tmp_diccionario["ioc_anomalo"] = {"existe":self.ioc_anomalo,"valores":[]}
+		self.tmp_diccionario["ioc_webshell"] = {"existe":self.webshell_ioc,"valores":[]}
+		self.tmp_diccionario["ioc_cryptominer"] = {"existe":self.ioc_miner,"valores":[]}
+		self.tmp_diccionario["ioc_ejecutables"] = {"existe":self.ejecutable_ioc,"valores":[]}
 		self.util = Utilerias(self.cookie, self.redireccionamiento)
 		self.ejecutar_ioc()
 
@@ -693,6 +693,7 @@ class Obtener_IOC():
 		self.ioc_contenido_anomalo()
 		self.ioc_cryptominer()
 		self.ioc_webshell()
+		self.ioc_ejecutables()
 
 	def ioc_contenido_anomalo(self):
 		print("IOC Anomalo")
@@ -708,13 +709,13 @@ class Obtener_IOC():
 		for palabra_v in venta:
 			palabra_v = " " + palabra_v + " "
 			if palabra_v.lower() in str(contenido_a).lower():
-				print("venta " + palabra_v)
+				self.tmp_diccionario["ioc_anomalo"]["valores"].append(palabra_v)
 				contador_venta += 1
 
 		for palabra_a in anomalo:
 			palabra_a = " " + palabra_a + " "
 			if palabra_a.lower() in str(contenido_a).lower():
-				print("anomalo " + palabra_a)
+				self.tmp_diccionario["ioc_anomalo"]["valores"].append(palabra_a)
 				contador_anomalo += 1
 
 		if contador_venta >= 3 and contador_anomalo >= 2:
@@ -736,6 +737,8 @@ class Obtener_IOC():
 				for link in enlaces_crypto:
 					if link in source:
 						contador_miner += 1
+						self.tmp_diccionario["ioc_cryptominer"]["valores"].append(link)
+
 		if contador_miner > 0: 
 			self.ioc_miner = True
 			self.tmp_diccionario["ioc_cryptominer"] = self.ioc_miner
@@ -759,7 +762,9 @@ class Obtener_IOC():
 					contenido_analizar = self.util.obtener_contenido_html(url)
 					regex = ".*:.*:[0-9]*:[0-9]*:.*:.*:.*"
 					if re.search(regex,str(contenido_analizar)) != None:
+						self.tmp_diccionario["ioc_webshell"]["valores"].append(url)
 						contador_webshell += 1
+
 		if contador_webshell > 0:
 			self.webshell_ioc = True
 			self.tmp_diccionario["ioc_webshell"] = self.webshell_ioc
@@ -775,7 +780,9 @@ class Obtener_IOC():
 		contenido = self.util.obtener_contenido_html(self.sitio)
 		for exe in ejecutables:
 			if exe in contenido:
+				self.tmp_diccionario["ioc_ejecutables"]["valores"].append(exe)
 				contador_ejecutable += 1
+
 		if contador_ejecutable > 0:
 			self.ejecutable_ioc = True
 			self.tmp_diccionario["ioc_ejecutables"] = self.ejecutable_ioc
@@ -798,7 +805,6 @@ class Obtencion_informacion():
 	def __init__(self, sitio, cookie, lista_negra,redireccionamiento):
 		self.redireccionamiento  = redireccionamiento
 		self.lista_negra = lista_negra
-		print(lista_negra)
 		self.sitio = sitio
 		self.url_without_file()
 		self.tmp_diccionario = {}

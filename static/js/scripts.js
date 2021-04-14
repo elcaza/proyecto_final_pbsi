@@ -1,4 +1,7 @@
-
+function funcionxd(input){
+	let contenido_exploit_valor = document.getElementById("contenido_exploit_valor");
+	contenido_exploit_valor.innerHTML = input.value.split("\\")[2]
+}
 // Variable global
 let json_consultas;
 let json_proximos_escaneos;
@@ -31,9 +34,14 @@ document.addEventListener("DOMContentLoaded", function() {
 		// @cromos
 		let value_select = document.querySelector(".exploits__select").value;
 
+		peticion = { "exploit":value_select }
+		send_json_fetch_2(server_url+"/exploits-editar", peticion)
+		.then(json_respuesta =>{
+			console.log(json_respuesta)
+		});
 
 		response = {
-			"exploit":"shell_drupalgeddon2.sh",
+			"exploit":"shell_drupalgeddon50.sh",
 			"contenido":"BASE64",
 			"extension":"sh",
 			"cve":"CVE-2018-002",
@@ -155,13 +163,14 @@ document.addEventListener("DOMContentLoaded", function() {
 		body.classList.replace("in_software", "in_cms");
 	});
 
-	button_add__exploits.addEventListener("click", function(){
+	button_add__exploits.addEventListener("click", async function(){
 		//@cromos
 		alert("Añadiendo exploit");
 
 		let opcion = "";
 		let nombre = document.querySelector("#exploit_name").value;
-		let contenido_exploit = document.querySelector("#contenido_exploit").value;
+		let contenido_exploit = document.querySelector("#contenido_exploit");
+		let contenido_exploit_valor = document.getElementById("contenido_exploit_valor");
 		let tecnologia = document.querySelector("#tecnologia").value
 		let exploit_cve = document.querySelector("#exploit_cve").value;
 		let exploit_software = document.querySelector("#exploit_software").value;
@@ -171,10 +180,6 @@ document.addEventListener("DOMContentLoaded", function() {
 		let exploit_extension = document.querySelector("#exploit_extension").value;
 		let exploit_version = document.querySelector("#exploit_version").value;
 
-		// Contenido to b64
-		contenido_exploit = utf8_to_b64( contenido_exploit );
-
-
 		if ( document.querySelector("body").classList.contains("in_software") ){
 			opcion = "software";
 		} else if ( document.querySelector("body").classList.contains("in_cms") ) {
@@ -182,6 +187,14 @@ document.addEventListener("DOMContentLoaded", function() {
 		}
 		let peticion;
 
+		if (contenido_exploit.value != ""){
+			contenido_exploit_valor.innerHTML = contenido_exploit.value.split("\\")[2]
+			contenido_exploit = await file_upload(contenido_exploit.files[0])
+			
+		} else {
+			contenido_exploit = ""
+		}
+		
 		if (opcion === "software"){
 			peticion = {
 				"exploit":nombre,
@@ -193,8 +206,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					"software_version":exploit_software_version,
 				}
 			}
-		}
-		else{
+		} else {
 			peticion = {
 				"exploit":nombre,
 				"contenido":contenido_exploit,
@@ -211,9 +223,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
 		console.log(peticion);
 
-		send_json_fetch(server_url+"/exploits-crear", peticion);
+		//send_json_fetch_2(server_url+"/exploits-crear", peticion);
 
-		reload_site();
+		//reload_site();
 	});
 
 	button_exploits__borrar.addEventListener("click", function(){
@@ -271,8 +283,11 @@ document.addEventListener("DOMContentLoaded", function() {
 		// alert(redireccionamiento)
 		// alert(lista_negra)		
 
-
-		archivo = await file_upload(archivo.files[0])
+		if (archivo.value != ""){
+			archivo = await file_upload(archivo.files[0])
+		} else {
+			archivo = ""
+		}
 
 		let peticion = {
 			"sitio":sitio,
@@ -842,12 +857,4 @@ async function send_json(url, json) {
 
 function reload_site(){
 	window.location.reload()
-}
-
-function utf8_to_b64( str ) {
-	return window.btoa(unescape(encodeURIComponent( str )));
-}
-
-function b64_to_utf8( str ) {
-	return decodeURIComponent(escape(window.atob( str )));
 }

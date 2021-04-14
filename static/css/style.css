@@ -214,6 +214,18 @@ select {
 
 }
 
+label{
+    display: grid;
+    background-color: #064766;
+    border-radius: 5px;
+    color: #fefefe;
+    font-size: 1em;
+    height: 35px;
+    width: 90%;
+    text-align: center;
+    align-items: center;
+}
+
 button {
     min-width: 150px;
     min-height: 45px;
@@ -511,6 +523,10 @@ input:checked + .modulos__slider:before {
     transition: .5s;
 }
 
+.exploits__config-buttons_edit {
+    text-align: center;
+}
+
 .programar {
 
 }
@@ -562,7 +578,7 @@ input:checked + .modulos__slider:before {
 .consultas__analizados__numero,
 .consultas__vulnes__numero,
 .consultas__fecha__fecha {
-    font-size: 2.5em;
+    font-size: 2.0em;
 }
 
 .consultas__vulnes {

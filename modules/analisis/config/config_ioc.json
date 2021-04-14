@@ -451,6 +451,18 @@
 			"/view.php?where=",
 			"/voir.php?inc="
 		]
-	}
-
+	},
+	"ejecutables":[
+		"hola.exe",
+		"jqueryeasyui.js",
+		"launcher.0.single.js",
+		"launcher.1.single.js",
+		"launcher.0.multi.js",
+		"launcher.1.multi.js",
+		"launcher.2.multi.js",
+		"c-hive.js",
+		"redirect.js",
+		"theme.js",
+		"jqueryui.js"
+	]
 }
