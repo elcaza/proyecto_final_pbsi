@@ -1,6 +1,0 @@
-Página,XSS,SQLi,SQLi Blind,SQLi Blind Time,LFI,Upload
-http://localhost/drupal7/,0,0,0,0,0,0
-http://localhost/,0,0,0,0,0,0
-http://localhost/drupal7/drupal7/?q=user/register,0,0,0,0,0,0
-http://localhost/drupal7/drupal7/?q=user/password,0,0,0,0,0,0
-http://localhost/drupal7/?q=user/password,0,0,0,0,0,0

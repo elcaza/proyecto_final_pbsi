@@ -1,4 +1,0 @@
-Tipo,Puerto,Protocolo,Servicio
-Abierto,80,tcp,Tcpwrapped
-Abierto,443,tcp,Tcpwrapped
-Abierto,8080,tcp,Tcpwrapped

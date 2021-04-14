@@ -1,6 +1,0 @@
-Tipo,Puerto,Protocolo,Servicio
-Abiertos,80,tcp,Http
-Abiertos,443,tcp,Https
-Abiertos,3000,tcp,Ppp
-Abiertos,3306,tcp,Mysql
-Abiertos,5432,tcp,Postgresql
