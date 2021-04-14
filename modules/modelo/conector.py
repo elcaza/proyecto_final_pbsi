@@ -136,18 +136,14 @@ class Conector():
             with sesion.start_transaction():
                 coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
                 registro = coleccion_exploits.find_one({"exploit":json_nombre["exploit"]},{"_id":0})
-                ruta_total = registro["ruta"] + "/" + registro["exploit"]
-
-                with open(ruta_total,"rb") as archivo:
-                    contenido = base64.encodebytes(archivo.read())
-                registro["contenido"] = contenido
+                
                 registro.pop("ruta")
                 
                 if "software_nombre" in registro:
                     registro["software"] = {"software_nombre":registro["software_nombre"], "software_version":registro["software_version"]}
                     registro.pop("software_nombre")
                     registro.pop("software_version")
-                    
+
                 elif "cms_nombre" in registro:
                     registro["cms"] = {"cms_nombre":registro["cms_nombre"], "cms_categoria":registro["cms_categoria"],"cms_extension_nombre":registro["cms_extension_nombre"], "cms_extension_version":registro["cms_extension_version"]}
                     registro.pop("cms_nombre")
@@ -169,7 +165,7 @@ class Conector():
             with sesion.start_transaction():
                 try:
                     coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
-                    coleccion_exploits.update({"exploit":json_cargar_datos["exploit"]},json_cargar_datos,{"upsert":True})
+                    coleccion_exploits.update({"exploit":json_cargar_datos["exploit"]},json_cargar_datos,upsert=True)
                 except errors.DuplicateKeyError as e:
                     print("Error", e)   
 
@@ -184,6 +180,7 @@ class Conector():
         '''
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
+                print(json_cargar_datos)
                 coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
                 coleccion_exploits.delete_one({"exploit":json_cargar_datos["exploit"]})
 
@@ -405,3 +402,17 @@ class Conector():
         resultados = coleccion_analisis.find({"sitio":sitio,"fecha":fecha},{"_id":0})
         for resultado in resultados:
             return resultado
+
+    def eliminar_analisis(self, peticion):
+        '''
+            regresa el analisis completo
+
+            Parametros
+            ----------
+            peticion : dict
+                contiene el sitio a buscar con su respectiva fecha
+        '''
+        sitio = peticion["sitio"]
+        fecha = peticion["fecha"]
+        coleccion_analisis = self.base_datos[self.strings["COLECCION_ANALISIS"]]
+        resultados = coleccion_analisis.delete_one({"sitio":sitio,"fecha":fecha})

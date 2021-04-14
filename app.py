@@ -100,7 +100,7 @@ class Encolamiento(metaclass=SingletonMeta):
 
     def add_peticion(self, peticion):
         self.peticion.append(peticion)
-        return "Peticion en cola"
+        return {"status":"Petición enviada"}
 
     def pop_peticion(self):
         self.peticion_actual = self.peticion[0].copy()
@@ -909,6 +909,10 @@ class Reportes():
     def __init__(self, peticion):
         self.con = Conector()
         self.peticion = peticion
+    
+    def eliminar_reporte(self):
+        self.peticion_proceso = self.con.eliminar_analisis(self.peticion)
+        return json.dumps({"status":"Reporte eliminado"})
 
     def consulta_peticion_reporte(self):
         '''
@@ -933,7 +937,7 @@ class Reportes():
         self.explotacion = self.peticion_proceso["verificacion"]["explotacion"]
 
         self.execute_reporte()
-        return json.dumps({"estado":"error"})
+        return json.dumps({"status":"Creando Reporte"})
     
     def execute_reporte(self):
         '''
@@ -2223,7 +2227,9 @@ class Utileria():
         consulta["analisis_totales"] = analisis_totales
         consulta["ultima_fecha"] = ultima_fecha
         consulta["analisis"] = analisis
-        respueta_json = json.dumps(consulta)
+        respueta_json = consulta
+        print(respueta_json)
+        respueta_json["status"] = "Reportes cargados"
         return respueta_json
 
     def exploits_peticion_volcado(self):
@@ -2233,6 +2239,7 @@ class Utileria():
         volcado = self.con.exploit_volcado()
         if len(volcado["exploits"]) == 0:
             return json.dumps({"estado":"error"})
+        volcado["status"] = "Exploits cargados"
         return volcado
 
     def validar_json_ejecucion(self, peticion):
@@ -2327,7 +2334,7 @@ class Exploit():
         '''
         exploit = exp.execute(self.peticion)
         self.con.exploit_insertar_o_actualizar_registro(exploit)
-        return json.dumps({"estado":"ok"})
+        return json.dumps({"status":"Exploit enviado"})
 
     def exploits_peticion_editar(self):
         '''
@@ -2337,14 +2344,6 @@ class Exploit():
         if registro == None:
             return json.dumps({"estado":"error"})
         return registro
-
-    def exploits_peticion_actualizar(self):
-        '''
-            Realiza una conexión con Mongo para hacer una actualización de datos a un exploit
-        '''
-        exploit = exp.execute(self.peticion)
-        self.con.exploit_insertar_o_actualizar_registro(exploit)
-        return json.dumps({"estado":"ok"})
 
     def exploits_peticion_eliminar(self):
         '''
@@ -2356,7 +2355,7 @@ class Exploit():
         except FileNotFoundError:
             print("Exploit no encontrado")
         self.con.exploit_eliminar_registro(self.peticion)
-        return json.dumps({"estado":"ok"})
+        return json.dumps({"status":"Exploit eliminado"})
 
 # Variable de encolamiento
 cola = Encolamiento()
@@ -2426,6 +2425,17 @@ def reporte():
         Funcion que sirve para renderizar y mostrar el reporte
     '''
     return render_template("reporte.html")
+
+@app.route("/reporte-eliminar", methods=["GET","POST"])
+def reporte_eliminar():
+    '''
+        Funcion que llama a la ejecucion del reporte de algun sitio
+    '''
+    if request.method == "POST":
+        peticion_json = request.get_json()
+        ireporte = Reportes(peticion_json)
+        respuesta = ireporte.eliminar_reporte()
+        return respuesta
 
 @app.route("/reporte-informacion")
 def reporte_grafica_informacion():
@@ -2508,28 +2518,16 @@ def exploits_editar():
     if request.method == "GET":
         return "GET no"
 
-@app.route("/exploits-actualizar", methods=["GET","POST"])
-def exploits_actualizar():
-    '''
-        Funcion que actualiza un exploit recibiendo como entrada un exploit completo
-    '''
-    if request.method == "POST":
-        peticion_json = request.get_json()
-        iexploit = Exploit(peticion_json)
-        respuesta = iexploit.exploits_peticion_actualizar()
-        return respuesta
-    if request.method == "GET":
-        return "GET no"
-
 @app.route("/exploits-eliminar", methods=["GET","POST"])
 def exploits_eliminar():
     '''
         Funcion que elimina un exploit recibiendo como entrada el nombre del exploit
     '''
     if request.method == "POST":
+        
         peticion_json = request.get_json()
         iexploit = Exploit(peticion_json)
-        respuesta = iexploit.exploits_peticion_eliminar(peticion_json)
+        respuesta = iexploit.exploits_peticion_eliminar()
         return respuesta
     if request.method == "GET":
         return "GET no"
