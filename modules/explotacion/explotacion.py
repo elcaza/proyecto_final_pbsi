@@ -138,6 +138,7 @@ class Explotacion():
         self.ruta = path.abspath(path.dirname(__file__))
         self.set_puertos()
         self.set_sitio()
+        self.set_dominio()
         self.set_cookie()
         self.set_usuarios()
         self.set_contrasenas()

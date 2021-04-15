@@ -329,7 +329,7 @@ class Masivo():
             tipo, base, rastro = sys.exc_info()
             archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
             with open (self.error, "a") as error:
-                error.write("{0}: {1}{2}".format("El módulo de \"Información\" falló en:", tipo, archivo, rastro.tb_lineno,"\n"))
+                error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Información\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
 
     def execute_analisis(self):
         '''
@@ -350,7 +350,7 @@ class Masivo():
             tipo, base, rastro = sys.exc_info()
             archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
             with open (self.error, "a") as error:
-                error.write("{0}: {1}{2}".format("El módulo de \"Análisis\" falló en:", tipo, archivo, rastro.tb_lineno,"\n"))
+                error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Análisis\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
 
     def execute_fuzzing(self):
         '''
@@ -365,7 +365,7 @@ class Masivo():
                 tipo, base, rastro = sys.exc_info()
                 archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
                 with open (self.error, "a") as error:
-                    error.write("{0}: {1}{2}".format("El módulo de \"Fuzzing\" falló en:", tipo, archivo, rastro.tb_lineno,"\n"))
+                    error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Fuzzing\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
         
     def execute_explotacion(self):
         '''
@@ -381,7 +381,7 @@ class Masivo():
                 tipo, base, rastro = sys.exc_info()
                 archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
                 with open (self.error, "a") as error:
-                    error.write("{0}: {1}{2}".format("El módulo de \"Explotación\" falló en:", tipo, archivo, rastro.tb_lineno,"\n"))
+                    error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Explotación\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
 
     def fuzzing_lanzar_fuzz(self):
         '''
@@ -679,11 +679,12 @@ class Masivo():
         version = 0
         if caracteristica in peticion_proceso:
             for dato in peticion_proceso[caracteristica]:
-                if type(dato).find("list") >= 0:
+                print(dato)
+                if str(type(dato)).find("list") >= 0:
                     nombre = dato
                     datos_identificados.append({"cms_nombre":cms,"cms_categoria":caracteristica, "cms_extension_nombre":nombre,"cms_extension_version":0})
 
-                elif type(dato).find("dict") >= 0:
+                elif str(type(dato)).find("dict") >= 0:
                     if "nombre" in dato:
                         nombre = dato["nombre"]
                     if "version" in dato:
