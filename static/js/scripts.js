@@ -3,6 +3,7 @@
 let json_consultas;
 let json_proximos_escaneos;
 let json_consultas_exploits;
+
 // Main actions
 document.addEventListener("DOMContentLoaded", function() {
 	// Buttons
@@ -27,6 +28,9 @@ document.addEventListener("DOMContentLoaded", function() {
 	// ************************************************************************************************
 	// POST - exploits-individual
 
+	/**
+	 * Función que realiza una peticion a la app para obtener los datos completos del exploit
+	 */ 
 	button_exploits__editar.addEventListener("click", function(){
 		
 		let value_select = document.querySelector(".exploits__select").value;
@@ -95,13 +99,18 @@ document.addEventListener("DOMContentLoaded", function() {
 		});
 	});
 
-	// Event listeners
+	/**
+	 * Función que carga la vista de nuevo analisis
+	 */ 
 	button_nav__nuevo.addEventListener("click", function(){
 		body.classList.replace("vista_consultas", "vista_nuevo");
 		body.classList.replace("vista_configuraciones", "vista_nuevo");
 		body.classList.replace("vista_exploits", "vista_nuevo");
 	});
 	
+	/**
+	 * Función que carga la vista de consultas de reportes
+	 */ 
 	button_nav__consultas.addEventListener("click", function(){
 		body.classList.replace("vista_nuevo", "vista_consultas");
 		body.classList.replace("vista_configuraciones", "vista_consultas");
@@ -109,6 +118,9 @@ document.addEventListener("DOMContentLoaded", function() {
 		start_consulta();
 	});
 	
+	/**
+	 * Función que carga la vista de proximos escaneos
+	 */ 
 	button_nav__proximosEscaneos.addEventListener("click", function(){
 		body.classList.replace("vista_nuevo", "vista_configuraciones");
 		body.classList.replace("vista_consultas", "vista_configuraciones");
@@ -116,6 +128,9 @@ document.addEventListener("DOMContentLoaded", function() {
 		start_proximos_escaneos();
 	});
 
+	/**
+	 * Función que carga la vista de exploits
+	 */ 
 	button_nav__exploits.addEventListener("click", function(){
 		body.classList.replace("vista_nuevo", "vista_exploits");
 		body.classList.replace("vista_consultas", "vista_exploits");
@@ -124,14 +139,23 @@ document.addEventListener("DOMContentLoaded", function() {
 		start_consulta_exploits();
 	});
 
+	/**
+	 * Función que habilita la url
+	 */ 
 	button_scan__options__url.addEventListener("click", function(){
 		body.classList.replace("file", "url");
 	});
 
+	/**
+	 * Función que habilita el archivo
+	 */ 
 	button_scan__options__file.addEventListener("click", function(){
 		body.classList.replace("url", "file");
 	});
 
+	/**
+	 * Función que habilita las opciones de software
+	 */ 
 	button_exploits__options__software.addEventListener("click", function(){
 		body.classList.replace("in_cms", "in_software");
 		let exploit_software = document.querySelector("#exploit_software");
@@ -149,6 +173,9 @@ document.addEventListener("DOMContentLoaded", function() {
 		exploit_version.value = ""
 	});
 
+	/** 
+	 * Función que habilita las funciones de cms
+	 */
 	button_exploits__options__cms.addEventListener("click", function(){
 		body.classList.replace("in_software", "in_cms");
 		let exploit_software = document.querySelector("#exploit_software");
@@ -166,6 +193,9 @@ document.addEventListener("DOMContentLoaded", function() {
 		exploit_version.value = ""
 	});
 
+	/**
+	 * Función que envia una peticion a la app para crear/editar un exploit
+	 */ 
 	button_add__exploits.addEventListener("click", async function(){
 
 		let opcion = "";
@@ -232,8 +262,10 @@ document.addEventListener("DOMContentLoaded", function() {
 		reload_site();
 	});
 
+	/**
+	 * Función que envia una peticion a la app para eliminar un exploit
+	 */ 
 	button_exploits__borrar.addEventListener("click", function(){
-		//@cromos
 		// POST - exploits-eliminar
 
 		let value_select = document.querySelector("#exploit_name").value;
@@ -250,7 +282,9 @@ document.addEventListener("DOMContentLoaded", function() {
 		}
 	});
 
-	// Loading info
+	/**
+	 * Loading info
+	 */ 
 	set_maxdate();
 	// Función async
 
@@ -262,8 +296,11 @@ document.addEventListener("DOMContentLoaded", function() {
 	// ************************************************************************************************
 	// ************************************************************************************************
 	// ************************************************************************************************
-
 	// POST - ejecucion
+
+	/**
+	 * Función que realiza la recoleccion de datos para la ejecucion del analisis
+	 */
 	scan__start.addEventListener("click", async function(){
 
 		let sitio = document.querySelector(".scan__url").value;
@@ -316,6 +353,10 @@ document.addEventListener("DOMContentLoaded", function() {
 	// POST - consulta-volcado
 	// Variable global
 	json_consultas;
+
+	/**
+	 * Función que obtiene los reportes de la app 
+	 */
 	function start_consulta() {
 		
 		send_json_fetch(server_url+"/consulta-volcado", {})
@@ -350,6 +391,10 @@ document.addEventListener("DOMContentLoaded", function() {
 	// POST - exploits-volcado
 	// Variable global
 	json_consultas_exploits;
+
+	/**
+	 * Función que obtiene todos los nombres de los exploits 
+	 */
 	function start_consulta_exploits() {
 		send_json_fetch(server_url+"/exploits-volcado", {})
 		.then(
@@ -358,25 +403,29 @@ document.addEventListener("DOMContentLoaded", function() {
 
 				let exploits__select = document.querySelector(".exploits__select");
 				let exploits = json_respuesta.exploits;
-		
-				exploits.forEach(element => {
-					array_exploits.push(element.exploit);
-				});
-		
-				array_exploits = [...new Set(array_exploits)];
-		
-				exploits__select.innerHTML = "";
-				
-				array_exploits.forEach(element => {
-					exploits__select.add(new Option(element, element));
-				});
-				json_consultas_exploits = json_respuesta;
+				if (exploits !== undefined){
+					exploits.forEach(element => {
+						array_exploits.push(element.exploit);
+					});
+			
+					array_exploits = [...new Set(array_exploits)];
+			
+					exploits__select.innerHTML = "";
+					
+					array_exploits.forEach(element => {
+						exploits__select.add(new Option(element, element));
+					});
+					json_consultas_exploits = json_respuesta;
+				}
 			}
 		)
 	}
 
-
 	json_proximos_escaneos;
+
+	/** 
+	 * Función que obtiene los proximos escaneos 
+	 */
 	function start_proximos_escaneos() {
 		send_json_fetch(server_url+"/proximos-escaneos", {})
 		.then(
@@ -438,6 +487,9 @@ document.addEventListener("DOMContentLoaded", function() {
 	// ************************************************************************************************
 	// POST - consulta-reporte
 
+	/**
+	 * Función que lanza la creacion de forma dinamica los reportes individuales
+	 */ 
 	button_consultas__opciones__proximo.addEventListener("click", function(){
 		let value_select = document.querySelector(".modulos__select").value;
 		load_sites(value_select);
@@ -452,11 +504,13 @@ document.addEventListener("DOMContentLoaded", function() {
 // Función para enviar los datos en un json
 const server_url = "http://localhost:3000";
 
-
 /**
  * General Functions 
  */
 
+/**
+ * Función que restringe la fecha máxima
+ */
 function set_maxdate() {
 	document.querySelector("#next_scan").min = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
 }
@@ -523,6 +577,9 @@ async function send_json_fetch(url, json){
 	return response; // parses JSON response into native JavaScript objects
 }
 
+/** 
+ * Función que obtiene en memoria el contenido del archivo
+ */ 
 function file_upload(file) {
 	return new Promise((resolve, reject)=>{
 		var reader = new FileReader();
@@ -534,132 +591,9 @@ function file_upload(file) {
 	})
 }
 
-function load_modules(json){
-	let target_modulos = document.querySelector(".modulos");
-
-	json = [
-		{
-			"nombre":"Configuraciones generales",
-			"opciones":[
-				{
-					"opcion_nombre":"Puertos a escanear",
-					"descripcion":"Selecciona los --top-ports a escanear",
-					"type":"number"
-				},
-				{
-					"opcion_nombre":"Cookie",
-					"descripcion":"Seleccione una cookie. (Opcional)",
-					"type":"text"
-				},
-				{
-					"opcion_nombre":"Profundidad",
-					"descripcion":"Probar exploits que coincidan completamente (1-4).\
-					1) a\
-					2) b",
-					"type":"number"
-				}
-			]
-		}
-	];
-
-	json.forEach(element => {
-		console.log(element.nombre)
-		let nombre = element.nombre;
-		let opcion_nombre = element.opciones;
-
-		/*
-		<div class="modulos__modulo">
-			<label class="modulos__switch">
-				<input type="checkbox" class="modulos__checkbox">
-				<span class="modulos__slider modulos__round"></span>
-			</label>
-			<span class="modulos__nombre">Nombre</span>
-			<div class="modulos__config">
-				<div class="modulos__opcion__nombre">Nombre de la opción</div>
-				<div class="modulos__opcion__descripcion">
-					Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut dictum lorem ut sem sagittis vulputate. Sed aliquet, neque placerat varius mollis, leo arcu fringilla magna, sit amet sollicitudin eros sapien a purus. Ut consequat mollis arcu, a feugiat nulla efficitur eget. Donec id ante sed sem egestas euismod. 
-				</div>
-				<div class="modulos__opcion__valor">
-					Valor
-				</div>
-			</div>
-		</div>
-		*/
-
-		// Creación de elmentos
-		let modulos__modulo = document.createElement('div');
-		modulos__modulo.classList.add("modulos__modulo");
-
-		let modulos__switch = document.createElement('label');
-		modulos__switch.classList.add("modulos__switch");
-
-		let modulos__checkbox = document.createElement('input');
-		modulos__checkbox.classList.add("modulos__checkbox");
-		modulos__checkbox.type = "checkbox";
-
-		let modulos__slider = document.createElement('span');
-		modulos__slider.classList.add("modulos__slider");
-		modulos__slider.classList.add("modulos__round");
-
-		let modulos__nombre = document.createElement('span');
-		modulos__nombre.classList.add("modulos__nombre");
-		modulos__nombre.innerHTML = nombre;
-
-		// Carga de elementos
-		target_modulos.appendChild(modulos__modulo);
-
-		modulos__modulo.appendChild(modulos__switch);
-		modulos__switch.appendChild(modulos__checkbox);
-		modulos__switch.appendChild(modulos__slider);
-		
-		modulos__modulo.appendChild(modulos__nombre);
-
-		// Configs
-
-		opcion_nombre.forEach(options => {
-			console.log(options);
-			let nombre = options.opcion_nombre;
-			let descripcion = options.descripcion;
-			let type = options.type;
-
-			let modulos__config = document.createElement('div');
-			modulos__config.classList.add("modulos__config");
-
-			let modulos__opcion__nombre = document.createElement('div');
-			modulos__opcion__nombre.classList.add("modulos__opcion__nombre");
-			modulos__opcion__nombre.innerHTML = nombre;
-
-			let modulos__opcion__descripcion = document.createElement('div');
-			modulos__opcion__descripcion.classList.add("modulos__opcion__descripcion");
-			modulos__opcion__descripcion.innerHTML = descripcion;
-			
-			let modulos__opcion__valor = document.createElement('div');
-			modulos__opcion__valor.classList.add("modulos__opcion__valor");
-			if (type === "number"){
-				modulos__opcion__valor.innerHTML = "<input type='number'></input>";
-
-			}else if (type === "text"){
-				modulos__opcion__valor.innerHTML = "<input type='text'></input>";
-
-			}else if (type === "boolean"){
-				modulos__opcion__valor.innerHTML = '<label class="modulos__switch">\
-				<input type="checkbox" class="modulos__checkbox">\
-				<span class="modulos__slider modulos__round"></span>\
-				</label>';
-			}
-
-			modulos__modulo.appendChild(modulos__config);
-			modulos__config.appendChild(modulos__opcion__nombre);
-			modulos__config.appendChild(modulos__opcion__nombre);
-			modulos__config.appendChild(modulos__opcion__descripcion);
-			modulos__config.appendChild(modulos__opcion__valor);
-		});
-	});
-
-
-	console.log(json);
-}
-
+/**
+ * Funcion que se encarga de la creación de los recuadros de reportes
+ */
 function load_sites(value_select){
 	let target_modulos = document.querySelector(".consultas__contenidor__sitio");
 
@@ -762,16 +696,25 @@ function load_sites(value_select){
 
 }
 
+/**
+ * Funcion que actualiza la página
+ */
 async function reload_site(){
 	await sleep(2000);
 	window.location.reload()
 }
 
+/**
+ * Funcion que asgina el nombre del archivo exploit al label que simula el botón
+ */
 function update_file_value(input){
 	let contenido_exploit_valor = document.getElementById("contenido_exploit_valor");
 	contenido_exploit_valor.innerHTML = input.value.split("\\")[2]
 }
 
+/**
+ * Funcion que duerme al sistema 2 seg
+ */
 function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }

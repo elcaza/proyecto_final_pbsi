@@ -138,9 +138,14 @@ class Masivo():
             diccionario que funciona para crear los reportes
         peticion_alerta : dict
             diccionario que funciona para lanzar las alertas obtenidas
+        error : str
+            ruta donde se escribiran los errores
         
         Metodos
         -------
+        set_error():
+            Funcion que guarda el nombre del archivo de errores
+
         peticion_actual():
             Funcion que regresa verdadero si la peticion se ejecuta al instante
             
@@ -219,6 +224,9 @@ class Masivo():
             self.ejecucion_analisis()
 
     def set_error(self):
+        '''
+            Funcion que guarda el nombre del archivo de errores
+        '''
         ruta = root + "/modules/strings.json"
         with open(ruta, "r") as archivo_strings:
             self.error = root + "/errores/" + json.load(archivo_strings)["ERROR_LOG"]
@@ -765,6 +773,9 @@ class Reportes():
 
         Metodos
         -------
+        eliminar_reporte():
+            Funcion que elimina un reporte de mongo partiendo del nombre y fecha
+
         consulta_peticion_reporte():
             Funcion que realiza una conexión al servidor Mongo para extraer una analisis en concreto
             
@@ -911,17 +922,15 @@ class Reportes():
         self.peticion = peticion
     
     def eliminar_reporte(self):
+        '''
+            Funcion que elimina un reporte de mongo partiendo del nombre y fecha
+        '''
         self.peticion_proceso = self.con.eliminar_analisis(self.peticion)
         return json.dumps({"status":"Reporte eliminado"})
 
     def consulta_peticion_reporte(self):
         '''
-            Función que realiza una conexión al servidor Mongo para extraer una analisis en concreto
-
-            Parametros
-            ----------
-            peticion : dict
-                contiene el sitio y la fecha de algun analisis
+            Funcion que realiza una conexión al servidor Mongo para extraer una analisis en concreto
         '''
         self.peticion_proceso = self.con.obtener_analisis(self.peticion)
         if self.peticion_proceso is not None:
@@ -943,13 +952,6 @@ class Reportes():
         '''
             Funcion que extrae los datos de los modulos de obtener_informacion, analisis, fuzzing y explotacion para crear un repore en HTML
             realiza un dump en formato CSV y JSON el cual trae el dump completo del analisis
-
-            Parametros
-            ----------
-            peticion_proceso : dict
-                objeto que tiene todo la ejecucion almacenada
-            peticion_reporte : dict
-                diccionario que sirve para guardar los datos importantes y ser mostrados en el documento HTML
         '''
         self.reporte_informacion_general()
         
@@ -991,13 +993,6 @@ class Reportes():
     def reporte_informacion_general(self):
         '''
             Funcion que recopila la informacion general del analisis
-
-            Parametros
-            ----------
-            peticion_proceso : dict
-                diccionario que contiene todo el analisis del sitio
-            peticion_reporte : dict
-                diccionario que sirve para crear el reporte HTML, CSV y JSON
         '''
         datos_generales = []
         sitio = self.peticion_proceso["sitio"]
@@ -2238,7 +2233,7 @@ class Utileria():
         '''
         volcado = self.con.exploit_volcado()
         if len(volcado["exploits"]) == 0:
-            return json.dumps({"estado":"error"})
+            return json.dumps({"status":"No se encotraron Exploits"})
         volcado["status"] = "Exploits cargados"
         return volcado
 
@@ -2316,9 +2311,6 @@ class Exploit():
             
         exploits_peticion_editar():
             Realiza una conexión con Mongo para realizar una consulta de edicion de un exploit
-            
-        exploits_peticion_actualizar():
-            Realiza una conexión con Mongo para hacer una actualización de datos a un exploit
             
         exploits_peticion_eliminar():
             Realiza una conexión con Mongo para realizar una consulta de eliminación de un exploit

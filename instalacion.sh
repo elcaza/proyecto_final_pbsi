@@ -38,3 +38,4 @@ sudo pip3 install -r requeriments.txt
 git clone https://github.com/tasos-py/Search-Engines-Scraper.git
 cd Search-Engines-Scraper
 sudo python3 setup.py install
+sudo rm chromedriver_linux64.zip google-chrome-stable_current_amd64.deb

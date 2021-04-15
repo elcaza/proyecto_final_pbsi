@@ -1,15 +1,12 @@
 README.md
 setup.py
 modules/__init__.py
-modules/flask_explotacion.py
-modules/strings.py
 modules/exploits/__init__.py
 modules/exploits/exploits.py
 modules/explotacion/__init__.py
 modules/explotacion/explotacion.py
 modules/modelo/__init__.py
 modules/modelo/conector.py
-modules/otro/__init__.py
 pbsi.egg-info/PKG-INFO
 pbsi.egg-info/SOURCES.txt
 pbsi.egg-info/dependency_links.txt
