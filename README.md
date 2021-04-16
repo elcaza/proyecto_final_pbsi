@@ -27,4 +27,22 @@ Herramienta para el análisis masivo y explotación de sitios vulnerables.
 1. Módulo de fuzzing (OK)
 
 ## Instrucciones de instalación
-`¯\_(ツ)_/¯`
+```
+git clone https://github.com/elcaza/proyecto_final_pbsi.git
+
+cd proyecto_final_pbsi.git
+
+sudo instalacion.sh
+
+```
+
+## Correr la aplicación
+
+```
+python3 app.py
+```
+
+Visitar
++ http://localhost:3000
++ http://your_ip:3000
+
