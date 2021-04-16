@@ -1,6 +1,7 @@
 from json.decoder import JSONDecodeError
 from subprocess import check_output, CalledProcessError, TimeoutExpired
 from os import path
+from urllib.parse import urlparse
 import concurrent.futures
 from itertools import product
 import json
@@ -16,6 +17,15 @@ class Explotacion():
         nombre : str
             nombre del exploit
         
+        sitio : str
+            nombre del sitio
+
+        dominio : str
+            nombre del dominio del sitio
+
+        posible_sitio : str
+            nombre del posible sitio, por ejemplo: http://dominio/drupal
+            
         parametros : dict
             valores que contienen el sitio y puertos
 
@@ -59,6 +69,12 @@ class Explotacion():
 
         set_sitio():
             obtiene el sitio de los parametros
+
+        set_dominio():
+            obtiene el dominio del sitio
+
+        set_posible_sitio():
+            obtiene el posible sitio del sitio
         
         set_cookie():
             obtiene la cookie de los parametros
@@ -77,6 +93,9 @@ class Explotacion():
             
         modificar_exploit_sitio(exploit, exploit_temporal):
             sustituye todas las cadenas APP_SITIO por el sitio proporcionado
+        
+        modificar_exploit_dominio(exploit, exploit_temporal):
+            sustituye todas las cadenas APP_DOMINIO por el dominio proporcionado
 
         modificar_exploit_puerto(puerto, exploit, exploit_temporal):
             sustituye todas las cadenas APP_PUERTO por el puerto proporcionado
@@ -119,6 +138,7 @@ class Explotacion():
         self.ruta = path.abspath(path.dirname(__file__))
         self.set_puertos()
         self.set_sitio()
+        self.set_dominio()
         self.set_cookie()
         self.set_usuarios()
         self.set_contrasenas()
@@ -222,6 +242,21 @@ class Explotacion():
         else:
             self.sitio = ""
 
+    def set_dominio(self):
+        '''
+            obtiene el dominio a partir del sitio
+        '''
+        self.dominio = urlparse(self.sitio).netloc
+    
+    def set_posible_sitio(self):
+        self.posible_sitio = urlparse(self.sitio)
+        parametros = self.posible_sitio.path
+        if parametros != "":
+            try:
+                self.posible_sitio = self.posible_sitio.scheme + "//" + self.posible_sitio.netloc + "/" + parametros.split("/")[0]
+            except:
+                self.posible_sitio = self.posible_sitio.scheme + "//" + self.posible_sitio.netloc
+
     def set_cookie(self):
         '''
             obtiene la cookie de los parametros
@@ -298,7 +333,21 @@ class Explotacion():
             check_output("sed -i \"s|APP_SITIO|{0}|g\" {1}".format(self.sitio, exploit_temporal),shell=True)
         except CalledProcessError:
             print("Ocurrió un error al cambiar el sitio {0} en {1}".format(self.sitio,exploit_temporal))
-            
+
+    def modificar_exploit_dominio(self, exploit_temporal):
+        '''
+            sustituye todas las cadenas APP_DOMINIO por el dominio proporcionado
+
+            Parametros
+            ----------
+            exploit_temporal : str
+                ruta del exploit temporal
+        '''
+        try:     
+            check_output("sed -i \"s|APP_DOMINIO|{0}|g\" {1}".format(self.dominio, exploit_temporal),shell=True)
+        except CalledProcessError:
+            print("Ocurrió un error al cambiar el dominio {0} en {1}".format(self.dominio, exploit_temporal))
+     
     def modificar_exploit_puerto(self, puerto, exploit_temporal):
         '''
             sustituye todas las cadenas APP_PUERTO por el puerto proporcionado
@@ -450,6 +499,7 @@ class Explotacion():
         
         self.crear_copia_temporal(exploit, exploit_temporal)
         self.modificar_exploit_sitio(exploit_temporal)
+        self.modificar_exploit_dominio(exploit_temporal)
         
         puerto = self.validar_campo("puertos")
         if type(puerto) == int:

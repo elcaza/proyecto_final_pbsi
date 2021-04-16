@@ -1,0 +1,3 @@
+El módulo de "Explotación" falló: find() takes at least 1 argument (0 given)
+El módulo de "Explotación" falló: find() takes at least 1 argument (0 given)
+El módulo de "Explotación" falló en:: <class 'TypeError'>app.pyEl módulo de "Explotación" falló en,'Explotacion' object has no attribute 'dominio':tipo,<class 'AttributeError'>:archivo,app.py:linea,377El módulo de "Explotación" falló en,'Explotacion' object has no attribute 'dominio':tipo,<class 'AttributeError'>:archivo,app.py:linea,377

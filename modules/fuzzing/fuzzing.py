@@ -1081,6 +1081,7 @@ class Pagina():
         self.driver_xss = webdriver.Chrome("/usr/bin/chromedriver",options=self.sin_navegador)
         self.driver_xss.set_page_load_timeout(30)
         json_forms_selenium = self.enviar_peticiones_selenium_xss()
+        self.driver_xss.close()
         return json_forms_selenium
         return {"forms_selenium":{}}
 
@@ -1091,6 +1092,7 @@ class Pagina():
         self.driver_upload = webdriver.Chrome("/usr/bin/chromedriver",options=self.sin_navegador)
         self.driver_upload.set_page_load_timeout(30)
         json_forms_selenium = self.enviar_peticiones_selenium_upload()
+        self.driver_upload.close()
         return json_forms_selenium
         return {"forms_uploadxs":{}}
 
@@ -1262,12 +1264,15 @@ class Pagina():
 
             sin abrir el navegador
             modo root
-
+            ignorando ssl autofirmados
         '''
         self.sin_navegador = webdriver.ChromeOptions()
         self.sin_navegador.add_argument('headless')      
         self.sin_navegador.add_argument('--no-sandbox')
         self.sin_navegador.add_argument('--disable-dev-shm-usage')
+        self.sin_navegador.add_argument('--ignore-ssl-errors=yes')
+        self.sin_navegador.add_argument('--ignore-certificate-errors')
+
 
     def set_peticion(self, json_temporal, carga, form, metodo):
         '''

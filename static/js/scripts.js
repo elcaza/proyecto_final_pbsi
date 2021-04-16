@@ -1,7 +1,9 @@
+
 // Variable global
 let json_consultas;
 let json_proximos_escaneos;
 let json_consultas_exploits;
+
 // Main actions
 document.addEventListener("DOMContentLoaded", function() {
 	// Buttons
@@ -26,101 +28,89 @@ document.addEventListener("DOMContentLoaded", function() {
 	// ************************************************************************************************
 	// POST - exploits-individual
 
+	/**
+	 * Función que realiza una peticion a la app para obtener los datos completos del exploit
+	 */ 
 	button_exploits__editar.addEventListener("click", function(){
-		// @cromos
+		
 		let value_select = document.querySelector(".exploits__select").value;
 
-		let peticion = {
-			"exploit":value_select
-		}
-
-		// let response = send_json_fetch(server_url+"/ejecucion", peticion);
-
-		response = {
-			"exploit":"shell_drupalgeddon2.sh",
-			"contenido":"BASE64",
-			"extension":"sh",
-			"cve":"CVE-2018-002",
-			"cms":{
-				"cms_nombre":"Drupal",
-				"cms_categoria":"pluggin",
-				"cms_extension_nombre":"Form 7",
-				"cms_extension_version":"9.8"
+		peticion = { "exploit":value_select }
+		send_json_fetch(server_url+"/exploits-editar", peticion)
+		.then(json_respuesta =>{
+			
+			if (json_respuesta.software === undefined){
+				response = {
+					"exploit":json_respuesta.exploit,
+					"extension":json_respuesta.extension,
+					"cve":json_respuesta.cve,
+					"cms":{
+						"cms_nombre":json_respuesta.cms.cms_nombre,
+						"cms_categoria":json_respuesta.cms.cms_categoria,
+						"cms_extension_nombre":json_respuesta.cms.cms_extension_nombre,
+						"cms_extension_version":json_respuesta.cms.cms_extension_version
+					}
+				}
+			} else { 
+				response = {
+					"exploit":json_respuesta.exploit,
+					"extension":json_respuesta.extension,
+					"cve":json_respuesta.cve,
+					"software":{
+						"software_nombre":json_respuesta.software.software_nombre,
+						"software_version":json_respuesta.software.software_version
+					}
+				}
 			}
-		}
 
-		let explot_name = document.querySelector("#exploit_name");
-		let contenido_exploit = document.querySelector("#contenido_exploit");
-		let tecnologia = document.querySelector("#tecnologia");
-		let exploit_cve = document.querySelector("#exploit_cve");
-
-		explot_name.value = response.exploit;
-		contenido_exploit.value = response.contenido;
-		tecnologia.value = response.extension;
-		exploit_cve.value = response.cve;
-
-		// software
-		if ('software' in response) {
-			document.querySelector("body").classList.replace("in_cms", "in_software");
-			let exploit_software = document.querySelector("#exploit_software");
-			let exploit_software_version = document.querySelector("#exploit_software_version");
-
-			exploit_software.value = response.software.software_nombre;
-			exploit_software_version.value = response.software.software_version;
-		} //cms
-		else if('cms' in response) {
-			document.querySelector("body").classList.replace("in_software", "in_cms");
-			let exploit_cms = document.querySelector("#exploit_cms");
-			let exploit_categoria = document.querySelector("#exploit_categoria");
-			let exploit_extension = document.querySelector("#exploit_extension");
-			let exploit_version = document.querySelector("#exploit_version");
-
-			exploit_cms.value = response.cms.cms_nombre;
-			exploit_categoria.value = response.cms.cms_categoria;
-			exploit_extension.value = response.cms.cms_extension_nombre;
-			exploit_version.value = response.cms.cms_extension_version;
-		}
-		
-
-		// Recibe
-
-		// Recibe
-		// peticion = {
-		// "exploit": "shell_drupalgeddon2.sh",
-		// "contenido": "BASE64", 
-		// "extension":"python3",
-		// "cve": "CVE-2018-002", 
-		// "software":{
-		// 	"software_nombre": "Drupal", 
-		// 	"software_version": "7.57"
-		// }
-		// }
-
-		// Ó
-
-		// peticion = {
-		// "exploit":"shell_drupalgeddon2.sh",
-		// "contenido":"BASE64",
-		// "extension":"sh",
-		// "cve":"CVE-2018-002",
-		// "cms":{
-		// 	"cms_nombre":"Drupal",
-		// 	"cms_categoria":"pluggin",
-		// 	"cms_extension_nombre":"Form 7",
-		// 	"cms_extension_version":"9.8"
-		// }
-		// }
-
-
+	
+			let explot_name = document.querySelector("#exploit_name");
+			let contenido_exploit_valor = document.getElementById("contenido_exploit_valor");
+			let tecnologia = document.querySelector("#tecnologia");
+			let exploit_cve = document.querySelector("#exploit_cve");
+	
+			explot_name.value = response.exploit;
+			contenido_exploit_valor.innerHTML = json_respuesta.exploit
+			tecnologia.value = response.extension;
+			exploit_cve.value = response.cve;
+	
+			// software
+			if ('software' in response) {
+				document.querySelector("body").classList.replace("in_cms", "in_software");
+				let exploit_software = document.querySelector("#exploit_software");
+				let exploit_software_version = document.querySelector("#exploit_software_version");
+	
+				exploit_software.value = response.software.software_nombre;
+				exploit_software_version.value = response.software.software_version;
+				
+			} //cms
+			else if('cms' in response) {
+				document.querySelector("body").classList.replace("in_software", "in_cms");
+				let exploit_cms = document.querySelector("#exploit_cms");
+				let exploit_categoria = document.querySelector("#exploit_categoria");
+				let exploit_extension = document.querySelector("#exploit_extension");
+				let exploit_version = document.querySelector("#exploit_version");
+	
+				exploit_cms.value = response.cms.cms_nombre;
+				exploit_categoria.value = response.cms.cms_categoria;
+				exploit_extension.value = response.cms.cms_extension_nombre;
+				exploit_version.value = response.cms.cms_extension_version;
+			}
+		});
 	});
 
-	// Event listeners
+	/**
+	 * Función que carga la vista de nuevo analisis
+	 */ 
 	button_nav__nuevo.addEventListener("click", function(){
 		body.classList.replace("vista_consultas", "vista_nuevo");
 		body.classList.replace("vista_configuraciones", "vista_nuevo");
 		body.classList.replace("vista_exploits", "vista_nuevo");
 	});
 	
+	/**
+	 * Función que carga la vista de consultas de reportes
+	 */ 
 	button_nav__consultas.addEventListener("click", function(){
 		body.classList.replace("vista_nuevo", "vista_consultas");
 		body.classList.replace("vista_configuraciones", "vista_consultas");
@@ -128,6 +118,9 @@ document.addEventListener("DOMContentLoaded", function() {
 		start_consulta();
 	});
 	
+	/**
+	 * Función que carga la vista de proximos escaneos
+	 */ 
 	button_nav__proximosEscaneos.addEventListener("click", function(){
 		body.classList.replace("vista_nuevo", "vista_configuraciones");
 		body.classList.replace("vista_consultas", "vista_configuraciones");
@@ -135,6 +128,9 @@ document.addEventListener("DOMContentLoaded", function() {
 		start_proximos_escaneos();
 	});
 
+	/**
+	 * Función que carga la vista de exploits
+	 */ 
 	button_nav__exploits.addEventListener("click", function(){
 		body.classList.replace("vista_nuevo", "vista_exploits");
 		body.classList.replace("vista_consultas", "vista_exploits");
@@ -143,29 +139,69 @@ document.addEventListener("DOMContentLoaded", function() {
 		start_consulta_exploits();
 	});
 
+	/**
+	 * Función que habilita la url
+	 */ 
 	button_scan__options__url.addEventListener("click", function(){
 		body.classList.replace("file", "url");
 	});
 
+	/**
+	 * Función que habilita el archivo
+	 */ 
 	button_scan__options__file.addEventListener("click", function(){
 		body.classList.replace("url", "file");
 	});
 
+	/**
+	 * Función que habilita las opciones de software
+	 */ 
 	button_exploits__options__software.addEventListener("click", function(){
 		body.classList.replace("in_cms", "in_software");
+		let exploit_software = document.querySelector("#exploit_software");
+		let exploit_software_version = document.querySelector("#exploit_software_version");
+		let exploit_cms = document.querySelector("#exploit_cms");
+		let exploit_categoria = document.querySelector("#exploit_categoria");
+		let exploit_extension = document.querySelector("#exploit_extension");
+		let exploit_version = document.querySelector("#exploit_version");
+
+		exploit_software.value = ""
+		exploit_software_version.value = ""
+		exploit_cms.value = ""
+		exploit_categoria.value = ""
+		exploit_extension.value = ""
+		exploit_version.value = ""
 	});
 
+	/** 
+	 * Función que habilita las funciones de cms
+	 */
 	button_exploits__options__cms.addEventListener("click", function(){
 		body.classList.replace("in_software", "in_cms");
+		let exploit_software = document.querySelector("#exploit_software");
+		let exploit_software_version = document.querySelector("#exploit_software_version");
+		let exploit_cms = document.querySelector("#exploit_cms");
+		let exploit_categoria = document.querySelector("#exploit_categoria");
+		let exploit_extension = document.querySelector("#exploit_extension");
+		let exploit_version = document.querySelector("#exploit_version");
+
+		exploit_software.value = ""
+		exploit_software_version.value = ""
+		exploit_cms.value = ""
+		exploit_categoria.value = ""
+		exploit_extension.value = ""
+		exploit_version.value = ""
 	});
 
-	button_add__exploits.addEventListener("click", function(){
-		//@cromos
-		alert("Añadiendo exploit");
+	/**
+	 * Función que envia una peticion a la app para crear/editar un exploit
+	 */ 
+	button_add__exploits.addEventListener("click", async function(){
 
 		let opcion = "";
 		let nombre = document.querySelector("#exploit_name").value;
-		let contenido_exploit = document.querySelector("#contenido_exploit").value;
+		let contenido_exploit = document.querySelector("#contenido_exploit");
+		let contenido_exploit_valor = document.getElementById("contenido_exploit_valor");
 		let tecnologia = document.querySelector("#tecnologia").value
 		let exploit_cve = document.querySelector("#exploit_cve").value;
 		let exploit_software = document.querySelector("#exploit_software").value;
@@ -175,17 +211,22 @@ document.addEventListener("DOMContentLoaded", function() {
 		let exploit_extension = document.querySelector("#exploit_extension").value;
 		let exploit_version = document.querySelector("#exploit_version").value;
 
-		// Contenido to b64
-		contenido_exploit = utf8_to_b64( contenido_exploit );
-
-
 		if ( document.querySelector("body").classList.contains("in_software") ){
 			opcion = "software";
 		} else if ( document.querySelector("body").classList.contains("in_cms") ) {
 			opcion = "cms";
 		}
+
 		let peticion;
 
+		if (contenido_exploit.value != ""){
+			contenido_exploit_valor.innerHTML = contenido_exploit.value.split("\\")[2]
+			contenido_exploit = await file_upload(contenido_exploit.files[0])
+			
+		} else {
+			contenido_exploit = ""
+		}
+		
 		if (opcion === "software"){
 			peticion = {
 				"exploit":nombre,
@@ -197,8 +238,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					"software_version":exploit_software_version,
 				}
 			}
-		}
-		else{
+		} else {
 			peticion = {
 				"exploit":nombre,
 				"contenido":contenido_exploit,
@@ -213,34 +253,40 @@ document.addEventListener("DOMContentLoaded", function() {
 			}
 		}
 
-		console.log(peticion);
-
-		send_json_fetch(server_url+"/exploits-crear", peticion);
-
+		if (opcion === "software" && peticion.software.software_nombre != "" && peticion.software.software_version != "") {
+			send_json_fetch(server_url+"/exploits-crear", peticion);
+		} else if (peticion.cms.cms_nombre != "" && peticion.cms.cms_categoria != "" && peticion.cms.cms_extension_nombre != "") {
+			send_json_fetch(server_url+"/exploits-crear", peticion);
+		}
+		
 		reload_site();
 	});
 
+	/**
+	 * Función que envia una peticion a la app para eliminar un exploit
+	 */ 
 	button_exploits__borrar.addEventListener("click", function(){
-		//@cromos
 		// POST - exploits-eliminar
 
-		alert("Eliminando exploit");
-		let value_select = document.querySelector(".exploits__select").value;
-		peticion = {
-			"exploit":value_select
+		let value_select = document.querySelector("#exploit_name").value;
+		if (value_select !== ""){
+			peticion = {
+				"exploit":value_select
+			}
+	
+			console.log(peticion);
+	
+			send_json_fetch(server_url+"/exploits-eliminar", peticion);
+	
+			reload_site();
 		}
-
-		console.log(peticion);
-
-		send_json_fetch(server_url+"/exploits-eliminar", peticion);
-
-		reload_site();
 	});
 
-	// Loading info
+	/**
+	 * Loading info
+	 */ 
 	set_maxdate();
 	// Función async
-	json_modulos = prepara_envio("load_modules");
 
 	/**
 	 * Peticiones al backend
@@ -250,18 +296,19 @@ document.addEventListener("DOMContentLoaded", function() {
 	// ************************************************************************************************
 	// ************************************************************************************************
 	// ************************************************************************************************
-
 	// POST - ejecucion
-	scan__start.addEventListener("click", function(){
-		//alert("iniciando scan");
+
+	/**
+	 * Función que realiza la recoleccion de datos para la ejecucion del analisis
+	 */
+	scan__start.addEventListener("click", async function(){
 
 		let sitio = document.querySelector(".scan__url").value;
-		let file = document.querySelector(".scan__file");
+		let archivo = document.querySelector(".scan__file");
 		let fecha = document.querySelector("#next_scan").value
 		let puertos = document.querySelector("#modulos_puertos").value;
 		let cookie = document.querySelector("#modulos_cookie").value;
 		let profundidad = document.querySelector("#profundidad").value;
-		//@cromos
 		let redireccionamiento = document.querySelector("#redireccionamiento").checked;
 		let lista_negra = document.querySelector("#lista_negra").value;
 		let array_lista_negra = [];
@@ -270,32 +317,33 @@ document.addEventListener("DOMContentLoaded", function() {
 		lista_negra = lista_negra.split('\n');
 		
 		lista_negra.forEach(element => {
-			// corroborar si el elemento es una url
-			// Pendiente
 			array_lista_negra.push(element);
 		});
-
-		// alert(redireccionamiento)
-		// alert(lista_negra)		
+		
+		if (archivo.value != ""){
+			archivo = await file_upload(archivo.files[0])
+		} else {
+			archivo = ""
+		}
 
 		let peticion = {
 			"sitio":sitio,
 			"fecha":fecha,
-			"file":file,
+			"archivo":archivo,
 			"puertos":{
 				"inicio":1,
 				"final":puertos
 			},
 			"cookie":cookie,
 			"profundidad":profundidad,
-			// @cromos
+			
 			"redireccionamiento":redireccionamiento,
 			"lista_negra":array_lista_negra
 		}
 		console.log(peticion)
 		send_json_fetch(server_url+"/ejecucion", peticion);
 
-		//reload_site();
+		reload_site();
 	});
 
 	// ************************************************************************************************
@@ -305,9 +353,13 @@ document.addEventListener("DOMContentLoaded", function() {
 	// POST - consulta-volcado
 	// Variable global
 	json_consultas;
+
+	/**
+	 * Función que obtiene los reportes de la app 
+	 */
 	function start_consulta() {
-		// @cromos
-		send_json_fetch_2(server_url+"/consulta-volcado", {})
+		
+		send_json_fetch(server_url+"/consulta-volcado", {})
 		.then(
 			json_respuesta =>{
 				let array_sites = [];
@@ -324,7 +376,6 @@ document.addEventListener("DOMContentLoaded", function() {
 				array_sites = [...new Set(array_sites)];
 		
 				modulos__select.innerHTML = "";
-				console.log(array_sites)
 				array_sites.forEach(element => {
 					modulos__select.add(new Option(element, element));
 				});
@@ -340,41 +391,46 @@ document.addEventListener("DOMContentLoaded", function() {
 	// POST - exploits-volcado
 	// Variable global
 	json_consultas_exploits;
+
+	/**
+	 * Función que obtiene todos los nombres de los exploits 
+	 */
 	function start_consulta_exploits() {
-		// @cromos
-		send_json_fetch_2(server_url+"/exploits-volcado", {})
+		send_json_fetch(server_url+"/exploits-volcado", {})
 		.then(
 			json_respuesta =>{
 				let array_exploits = [];
 
 				let exploits__select = document.querySelector(".exploits__select");
 				let exploits = json_respuesta.exploits;
-		
-				exploits.forEach(element => {
-					array_exploits.push(element.exploit);
-				});
-		
-				array_exploits = [...new Set(array_exploits)];
-		
-				exploits__select.innerHTML = "";
-				console.log(array_exploits)
-				
-				array_exploits.forEach(element => {
-					exploits__select.add(new Option(element, element));
-				});
-				json_consultas_exploits = json_respuesta;
+				if (exploits !== undefined){
+					exploits.forEach(element => {
+						array_exploits.push(element.exploit);
+					});
+			
+					array_exploits = [...new Set(array_exploits)];
+			
+					exploits__select.innerHTML = "";
+					
+					array_exploits.forEach(element => {
+						exploits__select.add(new Option(element, element));
+					});
+					json_consultas_exploits = json_respuesta;
+				}
 			}
 		)
 	}
 
-
 	json_proximos_escaneos;
+
+	/** 
+	 * Función que obtiene los proximos escaneos 
+	 */
 	function start_proximos_escaneos() {
-		send_json_fetch_2(server_url+"/proximos-escaneos", {})
+		send_json_fetch(server_url+"/proximos-escaneos", {})
 		.then(
 			json_respuesta =>{
 				json_proximos_escaneos = json_respuesta;
-				// @capi checa esto plx
 				let target_modulos = document.querySelector(".main__proximosEscaneos__contenedor");
 				target_modulos.innerHTML = "";
 				json_proximos_escaneos.forEach(element => {
@@ -431,25 +487,11 @@ document.addEventListener("DOMContentLoaded", function() {
 	// ************************************************************************************************
 	// POST - consulta-reporte
 
+	/**
+	 * Función que lanza la creacion de forma dinamica los reportes individuales
+	 */ 
 	button_consultas__opciones__proximo.addEventListener("click", function(){
 		let value_select = document.querySelector(".modulos__select").value;
-		// let analisis = json_consultas.analisis;
-		// analisis.forEach(element => {
-		// 	if (element.sitios === value_select){
-
-		// 	}
-		// });
-		
-		
-		// alert("enviando: "+ document.querySelector(".modulos__select").value);
-
-		// let peticion = {
-		// 	"sitio": document.querySelector(".modulos__select").value,
-		// 	"fecha":"NA"
-		// }
-
-		// send_json_fetch(server_url+"/consulta-reporte", peticion);
-
 		load_sites(value_select);
 	});
 
@@ -462,233 +504,96 @@ document.addEventListener("DOMContentLoaded", function() {
 // Función para enviar los datos en un json
 const server_url = "http://localhost:3000";
 
-
 /**
  * General Functions 
  */
 
+/**
+ * Función que restringe la fecha máxima
+ */
 function set_maxdate() {
 	document.querySelector("#next_scan").min = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
-}
-
-async function prepara_envio(action) {
-	switch (action) {
-		case "load_modules":
-			let modulos = send_json_fetch(server_url+"/hola", {"lala":"love"});
-			break;
-		
-		case "load_modules2":
-			break;
-	
-		default:
-			break;
-	}
-}
-
-async function dummy_response(action) {
-	switch (action) {
-		case "load_modules":
-			break;
-		
-		case "load_modules2":
-			break;
-	
-		default:
-			break;
-	}
 }
 
 /**
  * Función que se encarga de hacer las peticiones
  */
-async function send_json_fetch_2(url, json){
-	const response = await fetch(url, {
-		method: 'POST', // *GET, POST, PUT, DELETE, etc.
-		mode: 'cors', // no-cors, *cors, same-origin
-		cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-		credentials: 'same-origin', // include, *same-origin, omit
-		headers: {
-		  'Content-Type': 'application/json'
-		  // 'Content-Type': 'application/x-www-form-urlencoded',
-		},
-		redirect: 'follow', // manual, *follow, error
-		referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-		body: JSON.stringify(json) // body data type must match "Content-Type" header
-	  });
-	  return response.json(); // parses JSON response into native JavaScript objects
-}
-
-
-function send_json_fetch(url, json){
-	/*
-	fetch(url)
-		.then(response => response.json())
-		.then(json => load_modules(json));
-
-	*/	
-
-	const data_to_send = JSON.stringify(json);
-	console.log(data_to_send)
-	let dataReceived = ""; 
-	fetch(url, {
-		// credentials: "same-origin",
-		// mode: "same-origin",
-		method: "post",
-		headers: { "Content-Type": "application/json" },
-		body: data_to_send
-	})
-		.then(resp => {
-			if (resp.status === 200) {				
-				return resp.json()
-			} else {
-				console.log("Status: " + resp.status)
-				return Promise.reject("server")
-			}
-		})
-		.then(dataJson => {
-			console.log("evaluando");
-			try {
-				dataReceived = dataJson;
-			} catch (error) {
-				console.log(error);
-			}
-		})
-		.catch(err => {
-			console.log("fallando");
-			if (err === "server") return
-			console.log(err)
-		})
-		
-		console.log(`Received: ${dataReceived}`);
-		// load_modules({});	
-}
-
-function load_modules(json){
-	let target_modulos = document.querySelector(".modulos");
-
-	json = [
-		{
-			"nombre":"Configuraciones generales",
-			"opciones":[
-				{
-					"opcion_nombre":"Puertos a escanear",
-					"descripcion":"Selecciona los --top-ports a escanear",
-					"type":"number"
-				},
-				{
-					"opcion_nombre":"Cookie",
-					"descripcion":"Seleccione una cookie. (Opcional)",
-					"type":"text"
-				},
-				{
-					"opcion_nombre":"Profundidad",
-					"descripcion":"Probar exploits que coincidan completamente (1-4).\
-					1) a\
-					2) b",
-					"type":"number"
-				}
-			]
-		}
-	];
-
-	json.forEach(element => {
-		console.log(element.nombre)
-		let nombre = element.nombre;
-		let opcion_nombre = element.opciones;
-
-		/*
-		<div class="modulos__modulo">
-			<label class="modulos__switch">
-				<input type="checkbox" class="modulos__checkbox">
-				<span class="modulos__slider modulos__round"></span>
-			</label>
-			<span class="modulos__nombre">Nombre</span>
-			<div class="modulos__config">
-				<div class="modulos__opcion__nombre">Nombre de la opción</div>
-				<div class="modulos__opcion__descripcion">
-					Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut dictum lorem ut sem sagittis vulputate. Sed aliquet, neque placerat varius mollis, leo arcu fringilla magna, sit amet sollicitudin eros sapien a purus. Ut consequat mollis arcu, a feugiat nulla efficitur eget. Donec id ante sed sem egestas euismod. 
-				</div>
-				<div class="modulos__opcion__valor">
-					Valor
-				</div>
-			</div>
-		</div>
-		*/
-
-		// Creación de elmentos
-		let modulos__modulo = document.createElement('div');
-		modulos__modulo.classList.add("modulos__modulo");
-
-		let modulos__switch = document.createElement('label');
-		modulos__switch.classList.add("modulos__switch");
-
-		let modulos__checkbox = document.createElement('input');
-		modulos__checkbox.classList.add("modulos__checkbox");
-		modulos__checkbox.type = "checkbox";
-
-		let modulos__slider = document.createElement('span');
-		modulos__slider.classList.add("modulos__slider");
-		modulos__slider.classList.add("modulos__round");
-
-		let modulos__nombre = document.createElement('span');
-		modulos__nombre.classList.add("modulos__nombre");
-		modulos__nombre.innerHTML = nombre;
-
-		// Carga de elementos
-		target_modulos.appendChild(modulos__modulo);
-
-		modulos__modulo.appendChild(modulos__switch);
-		modulos__switch.appendChild(modulos__checkbox);
-		modulos__switch.appendChild(modulos__slider);
-		
-		modulos__modulo.appendChild(modulos__nombre);
-
-		// Configs
-
-		opcion_nombre.forEach(options => {
-			console.log(options);
-			let nombre = options.opcion_nombre;
-			let descripcion = options.descripcion;
-			let type = options.type;
-
-			let modulos__config = document.createElement('div');
-			modulos__config.classList.add("modulos__config");
-
-			let modulos__opcion__nombre = document.createElement('div');
-			modulos__opcion__nombre.classList.add("modulos__opcion__nombre");
-			modulos__opcion__nombre.innerHTML = nombre;
-
-			let modulos__opcion__descripcion = document.createElement('div');
-			modulos__opcion__descripcion.classList.add("modulos__opcion__descripcion");
-			modulos__opcion__descripcion.innerHTML = descripcion;
-			
-			let modulos__opcion__valor = document.createElement('div');
-			modulos__opcion__valor.classList.add("modulos__opcion__valor");
-			if (type === "number"){
-				modulos__opcion__valor.innerHTML = "<input type='number'></input>";
-
-			}else if (type === "text"){
-				modulos__opcion__valor.innerHTML = "<input type='text'></input>";
-
-			}else if (type === "boolean"){
-				modulos__opcion__valor.innerHTML = '<label class="modulos__switch">\
-				<input type="checkbox" class="modulos__checkbox">\
-				<span class="modulos__slider modulos__round"></span>\
-				</label>';
-			}
-
-			modulos__modulo.appendChild(modulos__config);
-			modulos__config.appendChild(modulos__opcion__nombre);
-			modulos__config.appendChild(modulos__opcion__nombre);
-			modulos__config.appendChild(modulos__opcion__descripcion);
-			modulos__config.appendChild(modulos__opcion__valor);
+async function send_json_fetch(url, json){
+	let response = await (async () => {
+		const rawResponse = await fetch(url, {
+			method: 'POST', // *GET, POST, PUT, DELETE, etc.
+			mode: 'cors', // no-cors, *cors, same-origin
+			cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+			credentials: 'same-origin', // include, *same-origin, omit
+			headers: {
+			'Content-Type': 'application/json'
+			},
+			redirect: 'follow', // manual, *follow, error
+			referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+			body: JSON.stringify(json) // body data type must match "Content-Type" header
 		});
-	});
-
-
-	console.log(json);
+		const content = await rawResponse.json();
+		return content;
+	})();
+	if (response.status !== undefined){
+		if(response.status.toLowerCase().includes("error")){		
+			toastr.options = {
+				"closeButton": false,
+				"debug": false,
+				"newestOnTop": false,
+				"progressBar": false,
+				"positionClass": "toast-top-center",
+				"preventDuplicates": true,
+				"showDuration": "300",
+				"hideDuration": "1000",
+				"timeOut": "2000",
+				"extendedTimeOut": "1000",
+				"showEasing": "swing",
+				"hideEasing": "linear",
+				"showMethod": "fadeIn",
+				"hideMethod": "fadeOut"
+			}
+			toastr.error(response.status,'Error');
+		}else{
+			toastr.options = {
+				"closeButton": false,
+				"debug": false,
+				"newestOnTop": false,
+				"progressBar": false,
+				"positionClass": "toast-top-center",
+				"preventDuplicates": true,
+				"showDuration": "300",
+				"hideDuration": "1000",
+				"timeOut": "2000",
+				"extendedTimeOut": "1000",
+				"showEasing": "swing",
+				"hideEasing": "linear",
+				"showMethod": "fadeIn",
+				"hideMethod": "fadeOut"
+			}
+			toastr.success(response.status,'Éxito');
+		}
+	}
+	return response; // parses JSON response into native JavaScript objects
 }
 
+/** 
+ * Función que obtiene en memoria el contenido del archivo
+ */ 
+function file_upload(file) {
+	return new Promise((resolve, reject)=>{
+		var reader = new FileReader();
+		reader.onloadend = function () {
+			resolve(reader.result);
+		}
+		reader.onerror = reject;
+		reader.readAsDataURL(file);	
+	})
+}
+
+/**
+ * Funcion que se encarga de la creación de los recuadros de reportes
+ */
 function load_sites(value_select){
 	let target_modulos = document.querySelector(".consultas__contenidor__sitio");
 
@@ -704,22 +609,7 @@ function load_sites(value_select){
 		let sitios = element.sitio;
 
 		if (value_select === sitios) {
-				/*
-			<div class="consultas__sitio">
-				<div class="consultas__sitio__url">
-					<span>www.site.com</span>
-				</div>
-				<div class="consultas__sitio__fecha">
-					Fecha: <span>22/03/2021</span>
-				</div>
-				<div class="consultas__sitio__opciones">
-					<button>Ver más</button>
-					<button>Borrar</button>
-				</div>
-			</div>
-			*/
 
-			// Creación de elmentos
 			let consultas__sitio = document.createElement('div');
 			consultas__sitio.classList.add("consultas__sitio");
 
@@ -769,7 +659,7 @@ function load_sites(value_select){
 	elements = document.querySelectorAll(".button_ver_mas");
 
 	let action_ver_mas = function(site, date) {
-		send_json_fetch_2(server_url+"/consulta-reporte", {"sitio":site,"fecha":date})
+		send_json_fetch(server_url+"/consulta-reporte", {"sitio":site,"fecha":date})
 		.then(
 			json_respuesta =>{
 				window.open("http://localhost:3000/reporte");
@@ -790,8 +680,8 @@ function load_sites(value_select){
 	elements = document.querySelectorAll(".button_borrar");
 
 	let action_borrar = function(site, date) {
-		alert("Borrar " + site + " " + date);
-		console.log("Borrar " + site + " " + date);
+		send_json_fetch(server_url+"/reporte-eliminar", {"sitio":site,"fecha":date})
+		reload_site()
 	};
 
 	Array.from(elements).forEach(function(element) {
@@ -806,69 +696,25 @@ function load_sites(value_select){
 
 }
 
-async function send_json(url, json) {
-	let response = await (async () => {
-		const rawResponse = await fetch(url, {
-		  method: 'POST',
-		  headers: {
-			'Accept': 'application/json',
-			'Content-Type': 'application/json'
-		  },
-		  body: JSON.stringify(json)
-		});
-		const content = await rawResponse.json();
-		return content;
-	})();
-	
-	if(response.status.toLowerCase().includes("error")){		
-		toastr.options = {
-			"closeButton": false,
-			"debug": false,
-			"newestOnTop": false,
-			"progressBar": false,
-			"positionClass": "toast-top-center",
-			"preventDuplicates": true,
-			"showDuration": "300",
-			"hideDuration": "1000",
-			"timeOut": "2000",
-			"extendedTimeOut": "1000",
-			"showEasing": "swing",
-			"hideEasing": "linear",
-			"showMethod": "fadeIn",
-			"hideMethod": "fadeOut"
-		  }
-		toastr.error(response.status,'Error');
-	}else{
-		toastr.options = {
-			"closeButton": false,
-			"debug": false,
-			"newestOnTop": false,
-			"progressBar": false,
-			"positionClass": "toast-top-center",
-			"preventDuplicates": true,
-			"showDuration": "300",
-			"hideDuration": "1000",
-			"timeOut": "2000",
-			"extendedTimeOut": "1000",
-			"showEasing": "swing",
-			"hideEasing": "linear",
-			"showMethod": "fadeIn",
-			"hideMethod": "fadeOut"
-		  }
-		toastr.success(response.status,'Éxito');
-	}
-	//return response;
-	return true;
-}
-
-function reload_site(){
+/**
+ * Funcion que actualiza la página
+ */
+async function reload_site(){
+	await sleep(2000);
 	window.location.reload()
 }
 
-function utf8_to_b64( str ) {
-	return window.btoa(unescape(encodeURIComponent( str )));
+/**
+ * Funcion que asgina el nombre del archivo exploit al label que simula el botón
+ */
+function update_file_value(input){
+	let contenido_exploit_valor = document.getElementById("contenido_exploit_valor");
+	contenido_exploit_valor.innerHTML = input.value.split("\\")[2]
 }
 
-function b64_to_utf8( str ) {
-	return decodeURIComponent(escape(window.atob( str )));
+/**
+ * Funcion que duerme al sistema 2 seg
+ */
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
