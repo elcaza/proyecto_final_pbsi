@@ -309,16 +309,16 @@ class Obtener_informacion():
             self.busqueda_ipvinfo()
             self.bing()
         self.scanner_puertos()
-
+		
     def google(self):
         '''
-            Método de busqueda en google
-            Retorna: 
-                resultados_finales: dic
-                    Los enlaces encontrados en el buscador de google en una lista
+        	Método de busqueda en google
+        	Retorna: 
+        	    resultados_finales: dic
+        	        Los enlaces encontrados en el buscador de google en una lista
 		'''
-        print("Entra a Google")
-        self.json_informacion["google"] = {}
+		print("Entra a Google")
+		self.json_informacion["google"] = {}
         dork_sites = {}
         resultados_query = []
         resultados_finales = {}
