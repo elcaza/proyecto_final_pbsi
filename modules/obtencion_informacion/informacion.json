@@ -1,10 +1,23 @@
 {
 	"dorks_google":{
 		"listado_directorios": "intitle:\"Index of\"",
-		"base_datos":"filetype:sql | filetype:dbf | filetype:mdb"
+		"base_datos":"filetype:sql | filetype:dbf | filetype:mdb",
+		"inicio_sesion":"inurl:login | inurl:signin | intitle:Login | intitle:signin | inurl:auth",
+		"bitacoras":"ext:log",
+		"respaldos":"ext:bkf | ext:bkp | ext:bak | ext:old | ext:backup",
+		"sql_error":"intext:\"sql syntax near\" | intext:\"syntax error has occurred\" | intext:\"incorrect syntax near\" | intext:\"unexpected end of SQL command\" | intext:\"Warning: mysql_connect()\" | intext:\"Warning: mysql_query()\" | intext:\"Warning: pg_connect()\"",
+		"configuracion_apache":"filetype:config \"apache\"",
+		"documentos_publicos":"ext:doc | ext:docx | ext:odt | ext:pdf | ext:rtf | ext:sxw | ext:psw | ext:ppt | ext:pptx | ext:pps | ext:csv",
+		"informacion_php":"ext:php intitle:phpinfo \"published by the PHP Group\"",
+		"backdoor":"inurl:shell | inurl:backdoor | inurl:wso | inurl:cmd | shadow | passwd | boot.ini",
+		"archivos_instalacion":"inurl:readme | inurl:license | inurl:install | inurl:setup | inurl:config",
+		"archivos_configuracion":"ext:xml | ext:conf | ext:cnf | ext:reg | ext:inf | ext:rdp | ext:cfg | ext:txt | ext:ora | ext:ini | ext:log",
+		"archivos_sitio":"\"robots.txt\" \"disallow:\" filetype:txt"
 	},
 	"dorks_bing":{
 		"base_datos":"(filetype:sql | filetype:dbf | filetype:mdb)",
-		"archivos_sitio":"\"robots.txt\" \"disallow:\" filetype:txt"
+		"archivos_sitio":"\"robots.txt\" \"disallow:\" filetype:txt",
+		"archivos_configuracion":"(filetype:xml | filetype:conf | filetype:cnf | filetype:reg | filetype:inf | filetype:rdp | filetype:cfg | filetype:txt | filetype:ora | filetype:ini | filetype:log)",
+		"documentos_publicos":"(filetype:doc | filetype:docx | filetype:odt | filetype:pdf | filetype:rtf | filetype:sxw | filetype:psw | filetype:ppt | filetype:pptx | filetype:pps | filetype:csv)"
 	}
 }

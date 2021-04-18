@@ -253,7 +253,7 @@ class Masivo():
                 "redireccionamiento":self.peticion["redireccionamiento"],
                 "lista_negra":self.peticion["lista_negra"],
                 "analisis":{"paginas":[]},
-                "verificacion":{"informacion":0,"analisis":0,"fuzzing":0,"explotacion":0}
+                "verificacion":{"informacion":0,"analisis":1,"fuzzing":0,"explotacion":0}
             }
             self.peticion_reporte = {
                 "sitio":self.peticion_proceso["sitio"],
@@ -265,11 +265,6 @@ class Masivo():
                 "paginas":[],
                 "fecha":datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             }
-            try:
-                if int(self.peticion["puertos"]["final"]) > 65536:
-                    self.peticion["puertos"]["final"] = "65536"
-            except:
-                return False
             return True
         else:
             self.peticion_proceso = {}
@@ -296,13 +291,13 @@ class Masivo():
         # self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://seguridad.unam.mx/","forms":{}}]
         # self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/DVWA-master/logout.php","forms":{}}]
         # self.peticion_proceso["analisis"]["paginas"] = [
-        # {'pagina': 'http://localhost/DVWA-master/vulnerabilities/brute/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csrf/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/fi/.?page=include.php'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/upload/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/captcha/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/sqli_blind/'},  {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_d/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_r/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/xss_s/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/csp/'}, {'pagina': 'http://localhost/DVWA-master/vulnerabilities/javascript/'}
+        # {'pagina': 'http://testphp.vulnweb.com/search.php?test=query'}
         # ]
         # self.peticion_proceso["analisis"]["paginas"] = [
-        # {'pagina': 'http://altoromutual.com:8080/login.jsp'},
-        # {'pagina': 'http://altoromutual.com:8080/feedback.jsp'},#, {'pagina': 'http://altoromutual.com:8080/login.jsp'},
-        # #{'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'},{'pagina': 'http://altoromutual.com:8080/status_check.jsp'},
-        # #{'pagina': 'http://altoromutual.com:8080/subscribe.jsp'},#{'pagina': 'http://altoromutual.com:8080/swagger/index.html'}
+        # {'pagina': 'http://testasp.vulnweb.com/showforum.asp?id=0'},
+        # # # {'pagina': 'http://altoromutual.com:8080/feedback.jsp'},#, {'pagina': 'http://altoromutual.com:8080/login.jsp'},
+        # # # #{'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'},{'pagina': 'http://altoromutual.com:8080/status_check.jsp'},
+        # # {'pagina': 'http://altoromutual.com:8080/default.jsp?content=security.htm'}, {'pagina': 'http://altoromutual.com:8080/survey_questions.jsp'}, {'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'}, {'pagina': 'http://altoromutual.com:8080/status_check.jsp'}, {'pagina': 'http://altoromutual.com:8080/swagger/index.html'}, {'pagina': 'http://altoromutual.com:8080/index.jsp/swagger/index.html'},#{'pagina': 'http://altoromutual.com:8080/swagger/index.html'}
         # ]
         self.execute_fuzzing()
 
@@ -342,30 +337,36 @@ class Masivo():
             peticion_proceso : dict
                 diccionario que guardara el resultado del analisis
         '''
-        try:
-            respuesta_analisis = analisis.execute(self.peticion_proceso["sitio"], self.peticion_proceso["cookie"], self.peticion_proceso["lista_negra"],self.peticion_proceso["redireccionamiento"])
-            self.peticion_proceso["analisis"] = respuesta_analisis
-            self.peticion_proceso["verificacion"]["analisis"] = 1
-        except Exception as e:
-            tipo, base, rastro = sys.exc_info()
-            archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
-            with open (self.error, "a") as error:
-                error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Análisis\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
+        respuesta_analisis = analisis.execute(self.peticion_proceso["sitio"], self.peticion_proceso["cookie"], self.peticion_proceso["lista_negra"],self.peticion_proceso["redireccionamiento"])
+        self.peticion_proceso["analisis"] = respuesta_analisis
+        self.peticion_proceso["verificacion"]["analisis"] = 1
+        # try:
+        #     respuesta_analisis = analisis.execute(self.peticion_proceso["sitio"], self.peticion_proceso["cookie"], self.peticion_proceso["lista_negra"],self.peticion_proceso["redireccionamiento"])
+        #     self.peticion_proceso["analisis"] = respuesta_analisis
+        #     self.peticion_proceso["verificacion"]["analisis"] = 1
+        # except Exception as e:
+        #     tipo, base, rastro = sys.exc_info()
+        #     archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
+        #     with open (self.error, "a") as error:
+        #         error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Análisis\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
 
     def execute_fuzzing(self):
         '''
             Funcion que ejecuta el modulo de fuzzing, una vez terminado ejecuta el modulo de alertas_fuzzing para guardar las (posibles)vulnerabilidades encontradas
         '''
         if self.peticion_proceso["verificacion"]["analisis"] == 1:
-            try:
-                self.fuzzing_lanzar_fuzz()
-                self.alertas_fuzzing()
-                self.peticion_proceso["verificacion"]["fuzzing"] = 1
-            except Exception as e:
-                tipo, base, rastro = sys.exc_info()
-                archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
-                with open (self.error, "a") as error:
-                    error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Fuzzing\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
+            self.fuzzing_lanzar_fuzz()
+            self.alertas_fuzzing()
+            self.peticion_proceso["verificacion"]["fuzzing"] = 1
+            # try:
+            #     self.fuzzing_lanzar_fuzz()
+            #     self.alertas_fuzzing()
+            #     self.peticion_proceso["verificacion"]["fuzzing"] = 1
+            # except Exception as e:
+            #     tipo, base, rastro = sys.exc_info()
+            #     archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
+            #     with open (self.error, "a") as error:
+            #         error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Fuzzing\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
         
     def execute_explotacion(self):
         '''
@@ -391,8 +392,9 @@ class Masivo():
         futures = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
             for posicion_pagina in range(len(self.peticion_proceso["analisis"]["paginas"])):
+                url = self.peticion_proceso["analisis"]["paginas"][posicion_pagina]["pagina"]
                 json_fuzzing = {
-                    "url":self.peticion_proceso["analisis"]["paginas"][posicion_pagina]["pagina"],
+                    "url":url,
                     "cookie":self.peticion_proceso["cookie"]
                 }
                 futures.append(executor.submit(fuzzing.execute,json_fuzzing))
@@ -1469,35 +1471,37 @@ class Reportes():
             peticion_reporte : dict
                 diccionario que sirve para crear el reporte HTML, CSV y JSON
         '''
-        vulnerabilidades = [[0,0,0]]
+        vulnerabilidades = [[0,0,0,0]]
         for pagina in self.peticion_proceso["analisis"]["paginas"]:
             for tipo in pagina:
                 if tipo == "forms":
                     for form in pagina[tipo]:
                         for resultados in pagina[tipo][form]:
-                            for ataque in ["posible_vulnerabilidad_comun"]:
+                            for ataque in ["posible_vulnerabilidad_comun", "posible_vulnerabilidad_xss"]:
                                 resultado_ataque = resultados[ataque]
                                 if resultado_ataque == True:
                                     if ataque == "posible_vulnerabilidad_comun":
+                                        vulnerabilidades[0][1] += 1
+                                    if ataque == "posible_vulnerabilidad_xss":
                                         vulnerabilidades[0][0] += 1
 
                 elif tipo == "vulnerabilidades":
                     for tipo_vulnerabilidad in pagina[tipo]:
                         for vulnerabilidad in pagina[tipo][tipo_vulnerabilidad]:
                             if vulnerabilidad["posible_vulnerabilidad"] == True:
-                                vulnerabilidades[0][1] += 1
+                                vulnerabilidades[0][2] += 1
                 
                 elif tipo == "forms_upload":
                     for form in pagina[tipo]:
                         for vulnerabilidad in pagina[tipo][form]:
                             if vulnerabilidad["posible_vulnerabilidad_comun"] == True:
-                                vulnerabilidades[0][2] += 1
+                                vulnerabilidades[0][3] += 1
 
                 elif tipo == "forms_selenium":
                     for form in pagina[tipo]:
                         for vulnerabilidad in pagina[tipo][form]:
                             if vulnerabilidad["posible_vulnerabilidad_comun"] == True:
-                                vulnerabilidades[0][0] += 1
+                                vulnerabilidades[0][1] += 1
 
         analisis = self.crear_posibles_vulnerabilidades(vulnerabilidades)
         self.peticion_reporte["analisis"].append(analisis)
@@ -1593,7 +1597,7 @@ class Reportes():
                 if tipo == "forms":
                     for form in pagina[tipo]:
                         for resultados in pagina[tipo][form]:
-                            for ataque in ["xss","sqli","sqli_blind","sqli_blind_time","posible_vulnerabilidad_comun"]:
+                            for ataque in ["xss","sqli","sqli_blind","sqli_blind_time","posible_vulnerabilidad_comun","posible_vulnerabilidad_xss"]:
                                 resultado_ataque = resultados[ataque]
                                 if resultado_ataque == True:
                                     if ataque == "xss":
@@ -1606,6 +1610,8 @@ class Reportes():
                                         vulnerabilidades += 1
                                     elif ataque == "posible_vulnerabilidad_comun":
                                         posibles_vulnerabilidades += 1
+                                    elif ataque == "posible_vulnerabilidad_xss":
+                                        posibles_vulnerabilidades += 1
 
                 elif tipo == "vulnerabilidades":
                     for vulnerabilidad in pagina[tipo]:
@@ -1614,6 +1620,21 @@ class Reportes():
                                 vulnerabilidades += 1
                             elif resultado["posible_vulnerabilidad"]:
                                 posibles_vulnerabilidades += 1
+
+                elif tipo == "forms_selenium":
+                    for form in pagina[tipo]:
+                        for resultado in pagina[tipo][form]:
+                            if resultado["xss"] == True:
+                                vulnerabilidades += 1
+
+                elif tipo == "forms_upload":
+                    for form in pagina[tipo]:
+                        for resultado in pagina[tipo][form]:
+                            if resultado["upload"] == True:
+                                vulnerabilidades += 1
+                            elif resultado["posible_vulnerabilidad_comun"] == True:
+                                posibles_vulnerabilidades += 1
+
         return vulnerabilidades, posibles_vulnerabilidades
 
     def obtener_explotaciones(self, peticion_proceso):
@@ -1897,7 +1918,7 @@ class Reportes():
                     "categoria":"",
                     "titulo":"Posibles Vulnerabilidades",
                     "grafica":"",
-                    "cabecera":["SQLi", "LFI","Upload"],
+                    "cabecera":["XSS", "SQLi", "LFI","Upload"],
                     "datos":vulnerabilidades
         }
         return analisis
@@ -2264,12 +2285,25 @@ class Utileria():
         try:
             sitio = peticion["sitio"]
             requests.get(sitio, verify=False)
-            int(peticion["profundidad"])
-            int(peticion["puertos"]["final"])
-            return True
         except Exception as e:
             print("No hay conexion a Internet o el sitio no es valido")
             return False
+        
+        try:
+            profundidad = int(peticion["profundidad"])
+            if profundidad < 1 or profundidad > 3:
+                peticion["profundidad"] = "2"
+        except:
+            peticion["profundidad"] = "2"
+        
+        try:
+            puertos = int(peticion["puertos"]["final"])
+            if puertos < 1 or puertos > 65536:
+                peticion["puertos"]["final"] = "1"
+        except:
+            peticion["puertos"]["final"] = "2"
+
+        return True
 
     def validar_json_archivo(self, peticion):
         '''

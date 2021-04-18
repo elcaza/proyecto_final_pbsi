@@ -2,7 +2,7 @@ import subprocess
 import shlex
 import requests
 import json
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
 from urllib.robotparser import RobotFileParser
 from fake_useragent import UserAgent
@@ -43,13 +43,14 @@ class Utilerias():
 		return str(abs_path)+"/"+relative_path+file_name+extension
 
 	def directorio_existente(self,sitio,nivel_deep=0):
-		existe = 0
+		existe = False
 		respuesta = self.get_peticion(sitio)
 		codigo_estado = -1
-		if len(respuesta.history) > 0:
-			codigo_estado = respuesta.history[-1].status_code
-		if respuesta.status_code == 200 and not (codigo_estado > 301 and codigo_estado <= 310):
-			existe = True
+		if respuesta != "":
+			if len(respuesta.history) > 0:
+				codigo_estado = respuesta.history[-1].status_code
+			if respuesta.status_code == 200 and not (codigo_estado > 301 and codigo_estado <= 310):
+				existe = True
 
 		return  existe
 
@@ -104,7 +105,7 @@ class Utilerias():
 			return False
 
 	def buscar_vulnerabilidades(self,cms):
-		url_cve_mitre = "https://cve.mitre.org/cgi-bin/cvekey.cgi?keyword="
+		url_cve_mitre = "https://cve.mitre.org/cgi-bin/cvekey.cgi?keyword=" + cms
 		soup = self.obtener_contenido_html(url_cve_mitre)
 		table = soup.find('div', id="TableWithRules")
 		rows = table.findAll('tr')
@@ -156,6 +157,7 @@ class Utilerias():
 class Wordpress():
 
 	def __init__(self,sitio, cookie, redireccionamiento):
+		print("Woordpress")
 		self.redireccionamiento = redireccionamiento
 		self.util = Utilerias(cookie, self.redireccionamiento)
 		self.sitio = sitio
@@ -304,6 +306,7 @@ class Wordpress():
 class Moodle():
 	
 	def __init__(self,sitio, cookie, redireccionamiento):
+		print("Moodle")
 		self.url = sitio
 		self.redireccionamiento = redireccionamiento
 		self.util = Utilerias(cookie, self.redireccionamiento)
@@ -445,6 +448,7 @@ class Moodle():
 
 class Drupal():
 	def __init__(self,sitio, cookie, redireccionamiento):
+		print("Drupal")
 		self.url = sitio
 		self.redireccionamiento = redireccionamiento
 		self.util = Utilerias(cookie, self.redireccionamiento)
@@ -582,6 +586,7 @@ class Drupal():
 
 class Joomla():
 	def __init__(self,sitio, cookie, redireccionamiento):
+		print("Joomla")
 		self.url = sitio
 		self.redireccionamiento = redireccionamiento
 		self.util = Utilerias(cookie, self.redireccionamiento)
@@ -928,58 +933,41 @@ class Obtencion_informacion():
 			self.tmp_diccionario["cifrados"] = {}
 		return self.tmp_diccionario
 
-
 	def web_href(self,url):
-		
+		dominio = urlparse(url).netloc
+
 		s = self.util.obtener_contenido_html(self.sitio)
 		if s != "":
 			for link in s.findAll('a'):
 				tet_2 = link.get('href')
 				if tet_2 != None:
-					if not(tet_2.startswith("#")):
-						if tet_2.startswith(url):
-							if not(tet_2 in self.paginas):
-								self.paginas.append(tet_2)
-						elif not(tet_2.startswith("http")) and not(tet_2.startswith("https")):
-							link_2 = self.valida_link(tet_2,url)
-							contador = 0
-							esta = 0
-							for page in self.paginas:
-								contador += 1 
-								if (contador >= len(self.paginas)) and not(esta > 0):
-									self.paginas.append(link_2)
-									contador = 0
-									esta = 0
-								elif tet_2 in page:
-									esta += 1
+					href = urlparse(tet_2)
+					href_dominio = href.netloc
 
-		return self.paginas
+					if href_dominio == "" or href_dominio == dominio:
+						url_final = urljoin(url, tet_2.strip())
+
+						if not(url_final in self.paginas) and url_final.startswith("http"):
+							print(url_final)
+							self.paginas.append(url_final)
 
 	def web_frame(self,url):
+		dominio = urlparse(url).netloc
+
 		s = self.util.obtener_contenido_html(self.sitio)
 		if s != "":
 			for link in s.findAll('iframe'):
 				tet_2 = link.get('src')
 				if tet_2 != None:
-					if not(tet_2.startswith("#")):
-						if tet_2.startswith(url):
-							if not(tet_2 in self.paginas):
-								self.paginas.append(tet_2)
-						elif not(tet_2.startswith("http")) and not(tet_2.startswith("https")):
-							link_2 = self.valida_link(tet_2,url)
-							contador = 0
-							esta = 0
-							for page in self.paginas:
-								contador += 1 
-								if (contador >= len(self.paginas)) and not(esta > 0):
-									self.paginas.append(link_2)
-									contador = 0
-									esta = 0
-								elif tet_2 in page:
-									esta += 1
+					href = urlparse(tet_2)
+					href_dominio = href.netloc
 
-		return self.paginas
+					if href_dominio == "" or href_dominio == dominio:
+						url_final = urljoin(url, tet_2.strip())
 
+						if not(url_final in self.paginas) and url_final.startswith("http"):
+							print(url_final)
+							self.paginas.append(url_final)
 
 	def valida_link(self,linea,url):
 		link = ""
@@ -1022,13 +1010,27 @@ class Obtencion_informacion():
 					link = self.valida_link(linea,tmp_url)
 					if not(link in self.paginas) and not(link in self.lista_negra):
 						self.paginas.append(link)
+
+		paginas_diferentes = []
 		for pagina in self.paginas:
+			if not pagina.startswith(self.sitio):
+				paginas_diferentes.append(pagina)
+		
+		try:
+			for pagina in paginas_diferentes:
+				self.paginas.remove(pagina)
+		except:
+			pass
+
+		paginas_totales = self.paginas.copy()
+
+		for pagina in paginas_totales:
 			if pagina not in self.lista_negra:
 				self.web_href(pagina)
 				self.web_frame(pagina)
 				self.tmp_diccionario["paginas"] = [ {"pagina":page} for page in self.paginas if page not in self.lista_negra]
+		
 		return self.tmp_diccionario
-
 
 	def get_lenguajes(self):
 		print("Lenguajes")
