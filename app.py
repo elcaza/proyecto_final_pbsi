@@ -280,8 +280,8 @@ class Masivo():
             este analisis consiste en ejecutar los modulos de "obtener informacion", "analisis", "fuzzing" y "explotacion"
         '''
             
-        # print("Iniciando Información")
-        # self.execute_informacion()
+        print("Iniciando Información")
+        self.execute_informacion()
 
         print("Iniciando Análisis")
         self.execute_analisis()
