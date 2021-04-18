@@ -23,28 +23,65 @@ from search_engines import Google, Bing
 
 
 class Robtex_informacion():
+    '''
+        Esta clase contiene métodos o funciones para la obtención de información de la plataforma Robtex
+        Atributos:
+            base_api_uri: string
+                Url base de la página de robtex
+            dominio: string
+                Dominio del sitio
+            ip_address: string
+                Dirección ip del sitio
+            información_robtex: dict
+                Diccionario de información de robtex
+    '''
     def __init__(self, dominio, ip_address):
+        '''
+        Método de iniciación de atributos
+        '''
         self.base_api_url = 'https://freeapi.robtex.com/'
         self.dominio = dominio
         self.ip_address = ip_address
         self.informacion_robtex = {}
 
     def ip_query(self):
+        '''
+        Método que realiza la petición a la plataforma de Robtex, por medio de la ip
+        Retorna: 
+            respuesta:
+             La respuesta de la petición
+        '''
         respuesta = self.get_respuesta(
             self.base_api_url + "ipquery/{}".format(self.ip_address))
         return respuesta
 
     def pdns_forward(self):
+        '''
+        Método que realiza la petición a la plataforma de Robtex, por medio de el nombre de dominio
+        Retorna: 
+            respuesta: La respuesta de la petición
+        '''
         respuesta = self.get_respuesta(
             self.base_api_url + "pdns/forward/{}".format(self.dominio))
         return respuesta
 
     def pdns_reverse(self):
+        '''
+        Método que realiza la petición a la plataforma de Robtex, para la obtención de información de dns reverse
+        Retorna: La respuesta de la petición
+        '''
         respuesta = self.get_respuesta(
             self.base_api_url + "pdns/reverse/{}".format(self.ip_address))
         return respuesta
 
     def get_respuesta(self, api_solicitud):
+        '''
+        Método que realiza las solicitudes a la plataforma de Robtex por medio del
+        de la url, ingresada
+        Entrada:
+            - api_solicitud: url de solicitud.
+        Retorna: Información en formato json, de la solicitud realizada
+        '''
         # renovar_tor_ip()
         session = requests.session()
         # session.proxies = {}
@@ -67,6 +104,14 @@ class Robtex_informacion():
             return None
 
     def clasificacion_registros(self):
+        '''
+        Método de clasificación de registros, dada la información retornada mediante la solicitud 
+        a la plataforma Robtex, por medio de la API
+        Retorna: Un diccionario 
+            información_robtex :
+            Donde las llaves son titulos de la información recabada, y los valores
+        la información recobrada.
+        '''
         temp_NS = []
         temp_A = []
         temp_MX = []
@@ -106,6 +151,16 @@ class Robtex_informacion():
         return self.informacion_robtex
 
     def tipos_registros(self, registro, temp_NS, temp_A, temp_MX, tipo_busqueda):
+        '''
+        Clasificación de registros de dns.
+        Entrada:
+            - registro: Obtiene el tipo de registro DNS
+            - temp_NS: Arreglo, que guarda los registros NS
+            - temp_A: Arreglo, que guarda los registros A
+            - temp_MX: Arreglo, que guarda los registros MX
+            - tipo_busqueda: Tipo de solicitud que se manda a la pltaforma de Robtex
+        Agrega llaves y valores al diccionario información_robtex
+        '''
         temp_informacion = {}
         if ('NS' in registro["rrtype"]):
             temp_informacion["dominio"] = registro['rrname']
@@ -128,8 +183,21 @@ class Robtex_informacion():
 
 
 class Obtener_informacion():
-
+    '''
+    Clase que contiene métodos de busqueda de información
+    Atributos:
+        json_información: dic
+            Información general de recobrada
+        sitio: string
+            url del sitio
+        user_agent: object
+            Objeto de la clase UserAgent
+        
+    '''
     def __init__(self, sitio, parametros):
+        '''
+        Métodos de inicialización de atributos del objeto que se crea
+        '''
         self.json_informacion = {}
         self.sitio = sitio
         self.user_agent = UserAgent()
@@ -142,9 +210,15 @@ class Obtener_informacion():
         self.ejecutar()
 
     def get_fake_user_agent(self):
+        '''
+        Método que retorna, un diccionario, con un valor de agente de usuario aleatorio
+        '''
         return {'User-Agent': self.user_agent.random}
 
     def set_parametros_json(self):
+        '''
+        Método de inicialización de variables, para el almacenamiento de la información
+        '''
         try:
             self.ip_address = socket.gethostbyname(self.sitio)
         except socket.gaierror:
@@ -188,6 +262,12 @@ class Obtener_informacion():
             self.opciones_puertos = parametros["puertos"]
 
     def set_dorks_google(self):
+        '''
+        Método que obtiene los dorks de consulta en google
+        Retorna:
+            dorks_google:dict
+                Diccionario, de consultas en google, con su eqtiqueta
+        '''
         self.dorks_google = []
         ruta = path.abspath(path.dirname(__file__))
         ruta += "/informacion.json"
@@ -196,6 +276,12 @@ class Obtener_informacion():
         self.dorks_google = archivo_json["dorks_google"]
 
     def set_dorks_bing(self):
+        '''
+        Método que obtiene los dorks de consulta en bing
+        Retorna:
+            dorks_bing:dict
+                Diccionario, de consultas en google, con su eqtiqueta
+        '''
         self.dorks_bing = []
         ruta = path.abspath(path.dirname(__file__))
         ruta += "/informacion.json"
@@ -213,6 +299,9 @@ class Obtener_informacion():
         return self.opciones_puertos
 
     def ejecutar(self):
+        '''
+        Método de ejecución, de buquedas por cada uno de los metodos
+        '''
         if self.ip_address != "" and IP(self.ip_address).iptype() == "PUBLIC":
             self.busqueda_dnsdumpster()
             self.busqueda_robtex()
@@ -222,6 +311,12 @@ class Obtener_informacion():
         self.scanner_puertos()
 
     def google(self):
+       '''
+        Método de busqueda en google
+        Retorna: 
+            resultados_finales: dic
+                Los enlaces encontrados en el buscador de google en una lista
+        '''
         print("Entra a Google")
         self.json_informacion["google"] = {}
         dork_sites = {}
@@ -242,12 +337,23 @@ class Obtener_informacion():
         self.json_informacion["google"] = resultados_finales
 
     def busqueda_g(self, query):
+        '''
+        Método de obtención de resultados (enlaces), dadas las busquedas realizadas
+        Retorna: 
+            -links: arreglo de enlaces, resultado de las peiticiones hechas en google
+        '''
         engine = Google()
         results = engine.search(query)
         links = results.links()
         return links
 
     def bing(self):
+        '''
+        Método de busqueda en bing
+            resultados_finales:dic
+                Resulados de busqueda de información en la plataforma bing
+        Agrega los resultados de la busquedas en bing
+        '''
         print("Entra a Bing")
         self.json_informacion["bing"] = {}
         dork_sites = {}
@@ -267,16 +373,28 @@ class Obtener_informacion():
         self.json_informacion["bing"] = resultados_finales
 
     def busqueda_b(self, query):
+        '''
+        Método de obtención de resultados (enlaces), dadas las busquedas realizadas
+        Retorna: 
+            -links: arreglo de enlaces, resultado de las peiticiones hechas en bing
+        '''
         engine = Bing()
         results = engine.search(query)
         links = results.links()
         return links
 
     def busqueda_ipvinfo(self):
+        '''
+        Método que que realiza la llamada al método de mandando la url
+        '''
         ipv4info = "http://ipv4info.com/?act=check&ip=" + self.sitio
         self.ipv_dominio(ipv4info)
 
     def ipv_dominio(self, url):
+        '''
+        Método de obtención de información de la pagina de ipv4
+        Agrega al atributo json_informacion, la información recolectada de la pagina
+        '''
         tmp_titulo = ""
         titulo_convert = ""
         tmp_diccionario = {}
@@ -345,6 +463,9 @@ class Obtener_informacion():
         self.json_informacion["ipv4info"] = self.informacion_ipv4
 
     def convert_titulo(self, titulo):
+        '''
+        Método que realiza un cambio de idioma a los titulos, de la información recabada
+        '''
         if titulo == "Block start":
             return "inicio_bloque"
         elif titulo == "End of block":
@@ -375,12 +496,21 @@ class Obtener_informacion():
             return "ciudad"
 
     def busqueda_robtex(self):
+        '''
+        Método de obtención de información de Robtex
+        Agrega al diccionario json_información, la información recolectada mediante las solicitudes a la pagina
+        '''
         print("Entra a Robtex")
         robtex = Robtex_informacion(self.sitio, self.ip_address)
         robtex_final = robtex.clasificacion_registros()
         self.json_informacion["robtex"] = robtex_final
 
     def scanner_puertos(self):
+        '''
+        Método de de escaner de puertos
+        Agrega al diccionario json_informacion un diccionario, que contiene los difrentes
+        estados de los puestos, con cada uno de los puertos en ese estado.
+        '''
         print("Entra a Scanner de puertos")
         puertos_completos = {}
         puertos_completos["abiertos"] = []
@@ -426,6 +556,11 @@ class Obtener_informacion():
         self.json_informacion["puertos"] = puertos_completos
 
     def busqueda_dnsdumpster(self):
+        '''
+        Método que realiza la busqueda de información deacuerdo al sitio en la página de
+        DNSDumpster
+        Agrega al diccionario json_infomacion, la información recolectada de DNSdupster
+        '''
         print("Entra a DNSDumpster")
         dns = []
         mx = []
@@ -459,6 +594,14 @@ class Obtener_informacion():
         self.json_informacion["dnsdumpster"] = informacion_dnsdumpster
 
     def clasificacion_dnsdumspter(self, registros_tipos, temp_registros, contador_datos):
+        '''
+        Método que realiza la clasificación de registros encontrados en la pagina de DNSDumpster
+        Entrada:
+            -registros_tipos: Contiene todos los registros encontrados
+            -temp_registros: Varuable temporal, que contiene la clasificación de los registros
+            -contador_datos: Contador de tipos de datos
+        Retorna: Un diccionario temp_registros de la clasificación de los datos, acada uno con su 
+        '''
         for llave, valor in registros_tipos.items():
             if llave == "domain":
                 temp_registros["dominio"] = valor
@@ -480,12 +623,16 @@ class Obtener_informacion():
         return temp_registros
 
 # def renovar_tor_ip():
-#	with Controller.from_port(port = 9051) as controller:
-#		controller.authenticate(password="hola123")
-#		controller.signal(Signal.NEWNYM)
+#   with Controller.from_port(port = 9051) as controller:
+#       controller.authenticate(password="hola123")
+#       controller.signal(Signal.NEWNYM)
 
 
 def obtener_sitio_dominio(sitio_limpiar):
+    '''
+    Función que obtiene el nombre de dominio de la url correspondiente
+    Retorna la variable site_dominio, contiene el nombre de dominio
+    '''
     if not(sitio_limpiar.startswith(('http://', 'https://'))):
         sitio_limpiar = "https://" + sitio_limpiar
     # Extrae el sitio que se quiere buscar
