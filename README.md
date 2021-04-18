@@ -1,5 +1,5 @@
 # Proyecto Final PBSI
-Herramienta para el análisis masivo y explotación de sitios vulnerables.
+Malphas, una herramienta para el análisis masivo y explotación de sitios vulnerables.
 
 ## Módulos disponibles
 1. Alertas
