@@ -1,30 +1,40 @@
 # Proyecto Final PBSI
 Herramienta para el análisis masivo y explotación de sitios vulnerables.
 
-## Estructura del proyecto
-
-### install
-+ Carpeta con los requerimientos para instalarse y script de instalación automática
-### modules
-+ Carpeta con los módulos de python que "hacen toda la magia"
-### static 
-+ Recursos de flask
-### templates
-+ Recursos de flask
-### app.py
-+ Script que inicializa el servidor de flask
-
 ## Módulos disponibles
-1. Obtención de información (OK)
-1. Análisis (OK)
-1. Base de exploits
-1. Identificación
-1. Alertas (OK)
-1. Explotación
+1. Alertas
+1. Análisis 
 1. Ejecución
-1. Consulta
+1. Exploits
+1. Explotación
+1. Fuzzing
+1. Obtención de información
 1. Reportes
-1. Módulo de fuzzing (OK)
 
 ## Instrucciones de instalación
-`¯\_(ツ)_/¯`
+1. Clonar el repositorio
+1. Correr el script de instalación con privilegios
+```
+git clone https://github.com/elcaza/proyecto_final_pbsi.git
+
+cd proyecto_final_pbsi.git
+
+sudo instalacion.sh
+
+```
+
+## Iniciar la aplicación
+
+```
+python3 app.py
+```
+
+Visitar
++ http://localhost:3000
++ http://your_ip:3000
+
+## Modo de uso
+
++ Documentación de pruebas realizadas
++ Documentación de instalación y uso
++ Resumen de la documentación para ser pública
