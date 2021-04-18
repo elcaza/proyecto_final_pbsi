@@ -333,13 +333,13 @@ class Reporte():
         '''
         footer = '''<hr class="linea-doble-divisora">
             <div class="contenedor-titulo"">
-                <img src=" https://congreso.seguridad.unam.mx/2016/sites/default/themes/theme2016/images/unam_negro.png"
-                width="56px" height="56px" style="vertical-align: middle; border: 0; max-width: 100%; padding-right: 4px;">
-                <h4 style="line-height: 80px; font-family: sans-serif; color:#FFFFFF; margin: 0; padding: 0; display: inline;">
+                <img src="{{ url_for('static', filename='img/unam_negro.png') }}"
+                width="56px" height="56px" style="vertical-align: middle; border: 0; max-width: 100%; padding-right: 4px; -webkit-filter: invert(1); filter: invert(1);">
+                <h4 style="line-height: 80px; font-family: sans-serif; color:#FFFFFF; margin: 0; padding: 0; display: inline; ">
                     Coordinación de Seguridad de la Información
                 </h4>
-                <img src="https://congreso.seguridad.unam.mx/2016/sites/default/themes/theme2016/images/cert_negro.png"
-                    width="56px" height="56px" style="vertical-align:middle; border: 0; max-width: 100%;">
+                <img src="{{ url_for('static', filename='img/cert_negro.png') }}"
+                    width="56px" height="56px" style="vertical-align:middle; border: 0; max-width: 100%; -webkit-filter: invert(1); filter: invert(1);">
             </div>
         </body>
 
