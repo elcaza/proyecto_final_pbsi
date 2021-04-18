@@ -422,6 +422,8 @@ class Moodle():
 						cont += 1
 			if cont > 5:
 				respuesta = self.util.get_peticion(self.url)
+				if respuesta == "":
+					return None
 				if config_moodle["identifier"] in respuesta.text:
 					return "moodle"
 		return None

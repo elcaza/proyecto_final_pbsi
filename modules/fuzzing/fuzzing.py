@@ -1425,16 +1425,19 @@ class Pagina():
         if urlparse(self.url).query != "" and bandera == 0:
             inputs_generales = []
             query = urlparse(self.url).query
+
             for valor in query.split("&"):
                 inputs_generales.append(valor.split("=")[0])
-                
+
+            self.url = self.url.replace(query, "")
+            self.url = self.url[:-1]  
             self.formularios["form_especial"] = {
                 "accion":self.url,
                 "metodo":"get",
                 "inputs":inputs_generales
             }
             self.json_fuzzing["forms"]["form_especial"] = []
-        print("--------->", self.url, urlparse(self.url))
+            
 
         self.json_fuzzing["vulnerabilidades"] = {"lfi":[]}
         self.json_fuzzing["forms_upload"] = {}

@@ -1,0 +1,136 @@
+_id: String
+sitio: String
+cookie: String
+fecha: String
+profundidad: String
+redireccionamiento: Bool
+lista_negra: Array (String)
+informacion: Dictionary
+    dnsdumpster: Dictionary
+        txt: Array (String)
+        mx: Array (Dictionary)
+            dominio: String
+            pais: String
+            ip: String
+            reverse_dns: String
+            header: String
+        dns: Array (Dictionary)
+            dominio: String
+            pais: String
+            ip: String
+            reverse_dns: String
+            header: String
+        host: Array (Dictionary)
+            dominio: String
+            pais: String
+            ip: String
+            reverse_dns: String
+            header: String
+    robtex: Dictionary
+    informacion
+        ip: String
+        ciudad: String
+        pais: String
+        red: String
+    dns_forward
+        dominio: String
+        host: String
+    host_forward
+        dominio: String
+        host: String
+    mx_forward
+        dominio: String
+        host: String
+    host_reverse
+        dominio: String
+        host: String
+    puertos: Dictionary
+        abiertos: Array (Dictionary)
+            puerto: String
+            protocolo: String
+            servicio: String
+        filtrados: Array (Dictionary)
+            puerto: String
+            protocolo: String
+            servicio: String
+        cerrados: Array (Dictionary)
+            puerto: String
+            protocolo: String
+            servicio: String
+    google: Dictionary
+        tipo: Array (String)
+    bing: Dictionary
+analisis: Dictionary
+    servidor: Dictionary
+        nombre: String
+        version: String
+    cms: Dictionary
+        nombre: String
+        version: String
+    headers: Array (String)
+    cifrados: Dictionary
+        nombre: String
+    lenguajes: Array (Dictionary)
+        nombre: String
+        version: String
+    frameworks: Array (Dictionary)
+        nombre: String
+        version: String
+    plugins: Array
+        String
+    librerias: Array (Dictionary)
+        nombre: String
+        version: String
+    archivos: Array
+        String
+    vulnerabilidades: Array
+        String
+    ioc_anomalo: Dictionary
+        existe: Bool
+        valores: Array (String)
+    ioc_webshell: Dictionary
+        existe: Bool
+        valores: Array (String)
+    ioc_cryptominer: Dictionary
+        existe: Bool
+        valores: Array (String)
+    ioc_ejecutables: Dictionary
+        existe: Bool
+        valores: Array (String)
+    paginas: Array (Dictionary)
+        pagina: String
+        forms: Dictionary
+            form: Dictionary
+                inputs: Array (String)
+                sqli: Bool
+                xss: Bool
+                sqli_blind: Bool
+                sqli_blind_time: Bool
+                posible_vulnerabilidad_comun: Bool
+                posible_vulnerabilidad_xss: Bool
+                codigo: Int
+        vulnerabilidades: Dictionary
+            lfi: Array (Dictionary)
+                inputs: Array (String)
+                lfi: Bool
+                posible_vulnerabilidad: Bool
+                codigo: Int
+        forms_selenium: Dictionary
+            form: Dictionary
+                inputs: Array (String)
+                xss: Bool
+                posible_vulnerabilidad_comun: Bool
+        forms_upload: Dictionary
+            form: Dictionary
+                inputs: Array (String)
+                upload: Bool
+                posible_vulnerabilidad_upload: Bool
+verificacion: Dictionary
+    informacion: Int
+    analisis: Int
+    fuzzing: Int
+    explotacion: Int
+explotaciones: Dictionary
+    exploit: Dictionary
+        configuracion: Int
+    

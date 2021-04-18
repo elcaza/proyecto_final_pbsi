@@ -291,7 +291,7 @@ class Masivo():
         # self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://seguridad.unam.mx/","forms":{}}]
         # self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/DVWA-master/logout.php","forms":{}}]
         # self.peticion_proceso["analisis"]["paginas"] = [
-        # {'pagina': 'http://testphp.vulnweb.com/search.php?test=query'}
+        # {'pagina': 'http://testasp.vulnweb.com/showforum.asp?id=1'}
         # ]
         # self.peticion_proceso["analisis"]["paginas"] = [
         # {'pagina': 'http://testasp.vulnweb.com/showforum.asp?id=0'},
@@ -956,6 +956,12 @@ class Reportes():
             Funcion que extrae los datos de los modulos de obtener_informacion, analisis, fuzzing y explotacion para crear un repore en HTML
             realiza un dump en formato CSV y JSON el cual trae el dump completo del analisis
         '''
+        self.ruta_previa = "{0}_{1}".format("prueab","fecha")
+        try:
+            mkdir(self.ruta_previa)
+        except FileExistsError:
+            pass
+        self.reportes_json_crear()
         self.reporte_informacion_general()
         
         if self.informacion == 1:

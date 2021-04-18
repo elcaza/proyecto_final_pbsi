@@ -1,1 +1,6 @@
+https://altoromutual.com/
+http://localhost/DVWA-master/
+http://localhost/joomla/
+http://testasp.vulnweb.com/
+https://localhost/drupal7/
 http://testphp.vulnweb.com/
