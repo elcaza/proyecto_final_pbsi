@@ -31,10 +31,4 @@ python3 app.py
 
 Visitar
 + http://localhost:3000
-+ http://your_ip:3000
-
-## Modo de uso
-
-+ Documentación de pruebas realizadas
-+ Documentación de instalación y uso
-+ Resumen de la documentación para ser pública
++ http://127.0.0.1:3000
