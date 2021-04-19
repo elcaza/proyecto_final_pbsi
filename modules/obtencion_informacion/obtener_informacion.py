@@ -157,7 +157,6 @@ class Robtex_informacion():
         
         return self.informacion_robtex
         
-
     def tipos_registros(self, registro, temp_NS, temp_A, temp_MX, tipo_busqueda):
         '''
         Clasificación de registros de dns.
@@ -231,6 +230,7 @@ class Obtener_informacion():
             self.ip_address = socket.gethostbyname(self.sitio)
         except socket.gaierror:
             self.ip_address = ""
+
         self.json_informacion["dnsdumpster"] = {"txt": [], "mx": [], "dns": [], "host": [{
             "dominio": "",
             "ip": "",
@@ -244,10 +244,12 @@ class Obtener_informacion():
                                                            "ciudad": "NA",
                                                            "pais": "NA",
                                                            "red": "NA"},
-                                           "dns_forward": [], "host_forward": [], "mx_forward": [], "host_reverse": []}
+                                           "dns_forward": [], "host_forward": [], 
+                                           "mx_forward": [], "host_reverse": []}
 
         self.json_informacion["google"] = {}
         self.json_informacion["bing"] = {}
+
         self.informacion_ipv4 = {"inicio_bloque": "", "final_bloque": "", "nombre_bloque": "",
                                  "region": "", "pais": "", "fecha_registro": "", "nombre_bloque": "",
                                  "numero_as": "", "bloque_padre": "", "tamaño_bloque": "", "organizacion": "",
@@ -343,7 +345,6 @@ class Obtener_informacion():
             resultados_finales[etiqueta] = resultados_query
             #time.sleep(60)
         self.json_informacion["google"] = resultados_finales
-
 
     def busqueda_g(self, query):
         '''
@@ -582,6 +583,7 @@ class Obtener_informacion():
         informacion_dnsdumpster['mx'] = []
         informacion_dnsdumpster['host'] = []
         registros = DNSDumpsterAPI().search(self.sitio)
+
         if len(registros) != 0:
             registros = registros["dns_records"]
             informacion_dnsdumpster["txt"] = registros["txt"]
@@ -590,16 +592,19 @@ class Obtener_informacion():
                     registro_dns, temp_registros, contador_datos))
                 temp_registros = {}
             informacion_dnsdumpster['dns'] = dns
+
             for registro_mx in registros["mx"]:
                 mx.append(self.clasificacion_dnsdumspter(
                     registro_mx, temp_registros, contador_datos))
                 temp_registros = {}
             informacion_dnsdumpster['mx'] = mx
+
             for registro_host in registros["host"]:
                 host.append(self.clasificacion_dnsdumspter(
                     registro_host, temp_registros, contador_datos))
                 temp_registros = {}
             informacion_dnsdumpster['host'] = host
+
         self.json_informacion["dnsdumpster"] = informacion_dnsdumpster
 
     def clasificacion_dnsdumspter(self, registros_tipos, temp_registros, contador_datos):
@@ -630,12 +635,6 @@ class Obtener_informacion():
             if contador_datos == 5:
                 return temp_registros
         return temp_registros
-
-# def renovar_tor_ip():
-#   with Controller.from_port(port = 9051) as controller:
-#       controller.authenticate(password="hola123")
-#       controller.signal(Signal.NEWNYM)
-
 
 def obtener_sitio_dominio(sitio_limpiar):
     '''

@@ -1,4 +1,4 @@
-https://altoromutual.com/
+http://altoromutual.com/
 http://localhost/DVWA-master/
 http://localhost/joomla/
 http://testasp.vulnweb.com/

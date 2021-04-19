@@ -913,13 +913,16 @@ class Drupal():
 			False: Si no se detecta la etiqueta
 		'''
 		gcontext = ssl.SSLContext()
-		html = urlopen(self.url,context=gcontext)
-		bs_object = bs(html,features="html.parser")
-		exp_regular = r'Drupal [7-9].*'
-		for tag in bs_object.findAll("meta",{"content":re.compile(exp_regular)}):
-			if re.search(exp_regular, str(tag)):
-				return True
-		return False
+		try:
+			html = urlopen(self.url,context=gcontext)
+			bs_object = bs(html,features="html.parser")
+			exp_regular = r'Drupal [7-9].*'
+			for tag in bs_object.findAll("meta",{"content":re.compile(exp_regular)}):
+				if re.search(exp_regular, str(tag)):
+					return True
+			return False
+		except:
+			return False
 
 	def realiza_peticiones(self,recursos,busqueda,codigo=0):
 		'''
@@ -1098,10 +1101,12 @@ class Joomla():
 			True: Si se comprueba que en el contenido se encuentra la cadena
 			False: Si no se comprueba que en el contenido exista la cadena
 		'''
-		metatags = soup.find_all(tag,attrs=attrs_objeto)
-		for tag in metatags:
-			if (if_containts in str(tag).lower()):
-				return True
+		if attrs_objeto is not None:
+			metatags = soup.find_all(tag,attrs=attrs_objeto)
+			for tag in metatags:
+				if (if_containts in str(tag).lower()):
+					return True
+		
 		return False
 
 	def cargar_configuracion(self):

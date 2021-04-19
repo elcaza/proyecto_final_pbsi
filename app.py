@@ -280,18 +280,18 @@ class Masivo():
             primero valida que le fecha sea actual, así como que contenga datos validos para lanzar el analisis
             este analisis consiste en ejecutar los modulos de "obtener informacion", "analisis", "fuzzing" y "explotacion"
         '''
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            print("Iniciando Información")
-            executor.submit(self.execute_informacion)
+        # with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        #     print("Iniciando Información")
+        #     executor.submit(self.execute_informacion)
 
-            #print("Iniciando Análisis")
-            executor.submit(self.execute_analisis_fuzz)
+        #     print("Iniciando Análisis")
+        #     executor.submit(self.execute_analisis)
 
-        # print("Iniciando Información")
-        # self.execute_informacion()
+        print("Iniciando Información")
+        self.execute_informacion()
 
-        # print("Iniciando Análisis")
-        # self.execute_analisis()
+        print("Iniciando Análisis")
+        self.execute_analisis()
 
         #self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/drupal7/","forms":{}}]
         # self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://seguridad.unam.mx/","forms":{}}]
@@ -305,6 +305,9 @@ class Masivo():
         # # # #{'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'},{'pagina': 'http://altoromutual.com:8080/status_check.jsp'},
         # # {'pagina': 'http://altoromutual.com:8080/default.jsp?content=security.htm'}, {'pagina': 'http://altoromutual.com:8080/survey_questions.jsp'}, {'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'}, {'pagina': 'http://altoromutual.com:8080/status_check.jsp'}, {'pagina': 'http://altoromutual.com:8080/swagger/index.html'}, {'pagina': 'http://altoromutual.com:8080/index.jsp/swagger/index.html'},#{'pagina': 'http://altoromutual.com:8080/swagger/index.html'}
         # ]
+
+        print("Iniciando Fuzzing")
+        self.execute_fuzzing()
 
         print("Iniciando Explotacion")
         self.execute_explotacion()
@@ -330,12 +333,6 @@ class Masivo():
             archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
             with open (self.error, "a") as error:
                 error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Información\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
-
-    def execute_analisis_fuzz(self):
-        print("Iniciando Analisis")
-        self.execute_analisis()
-        print("Iniciando Fuzzing")
-        self.execute_fuzzing()
 
     def execute_analisis(self):
         '''
@@ -415,6 +412,7 @@ class Masivo():
                     "tiempo_espera":self.peticion_proceso["tiempo_espera"]
                 }
                 futures.append(executor.submit(fuzzing.execute,json_fuzzing))
+
             for future in concurrent.futures.as_completed(futures):
                 forms = future.result()
                 if forms != False:
@@ -428,6 +426,8 @@ class Masivo():
             para ejecutar cada exploit
         '''
         exploits = self.buscar_exploits()
+        print("EXPLOITS ENCONTRADOS")
+
         if len(exploits) != 0:
             exploits = list({(e["ruta"],e["lenguaje"]):e for e in exploits}.values())
             explotaciones = explotacion.execute(self.datos_explotacion,exploits)
@@ -628,10 +628,6 @@ class Masivo():
             caracteristica : str
                 valor para extraer el software y version del analisis
 
-            software: str
-            version:[
-                str,int,int
-            ]
         '''
         datos_identificados = []
         if caracteristica in peticion_proceso:
@@ -703,7 +699,6 @@ class Masivo():
         version = 0
         if caracteristica in peticion_proceso:
             for dato in peticion_proceso[caracteristica]:
-                print(dato)
                 if str(type(dato)).find("list") >= 0:
                     nombre = dato
                     datos_identificados.append({"cms_nombre":cms,"cms_categoria":caracteristica, "cms_extension_nombre":nombre,"cms_extension_version":0})
@@ -1698,9 +1693,14 @@ class Reportes():
                 diccionario que contiene el resultado del analisis
         '''
         pais = peticion_proceso["informacion"]["robtex"]["informacion"]["pais"]
-        pais_secundario = peticion_proceso["informacion"]["dnsdumpster"]["host"][0]["pais"]
+        try:
+            pais_secundario = peticion_proceso["informacion"]["dnsdumpster"]["host"][0]["pais"]
+        except:
+            pais_secundario = ""
+
         if pais == "NA" and pais_secundario != "":
             pais = pais_secundario
+
         return pais
 
     def obtener_puertos_grafica(self, peticion_proceso):
@@ -2279,7 +2279,6 @@ class Utileria():
         consulta["ultima_fecha"] = ultima_fecha
         consulta["analisis"] = analisis
         respueta_json = consulta
-        print(respueta_json)
         respueta_json["status"] = "Reportes cargados"
         return respueta_json
 
@@ -2320,6 +2319,7 @@ class Utileria():
             sitio = peticion["sitio"]
             requests.get(sitio, verify=False)
         except Exception as e:
+            print(e)
             print("No hay conexion a Internet o el sitio no es valido")
             return False
         
@@ -2619,9 +2619,9 @@ def ciclo_analisis():
         if peticiones > 0:
             peticion = cola.pop_peticion()
             # try:
-            #     ejecucion_analisis(peticion)
+            #     Masivo(peticion)
             # except Exception as e:
-            #     print("Ocurrió un error bro", e)
+            #     print("Ocurrió un error durante la ejecución", e)
             Masivo(peticion)
         cola.reset_peticion_actual()
         sleep(2)

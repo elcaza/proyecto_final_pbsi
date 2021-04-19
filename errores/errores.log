@@ -1,1 +1,2 @@
 El módulo de "Explotación" falló en,list indices must be integers or slices, not str:tipo,<class 'TypeError'>:archivo,app.py:linea,377
+El módulo de "Información" falló en,HTTPSConnectionPool(host='freeapi.robtex.com', port=443): Max retries exceeded with url: /ipquery/18.192.172.30 (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd6984dfb20>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')):tipo,<class 'requests.exceptions.ConnectionError'>:archivo,app.py:linea,325
