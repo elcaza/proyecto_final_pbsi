@@ -1,0 +1,5 @@
+Tipo,Nombre
+Archivos configuracion,http://testphp.vulnweb.com/admin/create.sql
+Archivos configuracion,http://testphp.vulnweb.com/showimage.php?file=/etc/passwd
+Archivos configuracion,http://testphp.vulnweb.com/pictures/WS_FTP.LOG
+Archivos configuracion,http://testphp.vulnweb.com/bxss/vuln.php?id=1

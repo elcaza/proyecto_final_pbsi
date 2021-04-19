@@ -94,6 +94,15 @@
 					<textarea name="" id="lista_negra" cols="30" rows="10"></textarea>
 				</div>
 			</div>
+			<div class="modulos__config">
+				<div class="modulos__opcion__nombre">Tiempo de espera</div>
+				<div class="modulos__opcion__descripcion">Indica el tiempo de espera en segundos 
+
+				</div>
+				<div class="modulos__opcion__valor">
+					<input id="tiempo_espera" type="number">
+				</div>
+			</div>
 		</div>
 	</section>
 
@@ -254,12 +263,12 @@
 	<script src="../static/js/toastr.min.js"></script>
 
 	<div class="contenedor-titulo" style="text-align: center;">
-		<img src="../static/img/unam_negro.png"
+		<img src="{{ url_for('static', filename='img/unam_negro.png') }}"
 		width="56px" height="56px" style="vertical-align: middle; border: 0; max-width: 100%; padding-right: 4px; -webkit-filter: invert(1); filter: invert(1);">
 		<h4 style="line-height: 80px; font-family: sans-serif; color:#FFFFFF; margin: 0; padding: 0; display: inline; ">
 			Coordinación de Seguridad de la Información
 		</h4>
-		<img src="../static/img/cert_negro.png"
+		<img src="{{ url_for('static', filename='img/cert_negro.png') }}"
 			width="56px" height="56px" style="vertical-align:middle; border: 0; max-width: 100%; -webkit-filter: invert(1); filter: invert(1);">
 	</div>
 	<div class="footer__copy">

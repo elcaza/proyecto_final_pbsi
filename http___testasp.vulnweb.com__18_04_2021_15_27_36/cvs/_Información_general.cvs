@@ -1,0 +1,13 @@
+Nombre,Descripción
+Sitio,http://testasp.vulnweb.com/
+IP,3.126.110.1
+País,United States
+Puertos,0
+Servidor,IIS
+CMS,NA
+CVE,0
+IOC,0
+Cifrados Débiles,0
+Vulnerabilidades,39
+Posibles Vulnerabilidades,0
+Explotación,0

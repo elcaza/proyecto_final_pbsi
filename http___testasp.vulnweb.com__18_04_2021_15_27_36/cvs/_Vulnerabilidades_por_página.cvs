@@ -1,0 +1,10 @@
+Página,XSS,SQLi,SQLi Blind,SQLi Blind Time,LFI,Upload
+http://testasp.vulnweb.com/,0,0,0,0,0,0
+http://testasp.vulnweb.com/Templatize.asp?item=html/about.html,0,0,0,0,0,0
+http://testasp.vulnweb.com/Default.asp,0,0,0,0,0,0
+http://testasp.vulnweb.com/Search.asp,27,0,0,0,0,0
+http://testasp.vulnweb.com/Login.asp?RetURL=%2FDefault%2Easp%3F,0,0,0,0,0,0
+http://testasp.vulnweb.com/Register.asp?RetURL=%2FDefault%2Easp%3F,0,0,0,0,0,0
+http://testasp.vulnweb.com/showforum.asp?id=0,0,0,4,0,0,0
+http://testasp.vulnweb.com/showforum.asp?id=1,0,0,4,0,0,0
+http://testasp.vulnweb.com/showforum.asp?id=2,0,0,4,0,0,0

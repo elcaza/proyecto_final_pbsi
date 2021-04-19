@@ -1,0 +1,3 @@
+Tipo,Puerto,Protocolo,Servicio
+Filtrado,23,tcp,Telnet
+Filtrado,80,tcp,Http

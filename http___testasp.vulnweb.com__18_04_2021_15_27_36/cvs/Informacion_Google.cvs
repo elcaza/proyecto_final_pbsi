@@ -1,0 +1,3 @@
+Tipo,Nombre
+Inicio sesion,http://testasp.vulnweb.com/Login.asp?RetURL=/Default.asp?
+Backdoor,http://testasp.vulnweb.com/showthread.asp?id=40

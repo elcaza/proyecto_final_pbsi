@@ -1,0 +1,15 @@
+Página,XSS,SQLi,SQLi Blind,SQLi Blind Time,LFI,Upload
+http://testphp.vulnweb.com,6,0,0,0,0,0
+http://testphp.vulnweb.com/,6,0,0,0,0,0
+http://testphp.vulnweb.com/index.php,6,0,0,0,0,0
+http://testphp.vulnweb.com/categories.php,6,0,0,0,0,0
+http://testphp.vulnweb.com/artists.php,6,0,0,0,0,0
+http://testphp.vulnweb.com/disclaimer.php,6,0,0,0,0,0
+http://testphp.vulnweb.com/cart.php,6,0,0,0,0,0
+http://testphp.vulnweb.com/guestbook.php,12,0,0,0,0,0
+http://testphp.vulnweb.com/AJAX/index.php,0,0,0,0,0,0
+http://testphp.vulnweb.com/login.php,6,0,0,0,0,0
+http://testphp.vulnweb.com/userinfo.php,6,0,0,0,0,0
+http://testphp.vulnweb.com/privacy.php,0,0,0,0,0,0
+http://testphp.vulnweb.com/Mod_Rewrite_Shop/,0,0,0,0,0,0
+http://testphp.vulnweb.com/hpp/,0,0,0,0,0,0

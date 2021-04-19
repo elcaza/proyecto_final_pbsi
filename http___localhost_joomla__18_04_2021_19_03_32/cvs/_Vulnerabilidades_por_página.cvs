@@ -1,0 +1,6 @@
+Página,XSS,SQLi,SQLi Blind,SQLi Blind Time,LFI,Upload
+http://localhost/joomla/,0,0,0,0,0,0
+http://localhost/joomla/index.php,0,0,0,0,0,0
+http://localhost/joomla/index.php/component/users/?view=remind&Itemid=101,0,0,0,0,0,0
+http://localhost/joomla/index.php/component/users/?view=reset&Itemid=101,0,0,0,0,0,0
+http://localhost/joomla/#top,0,0,0,0,0,0
