@@ -28,7 +28,7 @@ sudo systemctl enable mongod
 sudo systemctl stop mongod
 sudo systemctl restart mongod
 sudo apt install -y python3-pip git nmap
-wget https://chromedriver.storage.googleapis.com/88.0.4324.96/chromedriver_linux64.zip
+wget https://chromedriver.storage.googleapis.com/90.0.4430.24/chromedriver_linux64.zip
 unzip chromedriver_linux64.zip
 sudo mv chromedriver /usr/bin/
 sudo apt install -y testssl.sh
@@ -38,4 +38,4 @@ sudo pip3 install -r requeriments.txt
 git clone https://github.com/tasos-py/Search-Engines-Scraper.git
 cd Search-Engines-Scraper
 sudo python3 setup.py install
-sudo rm chromedriver_linux64.zip google-chrome-stable_current_amd64.deb
+sudo rm chromedriver_linux64.zip google-chrome-stable_current_amd64.deb 2> /dev/null
