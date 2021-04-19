@@ -18,7 +18,7 @@ from base64 import b64decode
 import sys
 
 ## Modulos
-from modules.obtencion_informacion import obtener_informacion as obtener_informacion
+from modules.obtencion_informacion import obtener_informacion
 from modules.alertas import alertas
 from modules.analisis import analisis_2 as analisis
 from modules.exploits import exploits as exp
@@ -280,14 +280,19 @@ class Masivo():
             primero valida que le fecha sea actual, así como que contenga datos validos para lanzar el analisis
             este analisis consiste en ejecutar los modulos de "obtener informacion", "analisis", "fuzzing" y "explotacion"
         '''
-            
-        print("Iniciando Información")
-        self.execute_informacion()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            print("Iniciando Información")
+            executor.submit(self.execute_informacion)
 
-        print("Iniciando Análisis")
-        self.execute_analisis()
+            #print("Iniciando Análisis")
+            executor.submit(self.execute_analisis_fuzz)
 
-        print("Iniciando Fuzzing")
+        # print("Iniciando Información")
+        # self.execute_informacion()
+
+        # print("Iniciando Análisis")
+        # self.execute_analisis()
+
         #self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/drupal7/","forms":{}}]
         # self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://seguridad.unam.mx/","forms":{}}]
         # self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/DVWA-master/logout.php","forms":{}}]
@@ -300,7 +305,6 @@ class Masivo():
         # # # #{'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'},{'pagina': 'http://altoromutual.com:8080/status_check.jsp'},
         # # {'pagina': 'http://altoromutual.com:8080/default.jsp?content=security.htm'}, {'pagina': 'http://altoromutual.com:8080/survey_questions.jsp'}, {'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'}, {'pagina': 'http://altoromutual.com:8080/status_check.jsp'}, {'pagina': 'http://altoromutual.com:8080/swagger/index.html'}, {'pagina': 'http://altoromutual.com:8080/index.jsp/swagger/index.html'},#{'pagina': 'http://altoromutual.com:8080/swagger/index.html'}
         # ]
-        self.execute_fuzzing()
 
         print("Iniciando Explotacion")
         self.execute_explotacion()
@@ -326,6 +330,12 @@ class Masivo():
             archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
             with open (self.error, "a") as error:
                 error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Información\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
+
+    def execute_analisis_fuzz(self):
+        print("Iniciando Analisis")
+        self.execute_analisis()
+        print("Iniciando Fuzzing")
+        self.execute_fuzzing()
 
     def execute_analisis(self):
         '''
@@ -617,6 +627,11 @@ class Masivo():
                 diccionario que contiene todo el analisis del sitio
             caracteristica : str
                 valor para extraer el software y version del analisis
+
+            software: str
+            version:[
+                str,int,int
+            ]
         '''
         datos_identificados = []
         if caracteristica in peticion_proceso:
@@ -628,7 +643,7 @@ class Masivo():
                 if "version" in dato:
                     if len(dato["version"]) > 0:
                         for tipo in dato["version"]:
-                            version = dato["version"][tipo]
+                            version = tipo
                             version_regex = re.search(patron_version, version)
                             if version_regex is not None :
                                 version = float(version_regex.group())

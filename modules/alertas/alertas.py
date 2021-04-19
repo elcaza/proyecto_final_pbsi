@@ -1,4 +1,3 @@
-from app import exploits
 import smtplib
 import ssl
 from datetime import datetime
