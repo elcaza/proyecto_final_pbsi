@@ -2,6 +2,7 @@ from pymongo import MongoClient, errors
 from os import path, pardir
 import base64
 import json
+import re
 
 class Conector():
     '''
@@ -200,31 +201,39 @@ class Conector():
             profunidad : int
                 nivel de profundidad
         '''
+        regex_nombre = "(\w+)+"        
+        resultado = re.findall(regex_nombre,json_software["software_nombre"])
+        software_valido = " ".join(resultado)
+
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
                 softwares_iterados = {"exploits":[]}
                 coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
+
                 if profundidad == 1:
                     softwares = coleccion_exploits.find({
-                                                        "software_nombre":{"$regex":json_software["software_nombre"],"$options":"i"},
+                                                        "software_nombre":{"$regex":software_valido,"$options":"i"},
                                                         "software_version":json_software["software_version"]
                                                         })
                 elif profundidad == 2:
                     softwares = coleccion_exploits.find({
-                                                    "software_nombre":{"$regex":json_software["software_nombre"],"$options":"i"},
-                                                    "software_version":{"lte":json_software["software_version"]}
+                                                    "software_nombre":{"$regex":software_valido,"$options":"i"},
+                                                    "software_version":{"$regex":json_software["software_version"]+".*"}
                                                     })
                 else: 
                     softwares = coleccion_exploits.find({
-                                                    "software_nombre":{"$regex":json_software["software_nombre"],"$options":"i"}
+                                                    "software_nombre":{"$regex":software_valido,"$options":"i"}
                                                     })
+
                 for software in softwares:
                     lenguaje = software["extension"]
+
                     if lenguaje == "sh":
                         lenguaje = ""
                     else:
                         lenguaje += " "
                     ruta = software["ruta"] + "/" + software["exploit"]
+
                     if not path.exists(ruta):
                         ruta = "error"
                     softwares_iterados["exploits"].append({"ruta":ruta,"lenguaje":lenguaje})
@@ -243,29 +252,38 @@ class Conector():
             profundidad : int
                 nivel de profunidad
         '''
+        regex_nombre = "(\w+)+"        
+        resultado = re.findall(regex_nombre,json_cms["cms_nombre"])
+        cms_nombre = " ".join(resultado)
+        resultado = re.findall(regex_nombre,json_cms["cms_categoria"])
+        cms_categoria = " ".join(resultado)
+        resultado = re.findall(regex_nombre,json_cms["cms_extension_nombre"])
+        cms_extension_nombre = " ".join(resultado)
+
         with self.conexion.start_session() as sesion:
             with sesion.start_transaction():
                 cmss_iterados = {"exploits":[]}
                 coleccion_exploits = self.base_datos[self.strings["COLECCION_EXPLOITS"]]
                 if profundidad == 1:
                     cmss = coleccion_exploits.find({
-                                                        "cms_nombre":{"$regex":json_cms["cms_nombre"],"$options":"i"},
-                                                        "cms_categoria":{"$regex":json_cms["cms_categoria"],"$options":"i"},
-                                                        "cms_extension_nombre":{"$regex":json_cms["cms_extension_nombre"],"$options":"i"},
+                                                        "cms_nombre":{"$regex":cms_nombre,"$options":"i"},
+                                                        "cms_categoria":{"$regex":cms_categoria,"$options":"i"},
+                                                        "cms_extension_nombre":{"$regex":cms_extension_nombre,"$options":"i"},
                                                         "cms_extension_version":json_cms["cms_extension_version"] 
                                                     })
                 elif profundidad == 2:
                     cmss = coleccion_exploits.find({
-                                                    "cms_nombre":{"$regex":json_cms["cms_nombre"],"$options":"i"},
-                                                    "cms_categoria":{"$regex":json_cms["cms_categoria"],"$options":"i"},
-                                                    "cms_extension_nombre":{"$regex":json_cms["cms_extension_nombre"],"$options":"i"},
-                                                    "cms_extension_version":{"lte":json_cms["cms_extension_version"]}
+                                                    "cms_nombre":{"$regex":cms_nombre,"$options":"i"},
+                                                    "cms_categoria":{"$regex":cms_categoria,"$options":"i"},
+                                                    "cms_extension_nombre":{"$regex":cms_extension_nombre,"$options":"i"},
+                                                    "cms_extension_version":{"$regex":json_cms["cms_extension_version"]+".*"}
                                                     })
                 else:
                     cmss = coleccion_exploits.find({
-                                                    "cms_nombre":{"$regex":json_cms["cms_nombre"],"$options":"i"},
-                                                    "cms_categoria":{"$regex":json_cms["cms_categoria"],"$options":"i"},
-                                                    "cms_extension_nombre":{"$regex":".*"},
+                                                    "cms_nombre":{"$regex":cms_nombre,"$options":"i"},
+                                                    "cms_categoria":{"$regex":cms_categoria,"$options":"i"},
+                                                    "cms_extension_nombre":{"$regex":cms_extension_nombre,"$options":"i"},
+                                                    "cms_extension_version":{"$regex":".*"},
                                                     })
                 for cms in cmss:
                     lenguaje = self.definir_lenguaje(cms["exploit"])

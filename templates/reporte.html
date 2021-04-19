@@ -45,11 +45,11 @@
                 </div>
         
             <h2 class="subtitulo" style="text-align: center;">
-                REPORTE DEL SITIO http://testphp.vulnweb.com
+                REPORTE DEL SITIO http://testphp.vulnweb.com/
             </h2>
             <!-- Fecha del analisis-->
             <h4 class="subtitulo" style="text-align: center;">
-                18/04/2021 22:46:24
+                19/04/2021 18:40:12
             </h4>
             <hr class="linea-doble-divisora">
         
@@ -65,7 +65,286 @@
                     </tr>
                 </thead>
                 <tbody>
-                <tr><th class="tabla-descripcion-renglon" scope="row">Sitio</th><td class="tabla-descripcion-renglon">http://testphp.vulnweb.com</td></tr> 
+                <tr><th class="tabla-descripcion-renglon" scope="row">Sitio</th><td class="tabla-descripcion-renglon">http://testphp.vulnweb.com/</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">IP</th><td class="tabla-descripcion-renglon">18.192.172.30</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">País</th><td class="tabla-descripcion-renglon">United States</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Puertos</th><td class="tabla-descripcion-renglon">1</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Servidor</th><td class="tabla-descripcion-renglon">Nginx 1.19.0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">CMS</th><td class="tabla-descripcion-renglon">Na NA</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">CVE</th><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">IOC</th><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Cifrados Débiles</th><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Vulnerabilidades</th><td class="tabla-descripcion-renglon">60</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Posibles Vulnerabilidades</th><td class="tabla-descripcion-renglon">270</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Explotación</th><td class="tabla-descripcion-renglon">0</td></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="puertos">
+                Puertos
+            </h3>
+        
+            <div class="contenedor-grafica">                           
+                </iframe>                           
+                    <iframe src="/reporte-informacion" width="100%" height="400">
+                </iframe>
+            </div>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">Tipo</th> <th class="tabla-descripcion-renglon" scope="col">Puerto</th> <th class="tabla-descripcion-renglon" scope="col">Protocolo</th> <th class="tabla-descripcion-renglon" scope="col">Servicio</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">Abierto</th><td class="tabla-descripcion-renglon">80</td><td class="tabla-descripcion-renglon">tcp</td><td class="tabla-descripcion-renglon">Tcpwrapped </td></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="dns_dumpster">
+                DNS Dumpster
+            </h3>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">Tipo</th> <th class="tabla-descripcion-renglon" scope="col">Valor</th> <th class="tabla-descripcion-renglon" scope="col">IP</th> <th class="tabla-descripcion-renglon" scope="col">DNS Inverso</th> <th class="tabla-descripcion-renglon" scope="col">País</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">Txt</th><td class="tabla-descripcion-renglon">"google-site-verification:toEctYsulNIxgraKk7H3z58PCyz2IOCc36pIupEPmYQ"</td><td class="tabla-descripcion-renglon">NA</td><td class="tabla-descripcion-renglon">NA</td><td class="tabla-descripcion-renglon">NA</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Host</th><td class="tabla-descripcion-renglon">testphp.vulnweb.com</td><td class="tabla-descripcion-renglon">18.192.172.30</td><td class="tabla-descripcion-renglon">ec2-18-192-172-30.eu-central-1.compute.amazonaws.com</td><td class="tabla-descripcion-renglon">unknown</td></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="robtex">
+                Robtex
+            </h3>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">Tipo</th> <th class="tabla-descripcion-renglon" scope="col">Dominio</th> <th class="tabla-descripcion-renglon" scope="col">Dominio - IP</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">Host forward</th><td class="tabla-descripcion-renglon">testphp.vulnweb.com</td><td class="tabla-descripcion-renglon">176.28.50.165</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Host forward</th><td class="tabla-descripcion-renglon">testphp.vulnweb.com</td><td class="tabla-descripcion-renglon">18.192.172.30</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Host reverse</th><td class="tabla-descripcion-renglon">*.vulnweb.com</td><td class="tabla-descripcion-renglon">18.192.172.30</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Host reverse</th><td class="tabla-descripcion-renglon">testap.vulnweb.com</td><td class="tabla-descripcion-renglon">18.192.172.30</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Host reverse</th><td class="tabla-descripcion-renglon">httptestphp.vulnweb.com</td><td class="tabla-descripcion-renglon">18.192.172.30</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Host reverse</th><td class="tabla-descripcion-renglon">pingwww.vulnweb.com</td><td class="tabla-descripcion-renglon">18.192.172.30</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Host reverse</th><td class="tabla-descripcion-renglon">gd.vulnweb.com</td><td class="tabla-descripcion-renglon">18.192.172.30</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Host reverse</th><td class="tabla-descripcion-renglon">htttestphp.vulnweb.com</td><td class="tabla-descripcion-renglon">18.192.172.30</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Host reverse</th><td class="tabla-descripcion-renglon">testephp.vulnweb.com</td><td class="tabla-descripcion-renglon">18.192.172.30</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Host reverse</th><td class="tabla-descripcion-renglon">phptest.vulnweb.com</td><td class="tabla-descripcion-renglon">18.192.172.30</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Host reverse</th><td class="tabla-descripcion-renglon">testphp.vulnweb.com</td><td class="tabla-descripcion-renglon">18.192.172.30</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Host reverse</th><td class="tabla-descripcion-renglon">testpho.vulnweb.com</td><td class="tabla-descripcion-renglon">18.192.172.30</td></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="google">
+                Google
+            </h3>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">Tipo</th> <th class="tabla-descripcion-renglon" scope="col">Nombre</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">NA</th><td class="tabla-descripcion-renglon">No se encontraron enlaces</td></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="bing">
+                Bing
+            </h3>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">Tipo</th> <th class="tabla-descripcion-renglon" scope="col">Nombre</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">Archivos configuracion</th><td class="tabla-descripcion-renglon">http://testphp.vulnweb.com/admin/create.sql</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Archivos configuracion</th><td class="tabla-descripcion-renglon">http://testphp.vulnweb.com/showimage.php?file=/etc/passwd</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Archivos configuracion</th><td class="tabla-descripcion-renglon">http://testphp.vulnweb.com/pictures/WS_FTP.LOG</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">Archivos configuracion</th><td class="tabla-descripcion-renglon">http://testphp.vulnweb.com/bxss/vuln.php?id=1</td></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="bibliotecas,_frameworks,_lenguajes">
+                Bibliotecas, Frameworks, Lenguajes
+            </h3>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">Tipo</th> <th class="tabla-descripcion-renglon" scope="col">Nombre</th> <th class="tabla-descripcion-renglon" scope="col">Versión</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">Lenguaje</th><td class="tabla-descripcion-renglon">PHP</td><td class="tabla-descripcion-renglon">5.6.40</td></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="cifrados">
+                Cifrados
+            </h3>
+        
+            <div class="contenedor-grafica">                           
+                </iframe>                           
+                    <iframe src="/reporte-analisis" width="100%" height="400">
+                </iframe>
+            </div>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">Nombre</th> <th class="tabla-descripcion-renglon" scope="col">Interpretación</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">No se encontraron cifrados</th><td class="tabla-descripcion-renglon">NA</td></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="plugins">
+                Plugins
+            </h3>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">Nombre</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">No se encontraron plugins</th></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="archivos">
+                Archivos
+            </h3>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">Nombre</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">No se encontraron archivos</th></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="cve">
+                CVE
+            </h3>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">Nombre</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">No se encontraron vulnerabilidades</th></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="headers">
+                Headers
+            </h3>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">Nombre</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">No se encontraron headers</th></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="vulnerabilidades">
+                Vulnerabilidades
+            </h3>
+        
+            <div class="contenedor-grafica">                           
+                </iframe>                           
+                    <iframe src="/reporte-fuzzing" width="100%" height="400">
+                </iframe>
+            </div>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">XSS</th> <th class="tabla-descripcion-renglon" scope="col">SQLi</th> <th class="tabla-descripcion-renglon" scope="col">SQLi Blind</th> <th class="tabla-descripcion-renglon" scope="col">SQLi Blind Time</th> <th class="tabla-descripcion-renglon" scope="col">LFI</th> <th class="tabla-descripcion-renglon" scope="col">Upload</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">60</th><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="vulnerabilidades_por_página">
+                Vulnerabilidades por página
+            </h3>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">Página</th> <th class="tabla-descripcion-renglon" scope="col">XSS</th> <th class="tabla-descripcion-renglon" scope="col">SQLi</th> <th class="tabla-descripcion-renglon" scope="col">SQLi Blind</th> <th class="tabla-descripcion-renglon" scope="col">SQLi Blind Time</th> <th class="tabla-descripcion-renglon" scope="col">LFI</th> <th class="tabla-descripcion-renglon" scope="col">Upload</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">http://testphp.vulnweb.com/</th><td class="tabla-descripcion-renglon">6</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">http://testphp.vulnweb.com/index.php</th><td class="tabla-descripcion-renglon">6</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">http://testphp.vulnweb.com/categories.php</th><td class="tabla-descripcion-renglon">6</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">http://testphp.vulnweb.com/artists.php</th><td class="tabla-descripcion-renglon">6</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">http://testphp.vulnweb.com/disclaimer.php</th><td class="tabla-descripcion-renglon">6</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">http://testphp.vulnweb.com/cart.php</th><td class="tabla-descripcion-renglon">6</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">http://testphp.vulnweb.com/guestbook.php</th><td class="tabla-descripcion-renglon">12</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">http://testphp.vulnweb.com/AJAX/index.php</th><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">http://testphp.vulnweb.com/login.php</th><td class="tabla-descripcion-renglon">6</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">http://testphp.vulnweb.com/userinfo.php</th><td class="tabla-descripcion-renglon">6</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">http://testphp.vulnweb.com/privacy.php</th><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">http://testphp.vulnweb.com/Mod_Rewrite_Shop/</th><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr><tr><th class="tabla-descripcion-renglon" scope="row">http://testphp.vulnweb.com/hpp/</th><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="posibles_vulnerabilidades">
+                Posibles Vulnerabilidades
+            </h3>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">XSS</th> <th class="tabla-descripcion-renglon" scope="col">SQLi</th> <th class="tabla-descripcion-renglon" scope="col">LFI</th> <th class="tabla-descripcion-renglon" scope="col">Upload</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                <tr><th class="tabla-descripcion-renglon" scope="row">270</th><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td><td class="tabla-descripcion-renglon">0</td></tr> 
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="subtitulo" id="explotación">
+                Explotación
+            </h3>
+        
+            <div class="contenedor-grafica">                           
+                </iframe>                           
+                    <iframe src="/reporte-explotacion" width="100%" height="400">
+                </iframe>
+            </div>
+        
+        <div>
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+        <th class="tabla-descripcion-renglon" scope="col">Nombre</th> <th class="tabla-descripcion-renglon" scope="col">Resultado</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                 
                     </tbody>
                 </table>
             </div>

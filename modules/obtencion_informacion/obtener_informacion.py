@@ -546,14 +546,15 @@ class Obtener_informacion():
                 puerto_protocolo = separar_linea[0].split("/")
                 temp_informacion["puerto"] = puerto_protocolo[0]
                 temp_informacion["protocolo"] = puerto_protocolo[1]
-                temp_informacion["servicio"] = separar_linea[2]
-                for version in separar_linea[3:]:
-                    version_regex = re.search(patron_version, version)
-                    if version_regex:
-                        temp_informacion["version"] = version_regex.group()
-                        break
-                    else:
-                        temp_informacion["version"] = 0
+                temp_informacion["servicio"] = separar_linea[2] + " " + "".join(separar_linea[3:])
+                temp_informacion["version"] = "".join(separar_linea[3:])
+                # for version in separar_linea[3:]:
+                #     version_regex = re.search(patron_version, version)
+                #     if version_regex:
+                #         temp_informacion["version"] = version_regex.group()
+                #         break
+                #     else:
+                #         temp_informacion["version"] = 0
                 if separar_linea[1] == "open":
                     puertos_abiertos.append(temp_informacion)
                     puertos_completos["abiertos"] = puertos_abiertos

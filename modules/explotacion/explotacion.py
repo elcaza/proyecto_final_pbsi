@@ -159,14 +159,15 @@ class Explotacion():
         resultado = {}
         json_temporal = {}
         exploit_temporal, exploit_preparado = self.limpiar_exploit(exploit, lenguaje)
-        for producto in self.producto_valor:
-            valor = ",".join(str(dato) for dato in producto[1:])
-            self.cargar_parametros(producto, exploit, exploit_temporal)
-            self.otorgar_permisos_exploit(exploit_temporal)
-            resultado[valor] = self.ejecutar_exploit(exploit_preparado)
-            resultado[valor] = self.validar_resultado(resultado[valor])
-            self.eliminiar_exploit_temporal(exploit_temporal)
-            json_temporal[self.obtener_nombre(exploit)] = resultado
+        if exploit_temporal != None:
+            for producto in self.producto_valor:
+                valor = ",".join(str(dato) for dato in producto[1:])
+                self.cargar_parametros(producto, exploit, exploit_temporal)
+                self.otorgar_permisos_exploit(exploit_temporal)
+                resultado[valor] = self.ejecutar_exploit(exploit_preparado)
+                resultado[valor] = self.validar_resultado(resultado[valor])
+                self.eliminiar_exploit_temporal(exploit_temporal)
+                json_temporal[self.obtener_nombre(exploit)] = resultado
         return json_temporal
 
     def obtener_producto(self):
@@ -479,9 +480,13 @@ class Explotacion():
                 extension del exploit
         '''
         exploit_separado = exploit.rsplit(".")
-        exploit_temporal = exploit_separado[0] + "_temp." + exploit_separado[1]
-        exploit_preparado = lenguaje+exploit_temporal
-        return exploit_temporal, exploit_preparado
+        try:
+            exploit_temporal = exploit_separado[0] + "_temp." + exploit_separado[1]
+            exploit_preparado = lenguaje+exploit_temporal
+            return exploit_temporal, exploit_preparado
+        except:
+            print("El exploit\"", exploit_separado, "\"es invalido, le falta la extensión")
+            return None
 
     def cargar_parametros(self, producto, exploit, exploit_temporal):
         '''

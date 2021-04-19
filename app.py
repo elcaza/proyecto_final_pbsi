@@ -199,17 +199,17 @@ class Masivo():
         obtener_datos_consulta_exploits():
             Funcion que regresa los datos identificados y datos de explotacion a partir del analisis 
             
-        obtener_sofware_versiones(peticion_proceso, caracteristica):
+        obtener_softwares_versiones(peticion_proceso, caracteristica):
             Funcion que se encarga de extraer el nombre del software y multiples versiones partiendo de las caracteristica
             
-        obtener_software_version_unica(peticion_proceso, caracteristica):
+        obtener_software_version(peticion_proceso, caracteristica):
             Funcion que se encarga de extraer el nombre del software y su version partiendo de las caracteristica
         
-        obtener_cms(peticion_proceso, caracteristica, cms):
+        obtener_plugins(peticion_proceso, caracteristica, cms):
             Funcion que se encarga de extraer el nombre del cms, categoria de la extension, nombre de la extension con su respectiva version
             partiendo de las caracteristica
             
-        obtener_software_version_unica_puertos(peticion_proceso):
+        obtener_version_puertos(peticion_proceso):
             Funcion que se encarga de extraer el nombre del software y su version partiendo de los puertos
         
     '''
@@ -254,7 +254,7 @@ class Masivo():
                 "lista_negra":self.peticion["lista_negra"],
                 "tiempo_espera":self.peticion["tiempo_espera"],
                 "analisis":{"paginas":[]},
-                "verificacion":{"informacion":0,"analisis":0,"fuzzing":0,"explotacion":0}
+                "verificacion":{"informacion":0,"analisis":1,"fuzzing":0,"explotacion":0}
             }
             self.peticion_reporte = {
                 "sitio":self.peticion_proceso["sitio"],
@@ -280,31 +280,11 @@ class Masivo():
             primero valida que le fecha sea actual, así como que contenga datos validos para lanzar el analisis
             este analisis consiste en ejecutar los modulos de "obtener informacion", "analisis", "fuzzing" y "explotacion"
         '''
-        # with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        #     print("Iniciando Información")
-        #     executor.submit(self.execute_informacion)
-
-        #     print("Iniciando Análisis")
-        #     executor.submit(self.execute_analisis)
-
         print("Iniciando Información")
         self.execute_informacion()
 
         print("Iniciando Análisis")
         self.execute_analisis()
-
-        #self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/drupal7/","forms":{}}]
-        # self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://seguridad.unam.mx/","forms":{}}]
-        # self.peticion_proceso["analisis"]["paginas"] = [{"pagina":"https://localhost/DVWA-master/logout.php","forms":{}}]
-        # self.peticion_proceso["analisis"]["paginas"] = [
-        # {'pagina': 'http://testasp.vulnweb.com/showforum.asp?id=1'}
-        # ]
-        # self.peticion_proceso["analisis"]["paginas"] = [
-        # {'pagina': 'http://testasp.vulnweb.com/showforum.asp?id=0'},
-        # # # {'pagina': 'http://altoromutual.com:8080/feedback.jsp'},#, {'pagina': 'http://altoromutual.com:8080/login.jsp'},
-        # # # #{'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'},{'pagina': 'http://altoromutual.com:8080/status_check.jsp'},
-        # # {'pagina': 'http://altoromutual.com:8080/default.jsp?content=security.htm'}, {'pagina': 'http://altoromutual.com:8080/survey_questions.jsp'}, {'pagina': 'http://altoromutual.com:8080/index.jsp?content=security.htm'}, {'pagina': 'http://altoromutual.com:8080/status_check.jsp'}, {'pagina': 'http://altoromutual.com:8080/swagger/index.html'}, {'pagina': 'http://altoromutual.com:8080/index.jsp/swagger/index.html'},#{'pagina': 'http://altoromutual.com:8080/swagger/index.html'}
-        # ]
 
         print("Iniciando Fuzzing")
         self.execute_fuzzing()
@@ -345,57 +325,58 @@ class Masivo():
             peticion_proceso : dict
                 diccionario que guardara el resultado del analisis
         '''
-        respuesta_analisis = analisis.execute(self.peticion_proceso["sitio"], self.peticion_proceso["cookie"], self.peticion_proceso["lista_negra"],self.peticion_proceso["redireccionamiento"])
-        self.peticion_proceso["analisis"] = respuesta_analisis
-        self.peticion_proceso["verificacion"]["analisis"] = 1
-        # try:
-        #     respuesta_analisis = analisis.execute(self.peticion_proceso["sitio"], self.peticion_proceso["cookie"], self.peticion_proceso["lista_negra"],self.peticion_proceso["redireccionamiento"])
-        #     self.peticion_proceso["analisis"] = respuesta_analisis
-        #     self.peticion_proceso["verificacion"]["analisis"] = 1
-        # except Exception as e:
-        #     tipo, base, rastro = sys.exc_info()
-        #     archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
-        #     with open (self.error, "a") as error:
-        #         error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Análisis\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
+        # respuesta_analisis = analisis.execute(self.peticion_proceso["sitio"], self.peticion_proceso["cookie"], self.peticion_proceso["lista_negra"],self.peticion_proceso["redireccionamiento"])
+        # self.peticion_proceso["analisis"] = respuesta_analisis
+        # self.peticion_proceso["verificacion"]["analisis"] = 1
+        try:
+            respuesta_analisis = analisis.execute(self.peticion_proceso["sitio"], self.peticion_proceso["cookie"], self.peticion_proceso["lista_negra"],self.peticion_proceso["redireccionamiento"])
+            self.peticion_proceso["analisis"] = respuesta_analisis
+            self.peticion_proceso["verificacion"]["analisis"] = 1
+        except Exception as e:
+            tipo, base, rastro = sys.exc_info()
+            archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
+            with open (self.error, "a") as error:
+                error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Análisis\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
 
     def execute_fuzzing(self):
         '''
             Funcion que ejecuta el modulo de fuzzing, una vez terminado ejecuta el modulo de alertas_fuzzing para guardar las (posibles)vulnerabilidades encontradas
         '''
         if self.peticion_proceso["verificacion"]["analisis"] == 1:
-            self.fuzzing_lanzar_fuzz()
-            self.alertas_fuzzing()
-            self.peticion_proceso["verificacion"]["fuzzing"] = 1
-            # try:
-            #     self.fuzzing_lanzar_fuzz()
-            #     self.alertas_fuzzing()
-            #     self.peticion_proceso["verificacion"]["fuzzing"] = 1
-            # except Exception as e:
-            #     tipo, base, rastro = sys.exc_info()
-            #     archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
-            #     with open (self.error, "a") as error:
-            #         error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Fuzzing\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
+            # self.fuzzing_lanzar_fuzz()
+            # self.alertas_fuzzing()
+            # self.peticion_proceso["verificacion"]["fuzzing"] = 1
+            try:
+                self.fuzzing_lanzar_fuzz()
+                self.alertas_fuzzing()
+                self.peticion_proceso["verificacion"]["fuzzing"] = 1
+            except Exception as e:
+                tipo, base, rastro = sys.exc_info()
+                archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
+                with open (self.error, "a") as error:
+                    error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Fuzzing\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
         
     def execute_explotacion(self):
         '''
             Funcion que ejecuta el modulo de identificacion y de explotacion, guarda el resultado en el diccionario peticion_proceso en la llave "explotacion"
         '''
-        if self.peticion_proceso["verificacion"]["analisis"] == 1 or self.peticion_proceso["verificacion"]["informacion"] == 1:
-            self.datos_explotacion, self.datos_identificados = self.obtener_datos_consulta_exploits()
-            self.explotacion_lanzar_exploit()
-            self.alertas_explotacion()
-            self.peticion_proceso["verificacion"]["explotacion"] = 1
         # if self.peticion_proceso["verificacion"]["analisis"] == 1 or self.peticion_proceso["verificacion"]["informacion"] == 1:
-        #     try:
-        #         self.datos_explotacion, self.datos_identificados = self.obtener_datos_consulta_exploits()
-        #         self.explotacion_lanzar_exploit()
-        #         self.alertas_explotacion()
-        #         self.peticion_proceso["verificacion"]["explotacion"] = 1
-        #     except Exception as e:
-        #         tipo, base, rastro = sys.exc_info()
-        #         archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
-        #         with open (self.error, "a") as error:
-        #             error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Explotación\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
+        #     self.datos_explotacion, self.datos_identificados = self.obtener_datos_consulta_exploits()
+        #     print(self.datos_identificados)
+        #     self.explotacion_lanzar_exploit()
+        #     self.alertas_explotacion()
+        #     self.peticion_proceso["verificacion"]["explotacion"] = 1
+        if self.peticion_proceso["verificacion"]["analisis"] == 1 or self.peticion_proceso["verificacion"]["informacion"] == 1:
+            try:
+                self.datos_explotacion, self.datos_identificados = self.obtener_datos_consulta_exploits()
+                self.explotacion_lanzar_exploit()
+                self.alertas_explotacion()
+                self.peticion_proceso["verificacion"]["explotacion"] = 1
+            except Exception as e:
+                tipo, base, rastro = sys.exc_info()
+                archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
+                with open (self.error, "a") as error:
+                    error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Explotación\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
 
     def fuzzing_lanzar_fuzz(self):
         '''
@@ -586,7 +567,7 @@ class Masivo():
 
         self.datos_identificados = {"software":[],"cms":[], "cve":[], "profundidad": "2"}
         
-        self.datos_identificados["profundidad"] = self.peticion_proceso["profundidad"]
+        self.datos_identificados["profundidad"] = int(self.peticion_proceso["profundidad"])
 
         # Obtener datos para cargar los exploits
         if self.peticion_proceso["sitio"].startswith("https"):
@@ -595,21 +576,21 @@ class Masivo():
             self.datos_explotacion = {"sitio":self.peticion_proceso["sitio"],"puertos":["80"],"cookie":self.peticion_proceso["cookie"]}
 
         if informacion == 1:
-            self.datos_identificados["software"].extend(self.obtener_software_version_unica_puertos(self.peticion_proceso["informacion"]))
+            self.datos_identificados["software"].extend(self.obtener_version_puertos(self.peticion_proceso["informacion"]))
             for puerto in self.peticion_proceso["informacion"]["puertos"]["abiertos"]:
                 if puerto != "80" or puerto != "443":
                     self.datos_explotacion["puertos"].append(puerto["puerto"])
 
         if analisis == 1:
-            self.datos_identificados["software"].extend(self.obtener_software_version_unica(self.peticion_proceso["analisis"], "servidor"))
-            self.datos_identificados["software"].extend(self.obtener_sofware_versiones(self.peticion_proceso["analisis"], "lenguajes"))
-            self.datos_identificados["software"].extend(self.obtener_sofware_versiones(self.peticion_proceso["analisis"], "frameworks"))
-            self.datos_identificados["software"].extend(self.obtener_sofware_versiones(self.peticion_proceso["analisis"], "librerias"))
-            cms = self.obtener_software_version_unica(self.peticion_proceso["analisis"], "cms")
+            self.datos_identificados["software"].extend(self.obtener_software_version(self.peticion_proceso["analisis"], "servidor"))
+            self.datos_identificados["software"].extend(self.obtener_softwares_versiones(self.peticion_proceso["analisis"], "lenguajes"))
+            self.datos_identificados["software"].extend(self.obtener_softwares_versiones(self.peticion_proceso["analisis"], "frameworks"))
+            self.datos_identificados["software"].extend(self.obtener_softwares_versiones(self.peticion_proceso["analisis"], "librerias"))
+            cms = self.obtener_software_version(self.peticion_proceso["analisis"], "cms")
             if len(cms) != 0:
                 cms_nombre = cms[0]["software_nombre"]
                 self.datos_identificados["software"].extend(cms)
-                self.datos_identificados["cms"].extend(self.obtener_cms(self.peticion_proceso["analisis"], "plugins", cms_nombre))
+                self.datos_identificados["cms"].extend(self.obtener_plugins(self.peticion_proceso["analisis"], "plugins", cms_nombre))
 
             if "vulnerabilidades" in self.peticion_proceso["analisis"]:
                 for cve in self.peticion_proceso["analisis"]["vulnerabilidades"]:
@@ -617,7 +598,7 @@ class Masivo():
 
         return self.datos_explotacion, self.datos_identificados
 
-    def obtener_sofware_versiones(self, peticion_proceso, caracteristica):
+    def obtener_softwares_versiones(self, peticion_proceso, caracteristica):
         '''
             Funcion que se encarga de extraer el nombre del software y multiples versiones partiendo de las caracteristica
 
@@ -633,26 +614,21 @@ class Masivo():
         if caracteristica in peticion_proceso:
             for dato in peticion_proceso[caracteristica]:
                 nombre = ""
-                version = 0
+                version = ""
                 if "nombre" in dato:
                     nombre = dato["nombre"]
                 if "version" in dato:
                     if len(dato["version"]) > 0:
                         for tipo in dato["version"]:
                             version = tipo
-                            version_regex = re.search(patron_version, version)
-                            if version_regex is not None :
-                                version = float(version_regex.group())
-                            else:
-                                version = 0
                             if nombre != "":
                                 datos_identificados.append({"software_nombre":nombre,"software_version":version})
                     if len(dato["version"]) == 0:
                         if nombre != "":
-                            datos_identificados.append({"software_nombre":nombre,"software_version":0})
+                            datos_identificados.append({"software_nombre":nombre,"software_version":""})
         return datos_identificados
 
-    def obtener_software_version_unica(self, peticion_proceso, caracteristica):
+    def obtener_software_version(self, peticion_proceso, caracteristica):
         '''
             Funcion que se encarga de extraer el nombre del software y su version partiendo de las caracteristica
 
@@ -665,22 +641,17 @@ class Masivo():
         '''
         datos_identificados = []
         nombre = ""
-        version = 0
+        version = ""
         if caracteristica in peticion_proceso:
             if "nombre" in peticion_proceso[caracteristica]:
                 nombre = peticion_proceso[caracteristica]["nombre"]
             if "version" in peticion_proceso[caracteristica]:
                 version = peticion_proceso[caracteristica]["version"]
-                version_regex = re.search(patron_version, version)
-                if version_regex is not None :
-                    version = float(version_regex.group())
-                else:
-                    version = 0
             if nombre != "":
                 datos_identificados.append({"software_nombre":nombre,"software_version":version})
         return datos_identificados
 
-    def obtener_cms(self, peticion_proceso, caracteristica, cms):
+    def obtener_plugins(self, peticion_proceso, caracteristica, cms):
         '''
             Funcion que se encarga de extraer el nombre del cms, categoria de la extension, nombre de la extension con su respectiva version
             partiendo de las caracteristica
@@ -696,27 +667,13 @@ class Masivo():
         '''
         datos_identificados = []
         nombre = ""
-        version = 0
         if caracteristica in peticion_proceso:
             for dato in peticion_proceso[caracteristica]:
-                if str(type(dato)).find("list") >= 0:
-                    nombre = dato
-                    datos_identificados.append({"cms_nombre":cms,"cms_categoria":caracteristica, "cms_extension_nombre":nombre,"cms_extension_version":0})
-
-                elif str(type(dato)).find("dict") >= 0:
-                    if "nombre" in dato:
-                        nombre = dato["nombre"]
-                    if "version" in dato:
-                        version = dato["version"]
-                        version_regex = re.search(patron_version, version)
-                        if version_regex is not None :
-                            version = float(version_regex.group())
-                        else:
-                            version = 0    
-                    datos_identificados.append({"cms_nombre":cms,"cms_categoria":caracteristica, "cms_extension_nombre":nombre,"cms_extension_version":version})
+                nombre = dato
+                datos_identificados.append({"cms_nombre":cms,"cms_categoria":caracteristica, "cms_extension_nombre":nombre,"cms_extension_version":""})
         return datos_identificados
 
-    def obtener_software_version_unica_puertos(self, peticion_proceso):
+    def obtener_version_puertos(self, peticion_proceso):
         '''
             Funcion que se encarga de extraer el nombre del software y su version partiendo de los puertos
 
@@ -726,17 +683,12 @@ class Masivo():
                 diccionario que contiene todo el analisis del sitio
         '''
         datos_identificados = []
-        version = 0
+        version = ""
 
         for puertos in peticion_proceso["puertos"]["abiertos"]:
             puerto = str(puertos["servicio"])
             if "version" in puertos:
-                version = str(puertos["version"])
-                version_regex = re.search(patron_version, version)
-                if version_regex:
-                    version = float(version_regex.group())
-                else:
-                    version = 0
+                version = puertos["version"]
             if puerto != "":
                 datos_identificados.append({"software_nombre":puerto,"software_version":version})
         return datos_identificados
@@ -1033,11 +985,13 @@ class Reportes():
 
         if self.analisis == 1:
             servidor = self.validar_campo(self.peticion_proceso["analisis"]["servidor"], "nombre").capitalize()
-            version = self.validar_campo(self.peticion_proceso["analisis"]["servidor"], "version")
+            version = self.validar_campo(self.peticion_proceso["analisis"]["servidor"], "version").capitalize()
             servidor += " " + version
 
             cms = self.validar_campo(self.peticion_proceso["analisis"]["cms"], "nombre").capitalize()
-            cms_version = self.validar_campo(self.peticion_proceso["analisis"]["cms"], "version")
+            if cms == "Na":
+                cms = "NA"
+            cms_version = self.validar_campo(self.peticion_proceso["analisis"]["cms"], "version").capitalize()
             cms += " " + cms_version
 
             cifrados = self.obtener_cifrados_debiles(self.peticion_proceso)
@@ -2618,11 +2572,11 @@ def ciclo_analisis():
         print("Obteniendo peticiones\nPeticiones en cola ->",peticiones)
         if peticiones > 0:
             peticion = cola.pop_peticion()
-            # try:
-            #     Masivo(peticion)
-            # except Exception as e:
-            #     print("Ocurrió un error durante la ejecución", e)
-            Masivo(peticion)
+            try:
+                Masivo(peticion)
+            except Exception as e:
+                print("Ocurrió un error durante la ejecución", e)
+            #Masivo(peticion)
         cola.reset_peticion_actual()
         sleep(2)
 

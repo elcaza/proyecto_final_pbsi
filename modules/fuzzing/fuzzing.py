@@ -704,7 +704,10 @@ class Pagina():
                         continue
 
                     if funcion_validadora(resultado, payload):
-                        json_temporal["forms"][form_unico][i][tipo] = True
+                        if tipo == "xss":
+                            json_temporal["forms"][form_unico][i]["posible_vulnerabilidad_xss"] = True
+                        else:
+                            json_temporal["forms"][form_unico][i][tipo] = True
 
                     self.enviar_validacion_comun(resultado, json_temporal, form_unico, i)
                     i += 1
@@ -1097,6 +1100,9 @@ class Pagina():
         '''
         self.driver_xss = webdriver.Chrome("/usr/bin/chromedriver",options=self.sin_navegador)
         self.driver_xss.set_page_load_timeout(30)
+        # json_forms_selenium = self.enviar_peticiones_selenium_xss()
+        # self.driver_xss.quit()
+        # return json_forms_selenium
         try:
             json_forms_selenium = self.enviar_peticiones_selenium_xss()
             self.driver_xss.quit()
@@ -1110,6 +1116,9 @@ class Pagina():
         '''        
         self.driver_upload = webdriver.Chrome("/usr/bin/chromedriver",options=self.sin_navegador)
         self.driver_upload.set_page_load_timeout(30)
+        # json_forms_selenium = self.enviar_peticiones_selenium_upload()
+        # self.driver_upload.quit()
+        # return json_forms_selenium
         try:
             json_forms_selenium = self.enviar_peticiones_selenium_upload()
             self.driver_upload.quit()
@@ -1219,11 +1228,13 @@ class Pagina():
                 self.driver_xss.get(self.url)
             except:
                 if i == 2:
+                    print("NOOOOOOOO")
                     return json_formularios_selenium
 
         forms_totales = len(self.driver_xss.find_elements_by_xpath("//form"))
         contador = 0
-
+        print("FORM", forms_totales)
+        print("URL", self.driver_xss.current_url)
         for form in range(forms_totales):
             for payload in self.payload_lista_xss:
                 inputs_generales = []
