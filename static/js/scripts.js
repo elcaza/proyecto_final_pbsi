@@ -311,6 +311,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		let profundidad = document.querySelector("#profundidad").value;
 		let redireccionamiento = document.querySelector("#redireccionamiento").checked;
 		let lista_negra = document.querySelector("#lista_negra").value;
+		let tiempo_espera = document.querySelector("#tiempo_espera").value;
 		let array_lista_negra = [];
 
 		// Cada nueva línea será un elemento del array
@@ -338,7 +339,8 @@ document.addEventListener("DOMContentLoaded", function() {
 			"profundidad":profundidad,
 			
 			"redireccionamiento":redireccionamiento,
-			"lista_negra":array_lista_negra
+			"lista_negra":array_lista_negra,
+			"tiempo_espera":tiempo_espera
 		}
 		console.log(peticion)
 		send_json_fetch(server_url+"/ejecucion", peticion);

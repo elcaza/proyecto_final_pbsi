@@ -1,0 +1,13 @@
+Nombre,Descripción
+Sitio,http://localhost/DVWA-master/
+IP,127.0.0.1
+País,NA
+Puertos,1
+Servidor,Apache
+CMS,NA
+CVE,0
+IOC,0
+Cifrados Débiles,0
+Vulnerabilidades,55
+Posibles Vulnerabilidades,117
+Explotación,0

@@ -1,0 +1,13 @@
+Tipo,Dominio,Dominio - IP
+Host forward,testphp.vulnweb.com,176.28.50.165
+Host forward,testphp.vulnweb.com,18.192.172.30
+Host reverse,*.vulnweb.com,18.192.172.30
+Host reverse,testap.vulnweb.com,18.192.172.30
+Host reverse,httptestphp.vulnweb.com,18.192.172.30
+Host reverse,pingwww.vulnweb.com,18.192.172.30
+Host reverse,gd.vulnweb.com,18.192.172.30
+Host reverse,htttestphp.vulnweb.com,18.192.172.30
+Host reverse,testephp.vulnweb.com,18.192.172.30
+Host reverse,phptest.vulnweb.com,18.192.172.30
+Host reverse,testphp.vulnweb.com,18.192.172.30
+Host reverse,testpho.vulnweb.com,18.192.172.30

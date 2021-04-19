@@ -82,11 +82,7 @@ class Robtex_informacion():
             - api_solicitud: url de solicitud.
         Retorna: Información en formato json, de la solicitud realizada
         '''
-        # renovar_tor_ip()
         session = requests.session()
-        # session.proxies = {}
-        # session.proxies['http'] = 'socks5://127.0.0.1:9050'
-        # session.proxies['https'] = 'socks5://127.0.0.1:9050'
         user_agent = UserAgent().random
         respuesta_solicitud = session.get(
             api_solicitud, headers={'User-Agent': user_agent})
@@ -118,37 +114,49 @@ class Robtex_informacion():
         forward = self.pdns_forward()
         reverse = self.pdns_reverse()
         ip = self.ip_query()
-        while ip == None:
-            time.sleep(180)
-            ip = self.ip_query()
-        while forward == None:
-            time.sleep(180)
-            forward = self.pdns_forward()
-        while reverse == None:
-            time.sleep(180)
-            reverse = self.pdns_reverse()
-        informacion = {}
-        informacion["ip"] = self.ip_address
-        informacion["ciudad"] = ip["city"]
-        informacion["pais"] = ip["country"]
-        informacion["red"] = ip["bgproute"]
-        self.informacion_robtex["informacion"] = informacion
-        if("list" in str(type(forward))):
-            for registro in forward:
-                self.tipos_registros(
-                    registro, temp_NS, temp_A, temp_MX, "forward")
-        else:
-            self.tipos_registros(forward, temp_NS, temp_A, temp_MX, "forward")
-        temp_NS = []
-        temp_A = []
-        temp_MX = []
-        if("list" in str(type(reverse))):
-            for registro in reverse:
-                self.tipos_registros(
-                    registro, temp_NS, temp_A, temp_MX, "reverse")
-        else:
-            self.tipos_registros(reverse, temp_NS, temp_A, temp_MX, "reverse")
+        
+        for fallo in range(6):
+            while ip == None:
+                time.sleep(180)
+                ip = self.ip_query()
+                if fallo == 1:
+                    break
+            while forward == None:
+                time.sleep(180)
+                forward = self.pdns_forward()
+                if fallo == 3:
+                    break
+            while reverse == None:
+                time.sleep(180)
+                reverse = self.pdns_reverse()
+        
+        if ip is not None:
+            informacion = {}
+            informacion["ip"] = self.ip_address
+            informacion["ciudad"] = ip["city"]
+            informacion["pais"] = ip["country"]
+            informacion["red"] = ip["bgproute"]
+            self.informacion_robtex["informacion"] = informacion
+        
+        if forward is not None or reverse is not None:
+            if("list" in str(type(forward))):
+                for registro in forward:
+                    self.tipos_registros(
+                        registro, temp_NS, temp_A, temp_MX, "forward")
+            else:
+                self.tipos_registros(forward, temp_NS, temp_A, temp_MX, "forward")
+            temp_NS = []
+            temp_A = []
+            temp_MX = []
+            if("list" in str(type(reverse))):
+                for registro in reverse:
+                    self.tipos_registros(
+                        registro, temp_NS, temp_A, temp_MX, "reverse")
+            else:
+                self.tipos_registros(reverse, temp_NS, temp_A, temp_MX, "reverse")
+        
         return self.informacion_robtex
+        
 
     def tipos_registros(self, registro, temp_NS, temp_A, temp_MX, tipo_busqueda):
         '''

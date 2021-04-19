@@ -1,0 +1,6 @@
+Tipo,Dominio,Dominio - IP
+Host forward,testasp.vulnweb.com,87.230.29.167
+Host forward,testasp.vulnweb.com,5.175.17.140
+Host forward,testasp.vulnweb.com,3.126.110.1
+Host reverse,testasp.vulnweb.com,3.126.110.1
+Host reverse,testaspnet.vulnweb.com,3.126.110.1

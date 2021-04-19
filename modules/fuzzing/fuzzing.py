@@ -364,7 +364,6 @@ class Validaciones():
         texto = resultado.text
         for error in self.errores_lfi:
             if re.search(re.escape(error),texto):
-                print("LFI",error)
                 return True
         return False
 
@@ -527,6 +526,7 @@ class Pagina():
     def __init__(self, parametros):
         self.url = parametros["url"]
         print(self.url)
+        self.tiempo_espera = int(parametros["tiempo_espera"])
         self.sesion = requests.session()
         self.regex_patron = r"\{(.*)\}"
         self.user_agent = UserAgent()
@@ -569,6 +569,7 @@ class Pagina():
             url_cargada : str
         '''
         try:
+            sleep(self.tiempo_espera)
             resultado = self.sesion.get(url_cargada,cookies=self.cookies_requests,headers=self.headers,verify=False, timeout=15)
             return resultado
         except:
@@ -619,6 +620,7 @@ class Pagina():
             data : dict
         '''
         try:
+            sleep(self.tiempo_espera)
             resultado = self.sesion.post(url_cargada,cookies=self.cookies_requests,data=data,verify=False, timeout=15)
             return resultado
         except:
@@ -1005,7 +1007,7 @@ class Pagina():
                     resultado_correcto = self.enviar_peticion_post(url_cargada, data_correcta)
                     resultado_incorrecto = self.enviar_peticion_post(url_cargada, data_incorrecta)
                     resultado_payload = self.enviar_peticion_post(url_cargada, data_payload)
-                    self.set_peticion(json_temporal, data_correcta | data_incorrecta | data_payload,form_unico,metodo)
+                    self.set_peticion(json_temporal, {**data_correcta, **data_incorrecta, **data_payload}, form_unico,metodo)
 
                     if resultado_correcto is None or resultado_payload is None or resultado_incorrecto is None:
                         continue
@@ -1309,7 +1311,7 @@ class Pagina():
             Parametros
             ----------
             json_temporal : dict
-            carga : dict | str
+            carga : dict
             form : int
             metodo : str
         '''
@@ -1342,7 +1344,7 @@ class Pagina():
             Parametros
             ----------
             json_temporal : dict
-            carga : dict | str
+            carga : dict
             url : str
             metodo : str
         '''
@@ -1368,80 +1370,81 @@ class Pagina():
             realiza una peticion a la pagina para obtener todos los forms, inputs, textareas
             itera por cada form para obtener sus respectivos inputs y textareas cuales serán 
             almacenados dentro los formularios
-        '''   
-        resultado = self.sesion.get(self.url,cookies=self.cookies_requests,headers=self.headers,verify=False)
-        html_proc = BeautifulSoup(resultado.text, "html.parser")
-        self.formularios = {}
-        forms = html_proc.find_all("form")
-        nombre_temporal = "_temp_"
-        bandera = 0
-        for form_unico in forms:
-            inputs_generales = []
-            contador = 0
+        '''
+        resultado = self.enviar_peticion_get(self.url)
+        # resultado = self.sesion.get(self.url,cookies=self.cookies_requests,headers=self.headers,verify=False)
+        if resultado is not None:
+            html_proc = BeautifulSoup(resultado.text, "html.parser")
+            self.formularios = {}
+            forms = html_proc.find_all("form")
+            nombre_temporal = "_temp_"
+            bandera = 0
+            for form_unico in forms:
+                inputs_generales = []
+                contador = 0
 
-            nombre = form_unico.get("name")
-            id_form = form_unico.get("id")
-            nombre_temporal_unico = "{0}_{1}_{2}".format("form",nombre_temporal,contador)
-            nombre_form = self.obtener_nombre_etiqueta(nombre, id_form, nombre_temporal_unico)
-            contador += 1
-
-            inputs = form_unico.find_all("input")
-            for input_unico in inputs:
-                nombre = input_unico.get("name")
-                id_input = input_unico.get("id")
-                tipo_input = input_unico.get("type")
-                tamanio_input = input_unico.get("size")
-
-                if self.validaciones.validar_tipo_input(tipo_input) or (self.validaciones.validar_tamanio_input(tamanio_input) and tipo_input != "hidden"):
-                    nombre_temporal_unico = "{0}_{1}_{2}".format("input",nombre_temporal,contador)
-                    nombre_input = self.obtener_nombre_etiqueta(nombre, id_input, nombre_temporal_unico, tipo_input)
-                    if nombre_input is not None:
-                        inputs_generales.append(nombre_input)
-                    contador += 1
-
-            text_areas = form_unico.find_all("textarea")
-
-            for text_area_unico in text_areas:
-                nombre = text_area_unico.get("name")
-                id_text_area = text_area_unico.get("id")
-                nombre_temporal_unico = "{0}_{1}_{2}".format("input",nombre_temporal,contador)
-                nombre_form = self.obtener_nombre_etiqueta(nombre, id_text_area, nombre_temporal_unico)
-                inputs_generales.append(nombre_form)
+                nombre = form_unico.get("name")
+                id_form = form_unico.get("id")
+                nombre_temporal_unico = "{0}_{1}_{2}".format("form",nombre_temporal,contador)
+                nombre_form = self.obtener_nombre_etiqueta(nombre, id_form, nombre_temporal_unico)
                 contador += 1
 
-            metodo = form_unico.get("method")
-            accion = urljoin(self.url,form_unico.get("action"))
+                inputs = form_unico.find_all("input")
+                for input_unico in inputs:
+                    nombre = input_unico.get("name")
+                    id_input = input_unico.get("id")
+                    tipo_input = input_unico.get("type")
+                    tamanio_input = input_unico.get("size")
+
+                    if self.validaciones.validar_tipo_input(tipo_input) or (self.validaciones.validar_tamanio_input(tamanio_input) and tipo_input != "hidden"):
+                        nombre_temporal_unico = "{0}_{1}_{2}".format("input",nombre_temporal,contador)
+                        nombre_input = self.obtener_nombre_etiqueta(nombre, id_input, nombre_temporal_unico, tipo_input)
+                        if nombre_input is not None:
+                            inputs_generales.append(nombre_input)
+                        contador += 1
+
+                text_areas = form_unico.find_all("textarea")
+
+                for text_area_unico in text_areas:
+                    nombre = text_area_unico.get("name")
+                    id_text_area = text_area_unico.get("id")
+                    nombre_temporal_unico = "{0}_{1}_{2}".format("input",nombre_temporal,contador)
+                    nombre_form = self.obtener_nombre_etiqueta(nombre, id_text_area, nombre_temporal_unico)
+                    inputs_generales.append(nombre_form)
+                    contador += 1
+
+                metodo = form_unico.get("method")
+                accion = urljoin(self.url,form_unico.get("action"))
+                
+                if metodo != None and metodo != "" and accion != None and accion != "" and accion.startswith("http") != False:
+                    self.formularios[nombre_form] = {
+                        "accion":accion,
+                        "metodo":metodo.lower(),
+                        "inputs":inputs_generales
+                    }
+                    self.json_fuzzing["forms"][nombre_form] = []
+                    bandera = 1
             
-            if metodo != None and metodo != "" and accion != None and accion != "" and accion.startswith("http") != False:
-                self.formularios[nombre_form] = {
-                    "accion":accion,
-                    "metodo":metodo.lower(),
+
+            if urlparse(self.url).query != "" and bandera == 0:
+                inputs_generales = []
+                query = urlparse(self.url).query
+
+                for valor in query.split("&"):
+                    inputs_generales.append(valor.split("=")[0])
+
+                self.url = self.url.replace(query, "")
+                self.url = self.url[:-1]  
+                self.formularios["form_especial"] = {
+                    "accion":self.url,
+                    "metodo":"get",
                     "inputs":inputs_generales
                 }
-                self.json_fuzzing["forms"][nombre_form] = []
-                bandera = 1
-        
-
-        if urlparse(self.url).query != "" and bandera == 0:
-            inputs_generales = []
-            query = urlparse(self.url).query
-
-            for valor in query.split("&"):
-                inputs_generales.append(valor.split("=")[0])
-
-            self.url = self.url.replace(query, "")
-            self.url = self.url[:-1]  
-            self.formularios["form_especial"] = {
-                "accion":self.url,
-                "metodo":"get",
-                "inputs":inputs_generales
-            }
-            self.json_fuzzing["forms"]["form_especial"] = []
-            
-
+                self.json_fuzzing["forms"]["form_especial"] = []
+                
         self.json_fuzzing["vulnerabilidades"] = {"lfi":[]}
         self.json_fuzzing["forms_upload"] = {}
-        self.json_fuzzing["forms_selenium"] = {}
+        self.json_fuzzing["forms_selenium"] = {}            
 
     def set_headers(self):
         '''

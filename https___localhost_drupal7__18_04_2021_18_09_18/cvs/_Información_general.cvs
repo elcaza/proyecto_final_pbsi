@@ -1,0 +1,13 @@
+Nombre,Descripción
+Sitio,https://localhost/drupal7/
+IP,127.0.0.1
+País,NA
+Puertos,1
+Servidor,Apache 2.4.46
+CMS,Drupal 7
+CVE,0
+IOC,0
+Cifrados Débiles,33
+Vulnerabilidades,0
+Posibles Vulnerabilidades,0
+Explotación,1

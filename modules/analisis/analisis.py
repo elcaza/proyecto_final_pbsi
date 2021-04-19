@@ -1063,7 +1063,7 @@ class Joomla():
 		'''
 		soup = self.util.obtener_contenido_html(self.url+"/administrator")
 		if soup != "":
-			if (self.buscar_joomla(soup, "img", {'src':re.compile('(joomla*)')}, "joomla") | self.buscar_joomla(soup, "a", {'class':re.compile('(joomla*)')}, "joomla")):
+			if (self.buscar_joomla(soup, "img", {'src':re.compile('(joomla*)')}, "joomla") or self.buscar_joomla(soup, "a", {'class':re.compile('(joomla*)')}, "joomla")):
 				return True
 			else:
 				return False

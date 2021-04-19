@@ -1,0 +1,13 @@
+Nombre,Descripción
+Sitio,http://testphp.vulnweb.com
+IP,18.192.172.30
+País,United States
+Puertos,0
+Servidor,Nginx 1.19.0
+CMS,Na NA
+CVE,0
+IOC,0
+Cifrados Débiles,0
+Vulnerabilidades,66
+Posibles Vulnerabilidades,297
+Explotación,0

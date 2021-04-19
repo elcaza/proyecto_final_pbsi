@@ -188,7 +188,7 @@ class Reporte():
                 <!-- Header -->
                 <div class="contenedor-titulo">
                     <h1 class="titulo">
-                        UNAM CERT
+                        UNAM-CERT Malphas
                     </h1>
                 </div>
         '''

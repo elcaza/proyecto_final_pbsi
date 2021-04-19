@@ -1,0 +1,4 @@
+Tipo,Valor,IP,DNS Inverso,País
+Txt,"google-site-verification:9QFopDZwL4Fw1z9RU7_L1QQqIpeZNgyuufqN44mRG8w",NA,NA,NA
+Txt,"v=spf1 -all",NA,NA,NA
+Host,testasp.vulnweb.com,3.126.110.1,ec2-3-126-110-1.eu-central-1.compute.amazonaws.com,Germany

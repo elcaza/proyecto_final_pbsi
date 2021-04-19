@@ -20,7 +20,7 @@ import sys
 ## Modulos
 from modules.obtencion_informacion import obtener_informacion as obtener_informacion
 from modules.alertas import alertas
-from modules.analisis import analisis
+from modules.analisis import analisis_2 as analisis
 from modules.exploits import exploits as exp
 from modules.explotacion import explotacion
 from modules.fuzzing import fuzzing
@@ -252,8 +252,9 @@ class Masivo():
                 "profundidad":self.peticion["profundidad"],
                 "redireccionamiento":self.peticion["redireccionamiento"],
                 "lista_negra":self.peticion["lista_negra"],
+                "tiempo_espera":self.peticion["tiempo_espera"],
                 "analisis":{"paginas":[]},
-                "verificacion":{"informacion":0,"analisis":1,"fuzzing":0,"explotacion":0}
+                "verificacion":{"informacion":0,"analisis":0,"fuzzing":0,"explotacion":0}
             }
             self.peticion_reporte = {
                 "sitio":self.peticion_proceso["sitio"],
@@ -373,16 +374,21 @@ class Masivo():
             Funcion que ejecuta el modulo de identificacion y de explotacion, guarda el resultado en el diccionario peticion_proceso en la llave "explotacion"
         '''
         if self.peticion_proceso["verificacion"]["analisis"] == 1 or self.peticion_proceso["verificacion"]["informacion"] == 1:
-            try:
-                self.datos_explotacion, self.datos_identificados = self.obtener_datos_consulta_exploits()
-                self.explotacion_lanzar_exploit()
-                self.alertas_explotacion()
-                self.peticion_proceso["verificacion"]["explotacion"] = 1
-            except Exception as e:
-                tipo, base, rastro = sys.exc_info()
-                archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
-                with open (self.error, "a") as error:
-                    error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Explotación\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
+            self.datos_explotacion, self.datos_identificados = self.obtener_datos_consulta_exploits()
+            self.explotacion_lanzar_exploit()
+            self.alertas_explotacion()
+            self.peticion_proceso["verificacion"]["explotacion"] = 1
+        # if self.peticion_proceso["verificacion"]["analisis"] == 1 or self.peticion_proceso["verificacion"]["informacion"] == 1:
+        #     try:
+        #         self.datos_explotacion, self.datos_identificados = self.obtener_datos_consulta_exploits()
+        #         self.explotacion_lanzar_exploit()
+        #         self.alertas_explotacion()
+        #         self.peticion_proceso["verificacion"]["explotacion"] = 1
+        #     except Exception as e:
+        #         tipo, base, rastro = sys.exc_info()
+        #         archivo = path.split(rastro.tb_frame.f_code.co_filename)[1]
+        #         with open (self.error, "a") as error:
+        #             error.write("{0},{1}:{2},{3}:{4},{5}:{6},{7}{8}".format("El módulo de \"Explotación\" falló en",e ,"tipo" ,tipo ,"archivo" ,archivo, "linea",rastro.tb_lineno,"\n"))
 
     def fuzzing_lanzar_fuzz(self):
         '''
@@ -395,7 +401,8 @@ class Masivo():
                 url = self.peticion_proceso["analisis"]["paginas"][posicion_pagina]["pagina"]
                 json_fuzzing = {
                     "url":url,
-                    "cookie":self.peticion_proceso["cookie"]
+                    "cookie":self.peticion_proceso["cookie"],
+                    "tiempo_espera":self.peticion_proceso["tiempo_espera"]
                 }
                 futures.append(executor.submit(fuzzing.execute,json_fuzzing))
             for future in concurrent.futures.as_completed(futures):
@@ -567,7 +574,7 @@ class Masivo():
         informacion = self.peticion_proceso["verificacion"]["informacion"]
         analisis = self.peticion_proceso["verificacion"]["analisis"]
 
-        self.datos_identificados = {"software":[],"cms":[], "cve":[], "profundidad": 2}
+        self.datos_identificados = {"software":[],"cms":[], "cve":[], "profundidad": "2"}
         
         self.datos_identificados["profundidad"] = self.peticion_proceso["profundidad"]
 
@@ -1015,8 +1022,14 @@ class Reportes():
             datos_generales.append(["Puertos",puertos])
 
         if self.analisis == 1:
-            servidor = self.validar_campo(self.peticion_proceso["analisis"]["servidor"], "nombre")
-            cms = self.validar_campo(self.peticion_proceso["analisis"]["cms"], "nombre")
+            servidor = self.validar_campo(self.peticion_proceso["analisis"]["servidor"], "nombre").capitalize()
+            version = self.validar_campo(self.peticion_proceso["analisis"]["servidor"], "version")
+            servidor += " " + version
+
+            cms = self.validar_campo(self.peticion_proceso["analisis"]["cms"], "nombre").capitalize()
+            cms_version = self.validar_campo(self.peticion_proceso["analisis"]["cms"], "version")
+            cms += " " + cms_version
+
             cifrados = self.obtener_cifrados_debiles(self.peticion_proceso)
             cve = len(self.peticion_proceso["analisis"]["vulnerabilidades"])
 
@@ -1184,7 +1197,7 @@ class Reportes():
                                 bfl.append([tipo.capitalize()[:-1],nombre,version])
 
         if len(bfl) == 0:
-            bfl = [["No se encontraron {0}".format("datos"), "NA"]]
+            bfl = [["No se encontraron {0}".format("datos"), "NA", "NA"]]
 
         analisis = self.crear_b_f_l(bfl)
         self.peticion_reporte["analisis"].append(analisis)
@@ -2274,7 +2287,7 @@ class Utileria():
             peticion : dict
                 contiene la peticion original enviada al servidor
         '''
-        if "sitio" in peticion and "cookie" in peticion and "profundidad" in peticion and "redireccionamiento" in peticion and "lista_negra" in peticion and "puertos" in peticion:
+        if "sitio" in peticion and "cookie" in peticion and "profundidad" in peticion and "redireccionamiento" in peticion and "lista_negra" in peticion and "puertos" in peticion and "tiempo_espera" in peticion:
             return True
         return False
 
@@ -2307,7 +2320,14 @@ class Utileria():
             if puertos < 1 or puertos > 65536:
                 peticion["puertos"]["final"] = "1"
         except:
-            peticion["puertos"]["final"] = "2"
+            peticion["puertos"]["final"] = "1"
+
+        try:
+            tiempo = int(peticion["tiempo_espera"])
+            if tiempo < 0:
+                peticion["tiempo_espera"] = "0"
+        except:
+            peticion["tiempo_espera"] = "0"
 
         return True
 
@@ -2436,7 +2456,7 @@ def ejecucion():
             return respuesta
 
         else:
-            return json.loads({"estatus":"error"})
+            return json.dumps({"status":"error"})
     if request.method == "GET":
         return "GET no"
 
